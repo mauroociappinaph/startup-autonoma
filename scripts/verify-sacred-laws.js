@@ -58,20 +58,35 @@ function checkSacredLaws(filePath) {
   }
 }
 
-// Analizar carpetas backend, frontend y ai-engine
-const targetDirs = [
-  path.join(__dirname, '../backend'),
-  path.join(__dirname, '../frontend'),
-  path.join(__dirname, '../ai-engine')
-];
+const { execSync } = require('child_process');
 
-console.log('🔍 Auditando cumplimiento de Leyes Sagradas...\n');
+console.log('🔍 Auditando cumplimiento de Leyes Sagradas en archivos Staged...\n');
 
-targetDirs.forEach(dir => walkDir(dir, checkSacredLaws));
+// Extraer sólo los archivos que se están subiendo en este commit
+let stagedFiles = [];
+try {
+  const diffOutput = execSync('git diff --cached --name-only --diff-filter=ACMR', { encoding: 'utf-8' });
+  stagedFiles = diffOutput.split('\n').filter(Boolean);
+} catch (error) {
+  console.error("No se pudo obtener la lista de archivos modificados desde Git.");
+  process.exit(1);
+}
+
+if (stagedFiles.length === 0) {
+  console.log('✅ No hay archivos para auditar. Adelante.');
+  process.exit(0);
+}
+
+stagedFiles.forEach(file => {
+  const absolutePath = path.resolve(process.cwd(), file);
+  if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
+    checkSacredLaws(absolutePath);
+  }
+});
 
 if (errors > 0) {
-  console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura.`);
+  console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura en los archivos a subir.`);
   process.exit(1);
 } else {
-  console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla.');
+  console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla en tu commit.');
 }

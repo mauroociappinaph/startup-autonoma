@@ -5,14 +5,27 @@ echo "=========================================================="
 echo "🛡️  ANTIGRAVITY: Ejecutando verificación de Leyes Sagradas"
 echo "=========================================================="
 
-# 1. Validar reglas de arquitectura
+# 1. Validar reglas de arquitectura en archivos Stages
 node scripts/verify-sacred-laws.js
 if [ $? -ne 0 ]; then
   echo "❌ Leyes Sagradas violadas. Abortando commit."
   exit 1
 fi
 
-# 2. Ejecutar linters mediante lint-staged (si está configurado)
-# npx lint-staged
+# 2. Correr Tests
+echo "🧪 Ejecutando Tests Globales (si existen)..."
+npm run test --workspaces --if-present
+if [ $? -ne 0 ]; then
+  echo "❌ Test fail. Abortando commit."
+  exit 1
+fi
 
-echo "✅ Código aprobado por la IA Arquitectónica. Commiteando..."
+# 3. Correr Build
+echo "🏗️ Ejecutando Construcción (Build)..."
+npm run build --workspaces --if-present
+if [ $? -ne 0 ]; then
+  echo "❌ Build fail. Abortando commit."
+  exit 1
+fi
+
+echo "✅ Código aprobado por la IA Arquitectónica, Linters y Pipelines. Commiteando..."

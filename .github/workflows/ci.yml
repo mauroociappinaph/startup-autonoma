@@ -2,9 +2,9 @@ name: CI Validation - Sacred Laws
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "develop"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "develop"]
 
 jobs:
   validate-sacred-laws:
