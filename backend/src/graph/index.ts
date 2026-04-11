@@ -1,6 +1,5 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { AgentAnnotation } from "./state.js";
-import { AgentStateType } from "../types/state.js";
 import { ceo_node } from "../nodes/ceo.js";
 
 /**

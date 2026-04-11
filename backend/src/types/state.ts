@@ -8,5 +8,5 @@ export interface AgentStateType {
   messages: BaseMessage[];
   executive_summary: string;
   retry_count: number;
-  [key: string]: any; // Firma de índice requerida por LangGraph
+  [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)
 }
