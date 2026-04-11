@@ -6,9 +6,6 @@ import { SystemMessage, AIMessage, ToolMessage, BaseMessage } from "@langchain/c
 import { LLMFactory } from "../services/llmFactory.js";
 import { ChatOpenAI } from "@langchain/openai";
 
-/** Mapa tipado de herramientas disponibles para el Researcher. */
-const toolMap = { list_dir, read_file } as const;
-
 /** Lista de herramientas para binding del modelo. */
 const toolList = [list_dir, read_file];
 
