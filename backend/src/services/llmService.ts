@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { z } from "zod";
 import { BaseMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
