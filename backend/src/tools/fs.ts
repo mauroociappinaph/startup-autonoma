@@ -31,8 +31,8 @@ export const list_dir = tool(
         name: e.name,
         type: e.isDirectory() ? "directory" : "file"
       }));
-    } catch (error: any) {
-      return { error: error.message };
+    } catch (error: unknown) {
+      return { error: error instanceof Error ? error.message : String(error) };
     }
   },
   {
@@ -53,8 +53,8 @@ export const read_file = tool(
       const safePath = validatePath(file_path);
       const content = await fs.readFile(safePath, "utf-8");
       return content;
-    } catch (error: any) {
-      return { error: error.message };
+    } catch (error: unknown) {
+      return { error: error instanceof Error ? error.message : String(error) };
     }
   },
   {
