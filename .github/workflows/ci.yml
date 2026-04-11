@@ -47,3 +47,6 @@ jobs:
           pip install ruff
           ruff check .
           ruff format --check .
+
+      - name: Build Application (Turbo)
+        run: npx turbo run build

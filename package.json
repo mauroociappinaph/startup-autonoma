@@ -8,16 +8,16 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "concurrently -c \"cyan,magenta,yellow\" \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ai\"",
+    "dev": "turbo run dev",
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
-    "dev:ai": "cd ai-engine && uvicorn app.main:app --reload --port 8000",
-    "test": "npm run test --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present && cd ai-engine && ruff check ."
+    "dev:ai": "cd ai-engine && [ -d \".venv\" ] && source .venv/bin/activate || echo 'Sin entorno virtual' && uvicorn app.main:app --reload --port 8000",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "lint": "turbo run lint && cd ai-engine && ruff check ."
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "turbo": "^2.1.2",
     "husky": "^9.0.11"
   }
 }

@@ -118,9 +118,9 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 
 ## --- Automatización, CI/CD y Autonomía ---
 
-- **Pre-commit Hooks (Husky):** Antes de cualquier commit (sea humano o Worker), se activa Husky para ejecutar `.husky/pre-commit`. Este lanza los linters (Prettier, ESLint, Ruff) y evalúa los Scripts de Validación (Leyes Sagradas).
-- **Scripts de Validación (`/scripts`):** Auditan el sistema buscando violaciones a las reglas (límites de 300 líneas, tipos fuera de `/types` e imports conflictivos).
-- **GitHub Actions (`.github/workflows`):** Último seguro de vida. Replica la validación de linting y rulesets sobre el entorno de origin.
+- **Pre-commit Hooks (Husky):** Evaluación estricta de las Leyes Sagradas (límite de líneas, rutas, convenciones) y ejecución de tests unitarios rápidos. *Nota Arquitectónica:* Nunca se corren operaciones pesadas (como Builders de Next.js) en este hook para no destruir la iteración veloz de los agentes.
+- **Orquestación Monorepo (Turbo):** El espacio de trabajo global emplea `Turborepo` para ejecutar la lógica de `dev`, `build` y `lint` en paralelo con caché nativa sobre Node.js y React, abarcando también la protección de `.venv` en Python.
+- **GitHub Actions (`.github/workflows`):** Nuestro pipeline maestro corre sobre `main` y `develop`. Asume la responsabilidad de construcción dura (`Turborepo build`) y verificación de Linters (Ruff, ESLint).
 - **Ciclo TDD Autónomo:** Antes de implementar código, se crean los tests (ej. Jest). El Chief ejecuta los tests en la CLI; si fallan, inyecta el `stderr` al Worker iterativamente hasta que pasen.
 
 ---

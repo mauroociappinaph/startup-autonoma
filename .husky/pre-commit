@@ -20,12 +20,4 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# 3. Correr Build
-echo "🏗️ Ejecutando Construcción (Build)..."
-npm run build --workspaces --if-present
-if [ $? -ne 0 ]; then
-  echo "❌ Build fail. Abortando commit."
-  exit 1
-fi
-
-echo "✅ Código aprobado por la IA Arquitectónica, Linters y Pipelines. Commiteando..."
+echo "✅ Código aprobado por las Leyes de Arquitectura y los Tests Unitarios. Commiteando..."
