@@ -33,27 +33,25 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── nodes/                     # Lógica atómica bloque a bloque (testable)
 │   │   ├── evals/                     # LLM-as-a-Judge (Evaluación de alucinaciones)
 │   │   ├── agents/                    # Prompts del sistema o ensamblador de sub-grafos
-│   │   ├── habilidades/               # Primitivas (Prompts + Chains + Bindings)
-│   │   ├── herramientas/ (Tools)      # Implementación (Local/Remoto + Zod Contracts)
-│   │   ├── servicios/ 
+│   │   ├── skills/                    # Primitivas (Prompts + Chains + Bindings)
+│   │   ├── tools/                     # Implementación (Local/Remoto + Zod Contracts)
+│   │   ├── services/ 
 │   │   │   ├── llmFactory.ts          # Patrón Factory para inyección de Modelos. Aisla SDKs.
 │   │   │   ├── llmRouter.ts           # Enrutamiento Inteligente (Modelos Rápidos vs Pesados)
-│   │   │   └── orquestador.ts         # Orquestación general de lógica de negocio
+│   │   │   └── orchestrator.ts        # Orquestación general de lógica de negocio
 │   │   ├── workers/                   # Procesos async (BullMQ)
 │   │   ├── jobs/                      # Colas
-│   │   ├── controladores/             # Adaptadores HTTP
-│   │   ├── rutas/                     # Endpoints
-│   │   ├── contratos/                 # Schemas Zod y validaciones
-│   │   ├── puertos_mcp/               # Adaptadores a servidores MCP (stdio)
-│   │   ├── state/                     # Definición de Estados y Reducers (TypedDict/Zod)
-│   │   ├── nodes/                     # Nodos atómicos (testables aisladamente)
-│   │   ├── db/                        # Conexión a Supabase / Migraciones
-│   │   ├── modelos/                   # Esquemas Core
+│   │   ├── controllers/               # Adaptadores HTTP
+│   │   ├── routes/                    # Endpoints
+│   │   ├── contracts/                 # Schemas Zod y validaciones
+│   │   ├── mcp_ports/                 # Adaptadores a servidores MCP (stdio)
+│   │   ├── db/                        # Conexión a DB / Migraciones
+│   │   ├── models/                    # Esquemas Core
 │   │   ├── middleware/                # Cross-cutting (Auth, Trace, Log)
-│   │   ├── observabilidad/            # Debug (Tracer, Logs, LangSmith)
-│   │   ├── configuracion/             # Zod validation para .env secrets
+│   │   ├── observability/             # Debug (Tracer, Logs, LangSmith)
+│   │   ├── config/                    # Zod validation para .env secrets
 │   │   ├── helpers/                   # Utils puras (No side-effects)
-│   │   └── tipos/                     # Tipos internos
+│   │   └── types/                     # Tipos internos
 │   ├── tests/
 │   ├── .env.example                 # Esquema de Secretos Requeridos
 │   ├── .eslintrc.json               # Reglas de linting Node
@@ -108,8 +106,8 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 7.  **Resiliencia Activa (Fallback):** Todas las llamadas externas a LLMs deben tener un wrapper de `Retry` (Tolerancia HTTP 429) y un `Fallback` automático hacia un modelo secundario.
 8.  **JSDoc/Docstrings:** Documentación obligatoria en toda lógica pública o compleja.
 9.  **Types de Typescript:** Siempre van en `/types`. Nunca en los archivos donde se implementan.
-10. **Rutas relativas:** Siempre usar rutas relativas para importar módulos internos.
-11. **Linting y Formateo Automatizado:** El estilo de código NO se debate. Prettier y ESLint (Node/React) o Ruff (Python) deben ejecutarse **antes** de cualquier commit. Los agentes no deben gastar tokens discutiendo estilos.
+10. **Path Aliases Obligatorios:** Prohibido usar rutas relativas complejas (`../../../../`). A las IAs se les da pésimo calcular la profundidad del árbol. Siempre usar los Path Aliases configurados en `tsconfig.json` (ej. `import { tool } from '@/tools/...'`).
+11. **Linting y Formateo Automatizado:** El estilo de código NO se debate. Prettier y ESLint (Node) o Ruff (Python) evalúan todo **antes** del commit.
 12. **Human-in-the-Loop (HITL):** Prohibido el vuelo libre en rutas críticas. Tareas de despliegue, gasto de dinero o envíos masivos deben incluir un breakpoint (`interrupt_before`) en LangGraph esperando la pre-aprobación humana desde el frontend (SSE).
 
 ---
@@ -141,5 +139,5 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 
 1.  **Docs de Arquitectura:** `/docs/architecture/`.
 2.  **Definición de Estado:** `/backend/src/graph/state.ts` (Incluye `Executive_Summary` y `retry_count`).
-3.  **Memoria Semántica:** Conocimiento dinámico en **Engram** (Acceso validado por *Least Privilege Contex* para evitar alucinaciones).
-4.  **Protocolo de Comunicación:** Model Context Protocol (MCP) y REST (Abandono explícito de gRPC para el MVP).
+3.  **Memoria Semántica (Engram):** Memoria persistente a largo plazo. Los agentes acceden a ella dinámicamente mediante la herramienta/mcp `query_engram_tool` para recuperar el contexto histórico, configuraciones y leyes sagradas antes de planificar o ejecutar, evitando el desborde de su ventana de contexto.
+4.  **Protocolo de Comunicación:** Model Context Protocol (MCP) y REST.

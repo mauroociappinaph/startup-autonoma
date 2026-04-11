@@ -10,7 +10,7 @@ Antes de que este código se unifique a `main` o `develop`, el Agente/Humano gar
 - [ ] **Sin Super-Archivos**: Ningún archivo excede las 300 líneas (SRP protegido).
 - [ ] **Cobertura de TDD**: Se adjuntaron tests unitarios (o E2E si aplica) y fueron validados en CLI exitosamente.
 - [ ] **Linter Aprobado**: Pasó Prettier/Ruff y el pipeline CI (GitHub Actions) está en verde.
-- [ ] **Rutas Relativas**: Todos los imports internos son limpios (`./` ó `../` ó `@/`).
+- [ ] **Path Aliases**: Está prohibido usar rutas relativas profundas (`../../`). Uso exclusivamente el estándar de Path Aliases (`@/tools/`, etc) para prevenir alucinaciones de ruta.
 
 ## 🎫 Ticket Asociado
 Fixes # (Número de Issue)

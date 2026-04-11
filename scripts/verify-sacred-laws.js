@@ -46,12 +46,10 @@ function checkSacredLaws(filePath) {
         errors++;
       }
 
-      // Regla 8: Rutas relativas para importar módulos internos
-      // Detectamos si hay imports absolutos apuntando a carpetas del proyecto
-      // Ej: import { X } from 'src/algo' o import { Y } from 'backend/algo'
-      const absoluteImportMatch = line.match(/import\s+.*from\s+['"](src\/|backend\/|frontend\/|ai-engine\/|app\/).*['"]/);
-      if (absoluteImportMatch) {
-         console.error(`🚨 [LEY #8 ROTA]: ${filePath}:${i + 1} usa un import absoluto hacia un módulo interno (${absoluteImportMatch[1]}). Usa './' o '../'.`);
+      // Regla 10: Path Aliases (Prohibidas las relativas complejas)
+      // Buscamos imports espagueti estilo import x from '../../../../algo'
+      if (line.match(/import\s+.*from\s+['"]\.\.\/\.\.\//)) {
+         console.error(`🚨 [LEY #10 ROTA]: ${filePath}:${i + 1} usa un import relativo muy profundo ('../../'). Usa los Path Aliases configurados ('@/...') para ayudar a las IAs.`);
          errors++;
       }
     }
