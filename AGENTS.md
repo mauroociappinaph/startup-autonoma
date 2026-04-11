@@ -20,76 +20,83 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 ```text
 /
-├── .github/
-│   ├── dependabot.yml               # Bot de escaneo de vulnerabilidades
-│   └── workflows/                   # CI/CD pipelines (GitHub Actions)
-├── .husky/                          # Pre-commit (Lint, Rules) y Commit-msg (Commitlint)
-
-├── /backend (Node.js - Orquestador)
-│   ├── src
-│   │   ├── index.ts                   # Bootstrap (Express + Graph runner)
-│   │   ├── graph/                     # Instanciación del StateGraph general
-│   │   ├── state/                     # Definición de Estados y Reducers (TypedDict/Zod)
-│   │   ├── nodes/                     # Lógica atómica bloque a bloque (testable)
-│   │   ├── evals/                     # LLM-as-a-Judge (Evaluación de alucinaciones)
-│   │   ├── agents/                    # Prompts del sistema o ensamblador de sub-grafos
-│   │   ├── skills/                    # Primitivas (Prompts + Chains + Bindings)
-│   │   ├── tools/                     # Implementación (Local/Remoto + Zod Contracts)
-│   │   ├── services/ 
-│   │   │   ├── llmFactory.ts          # Patrón Factory para inyección de Modelos. Aisla SDKs.
-│   │   │   ├── llmService.ts          # Orquestador de Trimming + Structured Outputs.
-│   │   │   ├── llmRouter.ts           # Enrutamiento Inteligente (Modelos Rápidos vs Pesados)
-│   │   │   └── orchestrator.ts        # Orquestación general de lógica de negocio
-│   │   ├── checkpointers/             # Persistencia LangGraph (PostgresSaver / MemorySaver)
-│   │   ├── jobs/                      # Colas
-│   │   ├── controllers/               # Adaptadores HTTP
-│   │   ├── routes/                    # Endpoints
-│   │   ├── contracts/                 # Schemas Zod y validaciones (Incluye contratos SSE)
-│   │   ├── mcp_ports/                 # Adaptadores a servidores MCP (stdio)
-│   │   ├── db/                        # Conexión a DB / Migraciones
-│   │   ├── models/                    # Esquemas Core
-│   │   ├── middleware/                # Cross-cutting (Auth, Trace, Log)
-│   │   ├── observability/             # Debug (Tracer, Logs, LangSmith)
-│   │   ├── config/                    # Zod validation para .env secrets
-│   │   ├── helpers/                   # Utils puras (No side-effects)
-│   │   └── types/                     # Tipos internos
-│   ├── tests/
-│   ├── .env.example                 # Esquema de Secretos Requeridos
-│   ├── .eslintrc.json               # Reglas de linting Node
-│   ├── .prettierrc                  # Formateo Node
-│   └── package.json
-
-├── /ai-engine (Python - Heavy Tools)
-│   ├── app/
-│   │   ├── main.py                  # FastAPI / MCP Server (stdio)
-│   │   ├── api/                     # REST Endpoints (if applicable)
-│   │   ├── workers/                 # Scraping logic, ML, etc.
-│   │   ├── tools/                   # Tools accessible via MCP
-│   │   ├── contracts/               # Pydantic Models
-│   │   ├── helpers/                 # Python Utils
-│   │   └── core/                    # Config + Settings
-│   ├── tests/
-│   ├── pyproject.toml               # Configuración de Ruff (Lint/Format Python)
-│   └── requirements.txt
-
-├── /frontend (Next.js 15)
-│   ├── src
-│   │   ├── app/                     # App Router (Pages, Layouts, API Routes)
-│   │   ├── components/              # UI Atómico (Shadcn + Custom)
-│   │   ├── hooks/                   # Lógica de React compartida
-│   │   ├── store/                   # Zustand (Estado global de UI/SSE)
-│   │   ├── api/                     # Clientes Axios / TanStack Query
-│   │   ├── helpers/                 # Utilidades de transformación
-│   │   ├── styles/                  # Tailwind CSS y config
-│   │   └── types/                   # Interfaces locales del front
-│   ├── public/                      # Assets estáticos
-│   ├── .eslintrc.json               # Reglas de linting React/Next
-│   └── .prettierrc                  # Formateo Frontend
-├── /types (Monorepo Compartido)
-├── /docs                            # Arquitectura, ADRs, Specs
-├── /skills                          # Prompts globales
-├── /scripts                         # Scritps de validación de Leyes Sagradas y setups
-└── /infra                           # Docker + Terraform + Monitoring
+├── /.github
+│   ├── /ISSUE_TEMPLATE
+│   ├── /workflows
+├── .gitignore
+├── AGENTS.md
+├── GEMINI.md
+├── /ai-engine
+│   ├── /app
+│   │   ├── /api
+│   │   ├── /contratos
+│   │   ├── /core
+│   │   ├── /helpers
+│   │   ├── /herramientas
+│   │   ├── /workers
+│   ├── package.json
+│   ├── /tests
+├── /backend
+│   ├── package.json
+│   ├── /src
+│   │   ├── /agents
+│   │   ├── /config
+│   │   ├── /configuracion
+│   │   ├── /contracts
+│   │   ├── /contratos
+│   │   ├── /controladores
+│   │   ├── /db
+│   │   ├── /evals
+│   │   ├── /graph
+│   │   ├── /helpers
+│   │   ├── /jobs
+│   │   ├── /middleware
+│   │   ├── /modelos
+│   │   ├── /models
+│   │   ├── /nodes
+│   │   ├── /observabilidad
+│   │   ├── /observability
+│   │   ├── /puertos_mcp
+│   │   ├── /rutas
+│   │   ├── /services
+│   │   ├── /servicios
+│   │   ├── /skills
+│   │   ├── /state
+│   │   ├── /tipos
+│   │   ├── /tools
+│   │   ├── /types
+│   │   ├── /workers
+│   ├── /tests
+│   ├── tsconfig.json
+├── commitlint.config.js
+├── /docs
+│   ├── /agents
+│   │   ├── /chiefs
+│   │   ├── /workers
+│   ├── /architecture
+│   ├── /memory
+│   ├── /ux
+├── /frontend
+│   ├── .eslintrc.json
+│   ├── package.json
+│   ├── /public
+│   ├── /src
+│   │   ├── /api
+│   │   ├── /app
+│   │   ├── /components
+│   │   ├── /helpers
+│   │   ├── /hooks
+│   │   ├── /store
+│   │   ├── /styles
+│   │   ├── /types
+├── /infra
+├── package-lock.json
+├── package.json
+├── /scripts
+├── /skills
+├── tsconfig.json
+├── turbo.json
+├── /types
 ```
 
 ---
