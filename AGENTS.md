@@ -99,7 +99,7 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 
 - **GitHub CLI (`gh`):** Herramienta principal para operar sobre el repo.
 - **GitHub Actions:** Pipeline de tests, linting y despliegue continuo.
-- **Traceability:** Cada flujo genera un `trace_id` persistente para logs.
+- **Traceability:** Cada flujo genera un `trace_id` persistente para logs, transmitido nativamente en los headers de gRPC.
 
 ---
 
@@ -108,3 +108,4 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 1.  **Docs de Arquitectura:** `/docs/architecture/`.
 2.  **Definición de Estado:** `/backend/src/graph/state.ts`.
 3.  **Memoria Semántica:** Conocimiento dinámico en **Engram**.
+4.  **Protocolo de Comunicación:** gRPC (Backend ↔ AI Engine) para baja latencia.

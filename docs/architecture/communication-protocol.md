@@ -12,18 +12,18 @@ Este documento define cómo interactúan los agentes para garantizar orden, esca
 
 1.  **CEO a Chief:** Entrega un "Sub-objetivo" claro + métricas de éxito + `trace_id`.
 2.  **Chief a Worker:** Desglosa en "Tareas Atómicas". Entrega las herramientas necesarias.
-3.  **Ejecución:** El Worker devuelve un `Result` (data, success, log) vinculado al mismo `trace_id`.
+3.  **Ejecución:** El Worker devuelve un `Result` (data, success, log) vinculado al mismo `trace_id` a través de canales **gRPC** de alta performance.
 
 ## Flujo de Validación (Bottom-Up)
 
-1.  **Validación Técnica (Chief):** Revisa el resultado. Si falla, reinicia el nodo (edge cíclico) o escala al CEO.
+1.  **Validación Técnica (Chief):** Revisa el resultado recibido por gRPC. Si falla, reinicia el nodo (edge cíclico) o escala al CEO.
 2.  **Validación Estratégica (CEO):** Revisa el consolidado contra el plan original.
 3.  **Aprobación Final (Usuario):** Pausa obligatoria en puntos críticos para esperar validación humana.
 
 ## Manejo de Conflictos y Errores
 
 - **Deadlocks:** Si un Chief y un Worker no llegan a acuerdo tras 3 iteraciones, se escala automáticamente al CEO.
-- **Fallas de Herramientas:** Reportar `success: False` con el error exacto; el Chief decide si reintentar o pivotar estrategia.
+- **Fallas de Herramientas/gRPC:** Reportar `success: False` con el error exacto (o código de estado gRPC); el Chief decide si reintentar o pivotar estrategia.
 
 ## Interacción con la Memoria (Engram)
 
