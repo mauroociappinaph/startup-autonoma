@@ -1,9 +1,16 @@
 import { AgentStateType } from "../types/state.js";
 import { LLMService } from "../services/llmService.js";
 import { ResearcherResponseSchema } from "../contracts/researcher.js";
-import { systemTools } from "../tools/index.js";
+import { list_dir, read_file } from "../tools/index.js";
 import { SystemMessage, AIMessage, ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { LLMFactory } from "../services/llmFactory.js";
+import { ChatOpenAI } from "@langchain/openai";
+
+/** Mapa tipado de herramientas disponibles para el Researcher. */
+const toolMap = { list_dir, read_file } as const;
+
+/** Lista de herramientas para binding del modelo. */
+const toolList = [list_dir, read_file];
 
 /**
  * Nodo ResearchWorker: El explorador técnico.
@@ -12,11 +19,9 @@ import { LLMFactory } from "../services/llmFactory.js";
 export async function researcher_node(state: AgentStateType) {
   console.log("--- EJECUTANDO NODO RESEARCHER ---");
 
-  // Usamos el modelo SMART (NVIDIA) para asegurar precisión en la búsqueda
-  const model = LLMFactory.createModel({ type: "smart", temperature: 0 }) as any;
-  
-  // Binding de herramientas para que el modelo pueda "llamarlas"
-  const modelWithTools = model.bindTools(systemTools);
+  // Casteamos a ChatOpenAI porque NVIDIA usa el bridge OpenAI-compatible
+  const model = LLMFactory.createModel({ type: "smart", temperature: 0 }) as ChatOpenAI;
+  const modelWithTools = model.bindTools(toolList);
 
   const system_prompt = new SystemMessage(`
     Eres el ResearchWorker de una Startup Autónoma. 
@@ -34,8 +39,7 @@ export async function researcher_node(state: AgentStateType) {
     IMPORTANTE: Sé preciso y técnico. No inventes archivos que no existen.
   `);
 
-  // Bucle de herramientas simple (Autonomous Loop)
-  let currentMessages: BaseMessage[] = [system_prompt, ...state.messages];
+  const currentMessages: BaseMessage[] = [system_prompt, ...state.messages];
   let loopCount = 0;
   const MAX_LOOPS = 5;
 
@@ -46,19 +50,27 @@ export async function researcher_node(state: AgentStateType) {
     currentMessages.push(response);
 
     if (!response.tool_calls || response.tool_calls.length === 0) {
-      break; 
+      break;
     }
 
     for (const toolCall of response.tool_calls) {
+      if (!toolCall.id) continue;
       console.log(`🛠️ Ejecutando herramienta: ${toolCall.name}...`);
-      const tool = systemTools.find(t => t.name === toolCall.name);
-      
-      if (!tool || !toolCall.id) continue;
 
-      const toolResult = await (tool as any).invoke(toolCall.args);
-      const content = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult);
+      let toolResult: string;
+
+      if (toolCall.name === "list_dir") {
+        const result = await list_dir.invoke({ dir_path: toolCall.args.dir_path as string | undefined });
+        toolResult = typeof result === "string" ? result : JSON.stringify(result);
+      } else if (toolCall.name === "read_file") {
+        const result = await read_file.invoke({ file_path: toolCall.args.file_path as string });
+        toolResult = typeof result === "string" ? result : JSON.stringify(result);
+      } else {
+        toolResult = `Error: herramienta desconocida "${toolCall.name}"`;
+      }
+
       currentMessages.push(new ToolMessage({
-        content: content,
+        content: toolResult,
         tool_call_id: toolCall.id
       }));
     }
@@ -67,7 +79,7 @@ export async function researcher_node(state: AgentStateType) {
 
   // SÍNTESIS FINAL
   console.log("📊 Sintetizando hallazgos de investigación...");
-  
+
   const synthesisResponse = await LLMService.getStructuredResponse(
     { type: "smart", temperature: 0 },
     [
