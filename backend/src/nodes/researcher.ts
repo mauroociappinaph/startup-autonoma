@@ -21,18 +21,18 @@ export async function researcher_node(state: AgentStateType) {
   const modelWithTools = model.bindTools(toolList);
 
   const system_prompt = new SystemMessage(`
-    Eres el ResearchWorker de una Startup Autónoma. 
+    Eres el ResearchWorker de una Startup Autónoma.
     Tu misión es explorar el repositorio para responder preguntas técnicas del CEO.
-    
+
     HERRAMIENTAS DISPONIBLES:
     - list_dir: Para ver qué hay en las carpetas.
     - read_file: Para leer el código de archivos específicos.
-    
+
     ESTRATEGIA:
     1. Comienza explorando la raíz para entender la estructura.
     2. Lee archivos clave (package.json, src/index.ts, etc.) si es necesario.
     3. Cuando tengas la información completa, genera un reporte final.
-    
+
     IMPORTANTE: Sé preciso y técnico. No inventes archivos que no existen.
   `);
 
