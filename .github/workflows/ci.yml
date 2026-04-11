@@ -1,0 +1,49 @@
+name: CI Validation - Sacred Laws
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate-sacred-laws:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci || npm install # Asume que el package.json estará en root o backend
+
+      - name: Run Sacred Laws Verification
+        run: node scripts/verify-sacred-laws.js
+
+      - name: Run Prettier & ESLint (Backend)
+        working-directory: ./backend
+        run: |
+          npx prettier --check "src/**/*.ts"
+          npx eslint "src/**/*.ts" --max-warnings=0
+
+      - name: Run Prettier & ESLint (Frontend)
+        working-directory: ./frontend
+        run: |
+          npx prettier --check "src/**/*.{ts,tsx}"
+          npx eslint "src/**/*.{ts,tsx}" --max-warnings=0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Ruff (AI Engine)
+        working-directory: ./ai-engine
+        run: |
+          pip install ruff
+          ruff check .
+          ruff format --check .

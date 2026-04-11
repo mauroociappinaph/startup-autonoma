@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "=========================================================="
+echo "🛡️  ANTIGRAVITY: Ejecutando verificación de Leyes Sagradas"
+echo "=========================================================="
+
+# 1. Validar reglas de arquitectura
+node scripts/verify-sacred-laws.js
+if [ $? -ne 0 ]; then
+  echo "❌ Leyes Sagradas violadas. Abortando commit."
+  exit 1
+fi
+
+# 2. Ejecutar linters mediante lint-staged (si está configurado)
+# npx lint-staged
+
+echo "✅ Código aprobado por la IA Arquitectónica. Commiteando..."

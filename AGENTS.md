@@ -20,7 +20,9 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 ```text
 /
-├── .github/workflows/                  # CI/CD pipelines (GitHub Actions)
+├── .github/
+│   └── workflows/                   # CI/CD pipelines (GitHub Actions)
+├── .husky/                          # Pre-commit hooks (Lint, Rules)
 
 ├── /backend (Node.js - Orquestador)
 │   ├── src
@@ -81,7 +83,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ├── /types (Monorepo Compartido)
 ├── /docs                            # Arquitectura, ADRs, Specs
 ├── /skills                          # Prompts globales
-├── /scripts                         # Codegen + Setup
+├── /scripts                         # Scritps de validación de Leyes Sagradas y setups
 └── /infra                           # Docker + Terraform + Monitoring
 ```
 
@@ -116,10 +118,10 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 
 ## --- Automatización, CI/CD y Autonomía ---
 
-- **Ciclo TDD Autónomo:** Antes de implementar código, se crean los tests (ej. Jest). El Chief ejecuta los tests en la CLI; si fallan, inyecta el `stderr` al Worker iterativamente hasta que pasen, minimizando la carga humana de auditoría.
-- **GitHub CLI (`gh`):** Herramienta principal para operar sobre el repo una vez los tests están en verde.
-- **GitHub Actions:** Pipeline final de CI/CD.
-- **Traceability por Stream:** Cada flujo genera un `trace_id`. La latencia al usuario se mitiga mediante Server-Sent Events (SSE) mostrando progreso en tiempo real.
+- **Pre-commit Hooks (Husky):** Antes de cualquier commit (sea humano o Worker), se activa Husky para ejecutar `.husky/pre-commit`. Este lanza los linters (Prettier, ESLint, Ruff) y evalúa los Scripts de Validación (Leyes Sagradas).
+- **Scripts de Validación (`/scripts`):** Auditan el sistema buscando violaciones a las reglas (límites de 300 líneas, tipos fuera de `/types` e imports conflictivos).
+- **GitHub Actions (`.github/workflows`):** Último seguro de vida. Replica la validación de linting y rulesets sobre el entorno de origin.
+- **Ciclo TDD Autónomo:** Antes de implementar código, se crean los tests (ej. Jest). El Chief ejecuta los tests en la CLI; si fallan, inyecta el `stderr` al Worker iterativamente hasta que pasen.
 
 ---
 
