@@ -29,10 +29,10 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ├── /ai-engine
 │   ├── /app
 │   │   ├── /api
-│   │   ├── /contratos
+│   │   ├── /contracts
 │   │   ├── /core
 │   │   ├── /helpers
-│   │   ├── /herramientas
+│   │   ├── /tools
 │   │   ├── /workers
 │   ├── package.json
 │   ├── /tests
@@ -41,28 +41,22 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── /src
 │   │   ├── /agents
 │   │   ├── /config
-│   │   ├── /configuracion
 │   │   ├── /contracts
-│   │   ├── /contratos
-│   │   ├── /controladores
+│   │   ├── /controllers
 │   │   ├── /db
 │   │   ├── /evals
 │   │   ├── /graph
 │   │   ├── /helpers
 │   │   ├── /jobs
+│   │   ├── /mcp_ports
 │   │   ├── /middleware
-│   │   ├── /modelos
 │   │   ├── /models
 │   │   ├── /nodes
-│   │   ├── /observabilidad
 │   │   ├── /observability
-│   │   ├── /puertos_mcp
-│   │   ├── /rutas
+│   │   ├── /routes
 │   │   ├── /services
-│   │   ├── /servicios
 │   │   ├── /skills
 │   │   ├── /state
-│   │   ├── /tipos
 │   │   ├── /tools
 │   │   ├── /types
 │   │   ├── /workers
