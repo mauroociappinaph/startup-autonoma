@@ -1,0 +1,33 @@
+name: 🚀 Feature Request
+description: El Director (Vos) o un Manager piden una nueva funcionalidad
+title: "feat(modulo): [Título descriptivo]"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: 🎯 Contexto y Objetivo
+      description: ¿Qué problema resolvemos con esta feature? (Pensá en el impacto de negocio).
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: 📋 Criterios de Aceptación (Checklist)
+      description: Requisitos técnicos indispensables que el GitWorker debe tildar antes de mandar código.
+      value: |
+        - [ ] La feature debe hacer X...
+        - [ ] Validaciones de entrada implementadas
+        - [ ] Tests unitarios agregados y en verde
+    validations:
+      required: true
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: ⚡ Nivel de Urgencia
+      options:
+        - 🔥 Alta (Bloqueante)
+        - 🚀 Media (Roadmap actual)
+        - ☕ Baja (Backlog a futuro)
+    validations:
+      required: true
