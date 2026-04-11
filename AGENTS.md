@@ -21,8 +21,9 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ```text
 /
 ├── .github/
+│   ├── dependabot.yml               # Bot de escaneo de vulnerabilidades
 │   └── workflows/                   # CI/CD pipelines (GitHub Actions)
-├── .husky/                          # Pre-commit hooks (Lint, Rules)
+├── .husky/                          # Pre-commit (Lint, Rules) y Commit-msg (Commitlint)
 
 ├── /backend (Node.js - Orquestador)
 │   ├── src
@@ -50,6 +51,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── helpers/                   # Utils puras (No side-effects)
 │   │   └── tipos/                     # Tipos internos
 │   ├── tests/
+│   ├── .env.example                 # Esquema de Secretos Requeridos
 │   ├── .eslintrc.json               # Reglas de linting Node
 │   ├── .prettierrc                  # Formateo Node
 │   └── package.json
@@ -118,8 +120,10 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 
 ## --- Automatización, CI/CD y Autonomía ---
 
+- **Conventional Commits (`commit-msg`):** Obligatorio el uso estricto de formato `tipo(scope): mensaje` evaluado por `@commitlint`. Si la IA o el humano alucina un formato, el commit se destruye.
 - **Pre-commit Hooks (Husky):** Evaluación estricta de las Leyes Sagradas (límite de líneas, rutas, convenciones) y ejecución de tests unitarios rápidos. *Nota Arquitectónica:* Nunca se corren operaciones pesadas (como Builders de Next.js) en este hook para no destruir la iteración veloz de los agentes.
 - **Orquestación Monorepo (Turbo):** El espacio de trabajo global emplea `Turborepo` para ejecutar la lógica de `dev`, `build` y `lint` en paralelo con caché nativa sobre Node.js y React, abarcando también la protección de `.venv` en Python.
+- **Seguridad Continua (Dependabot):** Escaneo semanal y apertura de PRs automáticos frente a librerías obsoletas tanto en Python (`pip`) como en Node (`npm`).
 - **GitHub Actions (`.github/workflows`):** Nuestro pipeline maestro corre sobre `main` y `develop`. Asume la responsabilidad de construcción dura (`Turborepo build`) y verificación de Linters (Ruff, ESLint).
 - **Ciclo TDD Autónomo:** Antes de implementar código, se crean los tests (ej. Jest). El Chief ejecuta los tests en la CLI; si fallan, inyecta el `stderr` al Worker iterativamente hasta que pasen.
 
