@@ -32,9 +32,12 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── state/                     # Definición de Estados y Reducers (TypedDict/Zod)
 │   │   ├── nodes/                     # Lógica atómica bloque a bloque (testable)
 │   │   ├── agents/                    # Prompts del sistema o ensamblador de sub-grafos
-│   │   ├── skills/                    # Primitivas (Prompts + Chains + Bindings)
+│   │   ├── habilidades/               # Primitivas (Prompts + Chains + Bindings)
 │   │   ├── herramientas/ (Tools)      # Implementación (Local/Remoto + Zod Contracts)
-│   │   ├── servicios/                 # Lógica de negocio + Cliente IA + Orquestación
+│   │   ├── servicios/ 
+│   │   │   ├── llmFactory.ts          # Patrón Factory para inyección de Modelos. Aisla SDKs.
+│   │   │   ├── llmRouter.ts           # Enrutamiento Inteligente (Modelos Rápidos vs Pesados)
+│   │   │   └── orquestador.ts         # Orquestación general de lógica de negocio
 │   │   ├── workers/                   # Procesos async (BullMQ)
 │   │   ├── jobs/                      # Colas
 │   │   ├── controladores/             # Adaptadores HTTP
@@ -100,10 +103,12 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 3.  **Límites de Archivo:** Máximo **300 líneas**. Si se excede, se refactoriza y divide.
 4.  **Barrel Files:** Uso obligatorio de `index.ts` (o `__init__.py`) para exportaciones limpias.
 5.  **Tipado Estricto:** TypeScript obligatorio con validación **Zod**. Python con Type Hints y Pydantic.
-6.  **JSDoc/Docstrings:** Documentación obligatoria en toda lógica pública o compleja.
-7.  **Types de Typescript:** Siempre van en `/types`. Nunca en los archivos donde se implementan.
-8.  **Rutas relativas:** Siempre usar rutas relativas para importar módulos.
-9.  **Linting y Formateo Automatizado:** El estilo de código NO se debate. Prettier y ESLint (Node/React) o Ruff (Python) deben ejecutarse **antes** de cualquier commit. Los agentes no deben gastar tokens discutiendo estilos.
+6.  **Inversión de Dependencias (LLMs):** Ningún Agente (Nodo) importa directamente un SDK de IA (OpenAI, Groq, etc.). Todo modelo entra inyectado por la capa `servicios/llmFactory`. Si se cae un proveedor, solo se toca la Factory.
+7.  **Resiliencia Activa (Fallback):** Todas las llamadas externas a LLMs deben tener un wrapper de `Retry` (Tolerancia HTTP 429) y un `Fallback` automático hacia un modelo secundario.
+8.  **JSDoc/Docstrings:** Documentación obligatoria en toda lógica pública o compleja.
+9.  **Types de Typescript:** Siempre van en `/types`. Nunca en los archivos donde se implementan.
+10. **Rutas relativas:** Siempre usar rutas relativas para importar módulos internos.
+11. **Linting y Formateo Automatizado:** El estilo de código NO se debate. Prettier y ESLint (Node/React) o Ruff (Python) deben ejecutarse **antes** de cualquier commit. Los agentes no deben gastar tokens discutiendo estilos.
 
 ---
 
