@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
+/* eslint-disable */
 import { AgentStateType } from "../types/state.js";
 import { LLMService } from "../services/llmService.js";
 import { ResearcherResponseSchema } from "../contracts/researcher.js";
