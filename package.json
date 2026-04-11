@@ -1,5 +1,6 @@
 {
   "name": "startup-autonoma",
+  "packageManager": "npm@10.5.2",
   "version": "1.0.0",
   "description": "Orquestador de Agentes LangGraph",
   "private": true,

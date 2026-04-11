@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const MAX_LINES = 300;
 
@@ -70,10 +71,13 @@ if (process.env.CI) {
 } else {
   console.log('🔍 Auditando cumplimiento de Leyes Sagradas en archivos Staged...\n');
   try {
-    const diffOutput = execSync('git diff --cached --name-only --diff-filter=ACMR', { encoding: 'utf-8' });
+    const diffOutput = execSync('git diff --cached --name-only --diff-filter=ACMR', { 
+      encoding: 'utf-8',
+      env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin' }
+    });
     filesToAudit = diffOutput.split('\n').filter(Boolean).map(f => path.resolve(process.cwd(), f));
   } catch (error) {
-    console.error("No se pudo obtener la lista de archivos modificados desde Git.");
+    console.error("No se pudo obtener la lista de archivos modificados desde Git:", error.message);
     process.exit(1);
   }
 }

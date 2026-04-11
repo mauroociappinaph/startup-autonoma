@@ -1,5 +1,5 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+# Asegurar que los binarios comunes estén en el PATH para Husky
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
 
 echo "=========================================================="
 echo "🛡️  ANTIGRAVITY: Evaluando estructura del Mensaje de Commit"
