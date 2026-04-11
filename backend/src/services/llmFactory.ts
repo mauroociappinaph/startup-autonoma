@@ -14,7 +14,7 @@ export class LLMFactory {
    * Genera una instancia de modelo basada en el tipo (smart/fast).
    */
   static createModel(options: LLMFactoryOptions): BaseChatModel {
-    const provider = this._getProviderForType(options.type);
+    const provider = this.getProviderForType(options.type);
     const modelName = this._getModelName(options.type, provider);
 
     console.log(`🤖 Iniciando LLM: [${provider.toUpperCase()}] -> ${modelName}`);
@@ -66,9 +66,8 @@ export class LLMFactory {
 
   /**
    * Lógica de ruteo inteligente (Smart vs Fast)
-   * TODO: Mover a un llmRouter más complejo con balanceo.
    */
-  private static _getProviderForType(type: string): LLMProvider {
+  public static getProviderForType(type: string): LLMProvider {
     if (type === "smart") {
        return (process.env.PRIMARY_SMART_PROVIDER as LLMProvider) || "openai";
     }

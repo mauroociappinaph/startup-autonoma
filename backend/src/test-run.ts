@@ -11,22 +11,22 @@ async function testExecution() {
   try {
     const initialState = {
       messages: [
-        new HumanMessage("Hola CEO! Confirmame que podés leer este mensaje y decime qué modelo de IA sos."),
+        new HumanMessage("Hola CEO! Analiza el estado del proyecto y definamos el plan para hoy."),
       ],
     };
 
-    console.log("📨 Enviando mensaje al modelo de NVIDIA...");
+    console.log("🕸️ Iniciando ejecución del Grafo con NVIDIA Nemotron...");
     
-    // Invocamos el modelo directamente sin grafo para diagnosticar
-    const { LLMFactory } = await import("./services/llmFactory.js");
-    const model = LLMFactory.createModel({ type: "smart" });
-    const response = await model.invoke(initialState.messages);
+    const result = await graph.invoke(initialState, {
+        configurable: { thread_id: "test-session-1" }
+    });
 
-    console.log("\n--- RESPUESTA DE NVIDIA ---");
-    console.log(response.content);
+    console.log("\n--- RESULTADO DEL GRAFO ---");
+    console.log("Análisis del CEO:", result.executive_summary);
+    console.log("Número de mensajes en historial:", result.messages.length);
     console.log("---------------------------\n");
 
-    console.log("✅ Conectividad con NVIDIA confirmada.");
+    console.log("✅ Ciclo del CEO completado con éxito a través del Grafo.");
   } catch (error) {
     console.error("❌ Error en la ejecución del test:", error);
   }
