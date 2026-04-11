@@ -42,8 +42,8 @@ graph TD
 
 ## Estructura de Implementación
 
-- **`/backend` (Node.js)**: Cerebro lógico (LangGraph.js), servicios, herramientas, observabilidad.
-- **`/ai-engine` (Python)**: Motor para Tools pesadas (Scraping, AI). Comunicación vía **MCP (stdio) o FastAPI (REST)** abstraída del orquestador principal.
+- **`/backend` (Node.js)**: Cerebro lógico (LangGraph.js), services, tools, observability.
+- **`/ai-engine` (Python)**: Motor para Heavy Tools (Scraping, AI). Comunicación vía **MCP (stdio) o FastAPI (REST)** abstraída del orquestador principal.
 - **`/frontend` (Next.js 15)**: Consola de control.
 
 ## Persistencia y Memoria

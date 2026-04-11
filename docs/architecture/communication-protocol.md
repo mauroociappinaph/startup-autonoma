@@ -12,13 +12,13 @@ Este documento define cómo interactúan los agentes para garantizar orden, esca
 
 1.  **CEO a Chief:** Entrega un "Sub-objetivo" claro + métricas de éxito + `trace_id`.
 2.  **Chief a Worker:** Desglosa en "Tareas Atómicas". Entrega las herramientas necesarias (expuestas vía LangGraph CLI local o MCP).
-3.  **Ejecución:** El Worker devuelve un `Result` estructurado (success, error_message, stdout) vinculado al mismo `trace_id`. Si delega a Python, lo hace por **MCP (stdio) o REST**, evitando la complejidad de gRPC.
+3.  **Ejecución:** El Worker devuelve un `Result` estructurado (success, error_message, stdout) vinculado al mismo `trace_id`. Si delega a Python, lo hace por **MCP (stdio) o REST**.
 
 ## Flujo de Validación (Bottom-Up)
 
-1.  **Validación Técnica (Chief):** Revisa el resultado recibido por gRPC. Si falla, reinicia el nodo (edge cíclico) o escala al CEO.
+1.  **Validación Técnica (Chief):** Revisa el resultado estructurado. Si falla, reinicia el nodo (edge cíclico) o escala al CEO.
 2.  **Validación Estratégica (CEO):** Revisa el consolidado contra el plan original.
-3.  **Aprobación Final (Usuario):** Pausa obligatoria en puntos críticos para esperar validación humana.
+3.  **Aprobación Final (Usuario):** Pausa obligatoria en puntos críticos para esperar validación humana (HITL).
 
 ## Manejo de Conflictos y Errores
 

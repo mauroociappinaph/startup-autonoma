@@ -56,29 +56,36 @@ function checkSacredLaws(filePath) {
   }
 }
 
-const { execSync } = require('child_process');
+// Recolección de archivos a auditar
+let filesToAudit = [];
 
-console.log('🔍 Auditando cumplimiento de Leyes Sagradas en archivos Staged...\n');
-
-// Extraer sólo los archivos que se están subiendo en este commit
-let stagedFiles = [];
-try {
-  const diffOutput = execSync('git diff --cached --name-only --diff-filter=ACMR', { encoding: 'utf-8' });
-  stagedFiles = diffOutput.split('\n').filter(Boolean);
-} catch (error) {
-  console.error("No se pudo obtener la lista de archivos modificados desde Git.");
-  process.exit(1);
+if (process.env.CI) {
+  console.log('📡 Entorno CI detectado: Escaneando todo el proyecto...');
+  walkDir(process.cwd(), (fsPath) => {
+    // Solo auditamos archivos de código fuente relevantes
+    if (fsPath.endsWith('.ts') || fsPath.endsWith('.tsx') || fsPath.endsWith('.py')) {
+      filesToAudit.push(fsPath);
+    }
+  });
+} else {
+  console.log('🔍 Auditando cumplimiento de Leyes Sagradas en archivos Staged...\n');
+  try {
+    const diffOutput = execSync('git diff --cached --name-only --diff-filter=ACMR', { encoding: 'utf-8' });
+    filesToAudit = diffOutput.split('\n').filter(Boolean).map(f => path.resolve(process.cwd(), f));
+  } catch (error) {
+    console.error("No se pudo obtener la lista de archivos modificados desde Git.");
+    process.exit(1);
+  }
 }
 
-if (stagedFiles.length === 0) {
+if (filesToAudit.length === 0) {
   console.log('✅ No hay archivos para auditar. Adelante.');
   process.exit(0);
 }
 
-stagedFiles.forEach(file => {
-  const absolutePath = path.resolve(process.cwd(), file);
-  if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
-    checkSacredLaws(absolutePath);
+filesToAudit.forEach(file => {
+  if (fs.existsSync(file) && fs.statSync(file).isFile()) {
+    checkSacredLaws(file);
   }
 });
 

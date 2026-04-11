@@ -58,14 +58,14 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── .prettierrc                  # Formateo Node
 │   └── package.json
 
-├── /ai-engine (Python - Herramientas Pesadas)
+├── /ai-engine (Python - Heavy Tools)
 │   ├── app/
-│   │   ├── main.py                  # FastAPI / Servidor MCP (stdio)
-│   │   ├── api/                     # Endpoints REST (si aplica)
-│   │   ├── workers/                 # Lógica de scraping, ML, etc.
-│   │   ├── herramientas/            # Tools accesibles vía MCP
-│   │   ├── contratos/               # Modelos Pydantic
-│   │   ├── helpers/                 # Utils Python
+│   │   ├── main.py                  # FastAPI / MCP Server (stdio)
+│   │   ├── api/                     # REST Endpoints (if applicable)
+│   │   ├── workers/                 # Scraping logic, ML, etc.
+│   │   ├── tools/                   # Tools accessible via MCP
+│   │   ├── contracts/               # Pydantic Models
+│   │   ├── helpers/                 # Python Utils
 │   │   └── core/                    # Config + Settings
 │   ├── tests/
 │   ├── pyproject.toml               # Configuración de Ruff (Lint/Format Python)
@@ -114,11 +114,11 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 
 ---
 
-## --- Desarrollo de Herramientas (Tools Lifecycle) ---
+## --- Tool Development (Tools Lifecycle) ---
 
 Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 
-1.  **Implementación:** Se desarrolla la lógica en `/backend/herramientas/` (o `/ai-engine/herramientas/` expuesta vía **MCP stdio** si es Python).
+1.  **Implementation:** See logic in `/backend/src/tools/` (or `/ai-engine/tools/` exposed via **MCP stdio** if Python).
 2.  **Contrato Seguro:** Se define el schema de entrada y salida con **Zod** (o Pydantic). 
 3.  **Manejo de Errores (Safe Catch):** NINGUNA tool debe crashear el servidor. Todas devuelven un standard de error: `{ success: false, errorMessage: string, accion_requerida: string }`.
 4.  **Registro:** Se exponen a través de un **MCP Server** local para que LangGraph.js las consuma sin acoplamiento.

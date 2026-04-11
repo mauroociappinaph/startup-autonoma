@@ -6,10 +6,15 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "test": {
-      "dependsOn": ["build"],
       "outputs": []
     },
     "lint": {
+      "outputs": []
+    },
+    "format": {
+      "outputs": []
+    },
+    "check": {
       "outputs": []
     },
     "dev": {
