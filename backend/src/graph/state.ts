@@ -1,26 +1,32 @@
-import { Annotation, MessagesAnnotation } from "@langchain/langgraph";
+import { Annotation, messagesStateReducer } from "@langchain/langgraph";
+import { BaseMessage } from "@langchain/core/messages";
 
 /**
- * El AgentState es la "memoria compartida" de nuestra startup. 
- * Usamos Annotation.Root para definir un estado tipado y reactivo.
+ * AgentAnnotation: Implementación del canal de estado para LangGraph.
+ * Define cómo se transforman y acumulan los datos a través del grafo.
  */
-export const AgentState = Annotation.Root({
-  ...MessagesAnnotation.spec,
-  plan: Annotation<string[]>({
-    reducer: (oldState, newState) => newState,
+export const AgentAnnotation = Annotation.Root({
+  /**
+   * Historial de mensajes.
+   */
+  messages: Annotation<BaseMessage[]>({
+    reducer: messagesStateReducer,
     default: () => [],
   }),
-  next: Annotation<string>({
-    reducer: (oldState, newState) => newState,
-    default: () => "CEO",
+
+  /**
+   * Resumen ejecutivo del progreso actual.
+   */
+  executive_summary: Annotation<string>({
+    reducer: (prev, next) => next || prev,
+    default: () => "",
   }),
-  retryCount: Annotation<number>({
-    reducer: (old, val) => old + val,
+
+  /**
+   * Contador de reintentos.
+   */
+  retry_count: Annotation<number>({
+    reducer: (prev, next) => prev + next,
     default: () => 0,
   }),
-  executiveSummary: Annotation<string>({
-    reducer: (old, val) => val,
-    default: () => "",
-  })
 });
-

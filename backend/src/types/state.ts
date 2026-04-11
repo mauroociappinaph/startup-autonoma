@@ -1,12 +1,12 @@
-import { MessagesAnnotation } from "@langchain/langgraph";
+import { BaseMessage } from "@langchain/core/messages";
 
 /**
- * Interfaz fundamental para el estado de la Startup. 
- * Cumple con la Ley #7: Definida en carpeta /types.
+ * Interfaz pura del estado de los agentes.
+ * Cumple con la Ley #7 (Centralización de Tipos).
  */
-export type AgentState = typeof MessagesAnnotation.State & {
-  plan: string[];
-  next: string;
-  retryCount: number;
-  executiveSummary: string;
-};
+export interface AgentStateType {
+  messages: BaseMessage[];
+  executive_summary: string;
+  retry_count: number;
+  [key: string]: any; // Firma de índice requerida por LangGraph
+}
