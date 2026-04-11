@@ -1,35 +1,29 @@
-import "dotenv/config";
 import { graph } from "./graph/index.js";
-import { HumanMessage } from "@langchain/core/messages";
+import { BaseMessage } from "@langchain/core/messages";
 
-/**
- * Script de Probeta: Despierta al CEO y prueba el Grafo.
- */
-async function testExecution() {
-  console.log("🚀 Instandiando Grafo y despertando al CEO...");
+async function runTest() {
+  console.log("🚀 Iniciando prueba de ejecución del Grafo...");
+
+  // Estado inicial simulando una petición de investigación
+  const initialState = {
+    messages: [{ role: "user", content: "Investiga el estado actual del repositorio" } as any],
+    plan: ["research"],
+    results: [],
+    feedback: [],
+    status: "planning",
+    trace_id: "test-run-" + Date.now(),
+    metadata: {},
+  };
 
   try {
-    const initialState = {
-      messages: [
-        new HumanMessage("Hola CEO! Analiza el estado del proyecto y definamos el plan para hoy."),
-      ],
-    };
-
-    console.log("🕸️ Iniciando ejecución del Grafo con NVIDIA Nemotron...");
+    console.log("🤖 CEO iniciando plan de delegación...");
+    const result = await graph.invoke(initialState);
     
-    const result = await graph.invoke(initialState, {
-        configurable: { thread_id: "test-session-1" }
-    });
-
-    console.log("\n--- RESULTADO DEL GRAFO ---");
-    console.log("Análisis del CEO:", result.executive_summary);
-    console.log("Número de mensajes en historial:", result.messages.length);
-    console.log("---------------------------\n");
-
-    console.log("✅ Ciclo del CEO completado con éxito a través del Grafo.");
+    console.log("\n✅ Resultado final del Grafo:");
+    console.log(JSON.stringify(result, null, 2));
   } catch (error) {
-    console.error("❌ Error en la ejecución del test:", error);
+    console.error("\n❌ Error en la ejecución del grafo:", error);
   }
 }
 
-testExecution();
+runTest();
