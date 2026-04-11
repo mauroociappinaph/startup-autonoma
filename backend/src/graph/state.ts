@@ -29,4 +29,12 @@ export const AgentAnnotation = Annotation.Root({
     reducer: (prev, next) => prev + next,
     default: () => 0,
   }),
+
+  /**
+   * Lista de tareas estratégicas.
+   */
+  plan: Annotation<string[]>({
+    reducer: (prev, next) => next,
+    default: () => [],
+  }),
 });
