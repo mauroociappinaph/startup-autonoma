@@ -49,6 +49,16 @@ export class LLMFactory {
           apiKey: process.env.GROQ_API_KEY,
         });
 
+      case "nvidia":
+        return new ChatOpenAI({
+          modelName,
+          temperature: options.temperature ?? 0,
+          apiKey: process.env.NVIDIA_API_KEY,
+          configuration: {
+            baseURL: "https://integrate.api.nvidia.com/v1",
+          },
+        });
+
       default:
         throw new Error(`Proveedor no soportado: ${provider}`);
     }
@@ -71,11 +81,13 @@ export class LLMFactory {
         openai: "gpt-4o",
         anthropic: "claude-3-5-sonnet-20240620",
         google: "gemini-1.5-pro",
+        nvidia: process.env.NVIDIA_SMART_MODEL || "nvidia/nemotron-4-340b-instruct",
       },
       fast: {
         groq: "llama-3.1-70b-versatile",
         openai: "gpt-4o-mini",
         google: "gemini-1.5-flash",
+        nvidia: "nvidia/llama-3.1-8b-instruct",
       }
     };
 

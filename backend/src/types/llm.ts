@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Proveedores soportados por nuestra Startup.
  */
-export type LLMProvider = "openai" | "anthropic" | "groq" | "google" | "mistral";
+export type LLMProvider = "openai" | "anthropic" | "groq" | "google" | "mistral" | "nvidia";
 
 /**
  * Tallas de Modelos:
@@ -16,7 +16,7 @@ export type LLMModelType = "smart" | "fast";
  * Configuración de un modelo específico.
  */
 export const LLMConfigSchema = z.object({
-  provider: z.enum(["openai", "anthropic", "groq", "google", "mistral"]),
+  provider: z.enum(["openai", "anthropic", "groq", "google", "mistral", "nvidia"]),
   modelName: z.string(),
   temperature: z.number().default(0),
   maxTokens: z.number().optional(),
