@@ -37,6 +37,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── tools/                     # Implementación (Local/Remoto + Zod Contracts)
 │   │   ├── services/ 
 │   │   │   ├── llmFactory.ts          # Patrón Factory para inyección de Modelos. Aisla SDKs.
+│   │   │   ├── llmService.ts          # Orquestador de Trimming + Structured Outputs.
 │   │   │   ├── llmRouter.ts           # Enrutamiento Inteligente (Modelos Rápidos vs Pesados)
 │   │   │   └── orchestrator.ts        # Orquestación general de lógica de negocio
 │   │   ├── checkpointers/             # Persistencia LangGraph (PostgresSaver / MemorySaver)
@@ -128,7 +129,9 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 ## --- Automatización, CI/CD y Autonomía ---
 
 - **Conventional Commits (`commit-msg`):** Obligatorio el uso estricto de formato `tipo(scope): mensaje` evaluado por `@commitlint`. Si la IA o el humano alucina un formato, el commit se destruye.
-- **Pre-commit Hooks (Husky):** Evaluación estricta de las Leyes Sagradas (límite de líneas, rutas, convenciones) y ejecución de tests unitarios rápidos. *Nota Arquitectónica:* Nunca se corren operaciones pesadas (como Builders de Next.js) en este hook para no destruir la iteración veloz de los agentes.
+- **Pre-commit Hooks (Husky):** Evaluación estricta de las Leyes Sagradas, Tipado (TSC) y ejecución de tests unitarios rápidos.
+- **Pre-push Hooks (Husky):** Validación final de Lint, Check y Tests en todo el monorepo para evitar deploys rotos al CI.
+- **Post-merge Hooks (Husky):** Auto-instalación de dependencias (`npm install`) si el lockfile cambia tras un pull o merge.
 - **Orquestación Monorepo (Turbo):** El espacio de trabajo global emplea `Turborepo` para ejecutar la lógica de `dev`, `build` y `lint` en paralelo con caché nativa sobre Node.js y React, abarcando también la protección de `.venv` en Python.
 - **Seguridad Continua (Dependabot):** Escaneo semanal y apertura de PRs automáticos frente a librerías obsoletas tanto en Python (`pip`) como en Node (`npm`).
 - **Agentic Evals (LLM-as-a-Judge):** Más allá de los tests de código estructurado, todo *output narrativo o semántico* de un agente hacia el cliente es pre-auditado por un "LLM Juez" asíncrono para verificar consistencia, tono y ausencia de alucinaciones fatales.
