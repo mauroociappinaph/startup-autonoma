@@ -1,28 +1,29 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
-import { AgentAnnotation } from "./state.js";
-import { ceo_node } from "../nodes/ceo.js";
-import { researcher_node } from "../nodes/researcher.js";
+import { AgentAnnotation } from "@/graph/state.js";
+import { ceo_node } from "@/nodes/ceo.js";
+import { software_chief_node } from "@/nodes/chiefs/software_chief.js";
+import { researcher_node } from "@/nodes/researcher.js";
 
 /**
  * Orquestador Principal de la Startup. 
- * Ensambla el flujo de trabajo de los agentes usando LangGraph.
+ * Ensambla el flujo jerárquico: CEO -> SoftwareChief -> Worker.
  */
 export const createGraph = () => {
-    // 1. Inicializar el Grafo con nuestra definición de estado
     const workflow = new StateGraph(AgentAnnotation)
-        // 2. Registrar Nodos
         .addNode("ceo", ceo_node)
+        .addNode("software_chief", software_chief_node)
         .addNode("researcher", researcher_node)
-        
-        // 3. Definir el punto de entrada
+
         .addEdge(START, "ceo");
 
-    // 4. Arista condicional: El CEO decide si delegar al Researcher
+    // Arista: CEO delega al SoftwareChief
+    workflow.addEdge("ceo", "software_chief");
+
+    // Arista condicional: El Chief decide si delegar al Researcher
     workflow.addConditionalEdges(
-        "ceo",
+        "software_chief",
         (state) => {
-            // Lógica de ruteo basada en el estado
-            if (state.plan && state.plan.length > 0 && state.plan.includes("research")) {
+            if (state.plan && state.plan.includes("research")) {
                 return "researcher";
             }
             return END;
@@ -33,11 +34,12 @@ export const createGraph = () => {
         }
     );
 
-    // 5. Retorno del Worker al CEO
-    workflow.addEdge("researcher", "ceo");
+    // Retorno del Worker al Chief (para validación) y luego al CEO
+    workflow.addEdge("researcher", "software_chief");
+    workflow.addEdge("software_chief", "ceo");
 
-    // 6. Compilar el grafo
     return workflow.compile();
 };
 
 export const graph = createGraph();
+
