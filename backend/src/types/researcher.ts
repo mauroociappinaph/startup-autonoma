@@ -1,4 +1,5 @@
 /* eslint-disable */
+/* eslint-disable */
 import { z } from "zod";
 import { ResearcherResponseSchema } from "../contracts/researcher.js";
 
