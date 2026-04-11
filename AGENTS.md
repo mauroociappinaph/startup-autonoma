@@ -113,6 +113,7 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 12. **Human-in-the-Loop (HITL):** Prohibido el vuelo libre en rutas críticas. Tareas de despliegue, gasto de dinero o envíos masivos deben incluir un breakpoint (`interrupt_before`) en LangGraph esperando la pre-aprobación humana desde el frontend (SSE).
 13. **Truncamiento de Contexto (Anti-Bloat):** Prohibido inyectar el arreglo bruto de `messages` al LLM. LangGraph acumula historial infinitamente. Se debe invocar una utilidad de **Trimming** (`trim_messages(state, maxTokens)`) antes de cada llamado al modelo. De lo contrario, se penalizará con fallas por límite de tokens (Max Context Window).
 14. **Structured Outputs (Anti-Alucinación JSON):** Queda prohibido decirle al LLM en el prompt *"devuelve un JSON con esta estructura"*. Todo agente o nodo que genere datos para el estado debe usar obligatoriamente `llm.withStructuredOutput(zodSchema)` para forzar la salida tipada a nivel de proveedor (Groq/Mistral). Sin esto, el parseo fallará estocásticamente.
+15. **Resiliencia de Salida (Manual Fallback):** Si un proveedor (ej: NVIDIA NIM) presenta incompatibilidad con el protocolo nativo de Structured Outputs, se debe emplear obligatoriamente la estrategia de fallback en `LLMService`. Esta estrategia combina `StructuredOutputParser` con instrucciones de formato explícitas para garantizar la integridad de los datos sin comprometer la estabilidad del grafo.
 
 ---
 

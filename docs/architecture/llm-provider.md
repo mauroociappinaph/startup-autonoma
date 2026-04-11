@@ -1,24 +1,37 @@
-# 🧠 Estrategia de Inyección y Resiliencia de LLMs
+# LLM Providers & Routing Strategy
 
-En la Startup Autónoma, los Large Language Models (LLMs) son el motor cognitivo, pero también **el punto único de falla (SPOF) más grande y costoso**. 
-Para evitar acoplamiento y roturas en cascada, implementamos un ecosistema desacoplado bajo el patrón **Factory & Service (Leyes #6, #7, #13 y #14)**.
+## Overview
+El sistema emplea un enfoque multi-proveedor para optimizar costos, latencia y capacidades de razonamiento. La `LLMFactory` actúa como el orquestador de modelos, abstrayendo la complejidad de las APIs de los proveedores.
 
-## 1. El Patrón LLM Factory (`/backend/src/services/llmFactory.ts`)
-**REGLA:** Ningún Nodo tiene permitido importar SDKs de proveedores de forma directa.
-- Todas las instancias de LLMs nacen en el `LLMFactory`.
-- El sistema utiliza perfiles de inteligencia: **SMART** (Razonamiento complejo) y **FAST** (Tareas atómicas).
-- El ruteo se configura vía variables de entorno (`PRIMARY_SMART_PROVIDER`, `PRIMARY_FAST_PROVIDER`).
+## Supported Providers
+| Proveedor | Capacidad Sugerida | Notas |
+|-----------|--------------------|-------|
+| **OpenAI** | Smart / Fast | Estándar de oro en razonamiento y JSON nativo. |
+| **Anthropic** | Smart | Excelente para análisis de código complejo. |
+| **Groq** | Fast | Latencia ultra-baja para tareas atómicas. |
+| **NVIDIA NIM** | Smart (Nemotron) | Alta performance y precisión técnica. Requiere `Manual Fallback`. |
+| **Google** | Smart / Fast | Integración nativa con herramientas de Vertex AI. |
 
-## 2. LLM Service: La Capa de Blindaje
-El `LLMService` es el punto de entrada oficial para los agentes. Empaqueta el modelo de la Factory con dos protecciones obligatorias:
-- **Trimming de Contexto (Ley #13):** Invoca al `ContextManager` para recortar el historial de mensajes antes de enviarlo al modelo, protegiendo la ventana de tokens y los costos.
-- **Structured Outputs (Ley #14):** Utiliza `.withStructuredOutput(zodSchema)` para garantizar que la respuesta sea un objeto JS válido, eliminando el riesgo de errores de parseo por alucinaciones verborrágicas del LLM.
+## Smart vs Fast Routing
+El sistema divide las tareas en dos categorías:
+1.  **Smart Tasks**: Orquestación (CEO), Diseño Arquitectónico y Análisis Crítico. Utiliza modelos como `Nemotron-3-Super` o `GPT-4o`.
+2.  **Fast Tasks**: Ejecución de herramientas (Workers), validación de sintaxis y resúmenes simples. Utiliza modelos como `Llama-3-70b` (Groq) o `GPT-4o-mini`.
 
-## 3. Manejo de Fallback
-El sistema está diseñado para conmutar entre proveedores (OpenAI, Anthropic, Google, Groq) de forma transparente. Si un proveedor cae o alcanza límites de tasa, el cambio de estrategia se centraliza en el `LLMFactory` sin afectar la lógica de negocio de los agentes.
+## Resilient Structured Output Pattern
+Debido a inconsistencias en la implementación del protocolo `response_format` de OpenAI por parte de proveedores compatibles (principalmente NVIDIA NIM), hemos implementado un patrón de resiliencia en `LLMService`:
 
-## 4. Configuraciones Soportadas
-| Perfil | Proveedor Recomendado | Modelo |
-| :--- | :--- | :--- |
-| **SMART** | OpenAI / Anthropic | GPT-4o / Claude 3.5 Sonnet |
-| **FAST** | Groq / OpenAI | Llama 3.1 70b / GPT-4o-mini |
+1.  **Native Attempt**: Intenta usar `withStructuredOutput(zodSchema)`.
+2.  **Compatibility Detection**: Si el proveedor es detectado como incompatible (ej: `nvidia`), salta al fallback.
+3.  **Manual Fallback**: 
+    - Emplea `StructuredOutputParser.fromZodSchema(schema)`.
+    - Inyecta instrucciones imperativas de formato al final del prompt.
+    - Parsea manualmente la salida utilizando lógica de extracción de JSON segura.
+
+## Environment Configuration
+La configuración se gestiona en `backend/.env`:
+```env
+PRIMARY_SMART_PROVIDER=nvidia
+NVIDIA_SMART_MODEL=nvidia/nemotron-3-super-120b-a12b
+PRIMARY_FAST_PROVIDER=groq
+GROQ_FAST_MODEL=llama3-70b-8192
+```
