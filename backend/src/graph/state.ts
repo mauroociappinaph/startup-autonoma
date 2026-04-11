@@ -1,5 +1,4 @@
 import { Annotation, MessagesAnnotation } from "@langchain/langgraph";
-import { AgentState as AgentStateType } from "@/types/state.js";
 
 /**
  * El AgentState es la "memoria compartida" de nuestra startup. 
