@@ -25,8 +25,10 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ├── /backend (Node.js - Orquestador)
 │   ├── src
 │   │   ├── index.ts                   # Bootstrap (Express + Graph runner)
-│   │   ├── graph/                     # Flujo declarativo (Nodos, Aristas, Estado, Motor)
-│   │   ├── agents/                    # Configuración de personalidades
+│   │   ├── graph/                     # Instanciación del StateGraph general
+│   │   ├── state/                     # Definición de Estados y Reducers (TypedDict/Zod)
+│   │   ├── nodes/                     # Lógica atómica bloque a bloque (testable)
+│   │   ├── agents/                    # Prompts del sistema o ensamblador de sub-grafos
 │   │   ├── skills/                    # Primitivas (Prompts + Chains + Bindings)
 │   │   ├── herramientas/ (Tools)      # Implementación (Local/Remoto + Zod Contracts)
 │   │   ├── servicios/                 # Lógica de negocio + Cliente IA + Orquestación
@@ -35,9 +37,14 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── controladores/             # Adaptadores HTTP
 │   │   ├── rutas/                     # Endpoints
 │   │   ├── contratos/                 # Schemas Zod y validaciones
-│   │   ├── puentos_mcp/               # Adaptadores a servidores MCP (stdio)
+│   │   ├── puertos_mcp/               # Adaptadores a servidores MCP (stdio)
+│   │   ├── state/                     # Definición de Estados y Reducers (TypedDict/Zod)
+│   │   ├── nodes/                     # Nodos atómicos (testables aisladamente)
+│   │   ├── db/                        # Conexión a Supabase / Migraciones
 │   │   ├── modelos/                   # Esquemas Core
 │   │   ├── middleware/                # Cross-cutting (Auth, Trace, Log)
+│   │   ├── observabilidad/            # Debug (Tracer, Logs, LangSmith)
+│   │   ├── configuracion/             # Zod validation para .env secrets
 │   │   ├── helpers/                   # Utils puras (No side-effects)
 │   │   └── tipos/                     # Tipos internos
 │   ├── tests/

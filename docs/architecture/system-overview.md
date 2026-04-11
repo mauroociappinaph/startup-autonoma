@@ -9,7 +9,9 @@ El sistema se define como un `StateGraph` dinámico. Utilizamos la **primitiva `
 ### Componentes de Vanguardia
 - **Nodos Inteligentes (Smart Nodes):** Cada agente (CEO, Chief, Worker) devuelve un `Command` que especifica el siguiente destino o estado de interrupción.
 - **Aristas Fluidas:** El CEO puede saltar directamente a un Worker o volver al Mirror sin redefinir el grafo.
-- **Estado (State):** Un canal de comunicación tipado (Zod) validado en cada frontera de nodo.
+- **Estado Estricto (State):** Un canal de comunicación tipado (Zod) validado en cada frontera de nodo.
+- **Design for failure:** Cada nodo y subgraph espera fallar. Se atrapan errores localmente. Nunca deben abortar el ciclo principal.
+- **Environment Strictness:** Todos los secretos requeridos para APIs u orquestación (API_KEYS, DB URL) pasan por un pre-validador Zod al arranque, evitando que el bot opere ciego.
 
 ## Jerarquía de Operación
 
