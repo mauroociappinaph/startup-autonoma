@@ -1,0 +1,17 @@
+# Asegurar que los binarios comunes estén en el PATH para Husky
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
+
+echo "=========================================================="
+echo "⚓ ANTIGRAVITY: Actualización tras Merge detectada"
+echo "=========================================================="
+
+# Si cambió el package-lock.json, instalamos dependencias automáticamente
+CHANGED_FILES=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)
+
+if echo "$CHANGED_FILES" | grep -q "package-lock.json"; then
+  echo "📦 Se detectaron cambios en las dependencias. Instalando..."
+  npm install --legacy-peer-deps
+  echo "✅ Entorno actualizado."
+else
+  echo "✨ No hay cambios en dependencias. Todo listo."
+fi
