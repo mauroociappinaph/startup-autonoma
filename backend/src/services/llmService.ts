@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BaseMessage } from "@langchain/core/messages";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { LLMFactory } from "./llmFactory.js";
 import { LLMFactoryOptions } from "../types/llm.js";
 import { ContextManager } from "../helpers/contextManager.js";
@@ -18,7 +19,7 @@ export class LLMService {
     messages: BaseMessage[],
     schema: T
   ): Promise<z.infer<T>> {
-    const rawModel = LLMFactory.createModel(config);
+    const rawModel = LLMFactory.createModel(config) as BaseChatModel;
     const trimmedMessages = await ContextManager.trim(messages, rawModel);
 
     // Obtenemos el proveedor real consultando a la Factory
@@ -34,7 +35,7 @@ export class LLMService {
 
     try {
       const modelWithStructuredOutput = rawModel.withStructuredOutput(schema);
-      return await modelWithStructuredOutput.invoke(trimmedMessages);
+      return await modelWithStructuredOutput.invoke(trimmedMessages) as z.infer<T>;
     } catch (error) {
        console.warn("⚠️ Falló formato nativo, intentando fallback manual...");
        return this._getManualStructuredResponse(rawModel, trimmedMessages, schema);
@@ -44,7 +45,11 @@ export class LLMService {
   /**
    * Método de respaldo: Pide JSON explícito siguiendo el esquema y lo parsea.
    */
-  private static async _getManualStructuredResponse(model: any, messages: BaseMessage[], schema: any): Promise<any> {
+  private static async _getManualStructuredResponse<T extends z.ZodTypeAny>(
+    model: BaseChatModel, 
+    messages: BaseMessage[], 
+    schema: T
+  ): Promise<z.infer<T>> {
     const parser = StructuredOutputParser.fromZodSchema(schema);
     const formatInstructions = parser.getFormatInstructions();
     
@@ -65,10 +70,11 @@ export class LLMService {
     });
 
     const response = await model.invoke(formattedMessages);
+    const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
     try {
       // El parser de LangChain extrae el JSON incluso si viene dentro de bloques ```json
-      return await parser.parse(response.content as string);
+      return await parser.parse(content);
     } catch (e) {
       console.error("❌ Error crítico: El modelo no cumplió con el formato JSON solicitado por el esquema.");
       throw e;
