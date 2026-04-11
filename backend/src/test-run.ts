@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { graph } from "./graph/index.js";
-import { BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 
 /**
  * Script de validación en tiempo real para el grafo.

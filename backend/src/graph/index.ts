@@ -1,4 +1,4 @@
-import { StateGraph, START, END, Command } from "@langchain/langgraph";
+import { StateGraph, START, END } from "@langchain/langgraph";
 import { AgentAnnotation } from "./state.js";
 import { ceo_node } from "../nodes/ceo.js";
 import { researcher_node } from "../nodes/researcher.js";
