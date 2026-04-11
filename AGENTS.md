@@ -39,7 +39,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   │   ├── llmFactory.ts          # Patrón Factory para inyección de Modelos. Aisla SDKs.
 │   │   │   ├── llmRouter.ts           # Enrutamiento Inteligente (Modelos Rápidos vs Pesados)
 │   │   │   └── orchestrator.ts        # Orquestación general de lógica de negocio
-│   │   ├── workers/                   # Procesos async (BullMQ)
+│   │   ├── checkpointers/             # Persistencia LangGraph (PostgresSaver / MemorySaver)
 │   │   ├── jobs/                      # Colas
 │   │   ├── controllers/               # Adaptadores HTTP
 │   │   ├── routes/                    # Endpoints
@@ -109,6 +109,7 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 10. **Path Aliases Obligatorios:** Prohibido usar rutas relativas complejas (`../../../../`). A las IAs se les da pésimo calcular la profundidad del árbol. Siempre usar los Path Aliases configurados en `tsconfig.json` (ej. `import { tool } from '@/tools/...'`).
 11. **Linting y Formateo Automatizado:** El estilo de código NO se debate. Prettier y ESLint (Node) o Ruff (Python) evalúan todo **antes** del commit.
 12. **Human-in-the-Loop (HITL):** Prohibido el vuelo libre en rutas críticas. Tareas de despliegue, gasto de dinero o envíos masivos deben incluir un breakpoint (`interrupt_before`) en LangGraph esperando la pre-aprobación humana desde el frontend (SSE).
+13. **Truncamiento de Contexto (Anti-Bloat):** Prohibido inyectar el arreglo bruto de `messages` al LLM. LangGraph acumula historial infinitamente. Se debe invocar una utilidad de **Trimming** (`trim_messages(state, maxTokens)`) antes de cada llamado al modelo. De lo contrario, se penalizará con fallas por límite de tokens (Max Context Window).
 
 ---
 
