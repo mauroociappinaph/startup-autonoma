@@ -10,7 +10,7 @@ El Git Worker es el brazo ejecutor técnico en el entorno de desarrollo local. S
 ## Integración con el Grafo (LangGraph 2.0)
 - **Rol:** Operativo / Ejecutor.
 - **Output:** Reporte de cambios, IDs de commits y estado de la salud del repo.
-- **Lugar de Ejecución:** `/backend/src/workers/agent.worker.ts`.
+- **Lugar de Ejecución:** `/backend/src/nodes/workers/git-worker.ts`.
 
 ## Herramientas (Tools)
 *Ubicadas en `/backend/src/tools/platform/git/`*
