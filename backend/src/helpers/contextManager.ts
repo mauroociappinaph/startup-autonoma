@@ -1,4 +1,4 @@
-import { trimMessages } from "@langchain/core/messages";
+import { trimMessages, type BaseMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 /**
@@ -10,7 +10,7 @@ export class ContextManager {
    * Recorta el historial de mensajes para que quepa en la ventana del modelo.
    * Mantiene siempre el System Message al principio.
    */
-  static async trim(messages: any[], model: BaseChatModel) {
+  static async trim(messages: BaseMessage[], model: BaseChatModel) {
     // Configuración de trimming: 
     // - maxTokens: Limite prudente para no saturar al modelo.
     // - strategy: 'last' para mantener los mensajes más recientes.

@@ -1,4 +1,5 @@
 import { ZodSchema } from "zod";
+import { type BaseMessage } from "@langchain/core/messages";
 import { LLMFactory } from "./llmFactory.js";
 import { LLMFactoryOptions } from "../types/llm.js";
 import { ContextManager } from "../helpers/contextManager.js";
@@ -14,7 +15,7 @@ export class LLMService {
    */
   static async getStructuredResponse<T>(
     options: LLMFactoryOptions,
-    messages: any[],
+    messages: BaseMessage[],
     schema: ZodSchema<T>
   ): Promise<T> {
     const model = LLMFactory.createModel(options);
