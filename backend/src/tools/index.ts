@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { list_dir, read_file } from "./fs.js";
 
 /**

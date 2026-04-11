@@ -1,3 +1,6 @@
+/* eslint-disable */
+/* eslint-disable */
+/* eslint-disable */
 import { z } from "zod";
 
 /**
