@@ -18,6 +18,6 @@ El Git Worker es el brazo ejecutor técnico en el entorno de desarrollo local. S
 - `fs_safe_writer`: Escritura de archivos con validación de sintaxis previa.
 - `linter_executor`: Ejecución de ruff/eslint antes del commit.
 
-## Principios Operativos
-- **Atomic Operations:** Cada tarea debe resultar en un cambio mínimo y funcional.
-- **Zero Pollution:** No dejar archivos temporales o estados de git "sucios".
+- **Atomic Operations (SRP):** Cada tarea debe resultar en un cambio mínimo y unitario. Archivos de más de 300 líneas deben dividirse.
+- **Barrel Files Enforcement:** Cada vez que el Worker crea un módulo, componente o utilidad nueva, TIENE LA OBLIGACIÓN de exportarlo desde el `index.ts` (Barrel file) correspondiente en el mismo PR.
+- **Zero Pollution:** No dejar archivos temporales, repetir lógica (romper **DRY**) o arrastrar estados de git "sucios".
