@@ -4,8 +4,8 @@ El Software Chief coordina la producción técnica. Actúa como un "Supervisor" 
 
 ## Función y Responsabilidades
 - **Backlog Orchestration:** Desglosar los hitos del CEO en tickets de Jira/GitHub manejables por Workers.
-- **Validation Gates:** Realizar Code Reviews automáticos y ejecutar pipelines de validación (Tests/Lint).
-- **Worker Instantiation:** Decidir qué Worker especializado (Git, AI-Engine, Backend) activar según la tarea.
+- **Autonomous TDD (Loop CLI):** Oliga a la creación de unit tests antes del código funcional. Ejecuta el test por CLI automáticamente. Si la suite devuelve error de sintaxis (stderr), inyecta la falla al GitWorker repitiendo el proceso hasta ver color verde.
+- **Worker Instantiation:** Decidir qué Worker especializado (Git, AI-Engine) activar según la tarea.
 
 ## Integración con el Grafo (LangGraph 2.0)
 - **Rol:** Supervisor de Dominio Técnico.

@@ -41,10 +41,10 @@ graph TD
 ## Estructura de Implementación
 
 - **`/backend` (Node.js)**: Cerebro lógico (LangGraph.js), servicios, herramientas, observabilidad.
-- **`/ai-engine` (Python)**: Motor de razonamiento pesado (FastAPI, Agentes, Tools ML). Comunicación vía **gRPC**.
+- **`/ai-engine` (Python)**: Motor para Tools pesadas (Scraping, AI). Comunicación vía **MCP (stdio) o FastAPI (REST)** abstraída del orquestador principal.
 - **`/frontend` (Next.js 15)**: Consola de control.
 
 ## Persistencia y Memoria
 - **Operativa:** Gestionada por LangGraph Checkpoints (pausa/reanudación).
 - **Semántica:** Gestionada por Engram (Persistencia de largo plazo: decisiones, estilos, aprendizajes).
-- **Observabilidad:** `trace_id` único compartido mediante metadatos de gRPC entre Backend y AI Engine para trazabilidad completa.
+- **Observabilidad/UX:** `trace_id` único compartido entre Backend y AI Engine. Eventos asíncronos mediante **Server-Sent Events (SSE)** para visualizar el streaming de razonamiento de los agentes en el Frontend (evita latencia percibida).

@@ -11,8 +11,8 @@ Este documento define cómo interactúan los agentes para garantizar orden, esca
 ## Flujo de Delegación (Top-Down)
 
 1.  **CEO a Chief:** Entrega un "Sub-objetivo" claro + métricas de éxito + `trace_id`.
-2.  **Chief a Worker:** Desglosa en "Tareas Atómicas". Entrega las herramientas necesarias.
-3.  **Ejecución:** El Worker devuelve un `Result` (data, success, log) vinculado al mismo `trace_id` a través de canales **gRPC** de alta performance.
+2.  **Chief a Worker:** Desglosa en "Tareas Atómicas". Entrega las herramientas necesarias (expuestas vía LangGraph CLI local o MCP).
+3.  **Ejecución:** El Worker devuelve un `Result` estructurado (success, error_message, stdout) vinculado al mismo `trace_id`. Si delega a Python, lo hace por **MCP (stdio) o REST**, evitando la complejidad de gRPC.
 
 ## Flujo de Validación (Bottom-Up)
 
@@ -22,8 +22,8 @@ Este documento define cómo interactúan los agentes para garantizar orden, esca
 
 ## Manejo de Conflictos y Errores
 
-- **Deadlocks:** Si un Chief y un Worker no llegan a acuerdo tras 3 iteraciones, se escala automáticamente al CEO.
-- **Fallas de Herramientas/gRPC:** Reportar `success: False` con el error exacto (o código de estado gRPC); el Chief decide si reintentar o pivotar estrategia.
+- **Deadlocks (Strict TTL):** El estado debe trackear un `retry_count`. Si un Chief y un Worker no llegan a acuerdo o fallan tras 3 iteraciones (ej: loops fallando tests), se rompe explícitamente el nodo devolviendo `HARD_FAULT` para escalarlo al usuario o CEO.
+- **Fallas de Herramientas/MCP:** Reportar siempre un standard `{ success: false, errorMessage: "..." }`. NINGUNA tool debe crashear el proceso padre. NUNCA se falla silenciosamente. El Chief evalúa el error crudo para arreglarlo.
 
 ## Interacción con la Memoria (Engram)
 

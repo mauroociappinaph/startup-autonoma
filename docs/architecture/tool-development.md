@@ -37,11 +37,17 @@ export const HerramientaGitCommitSchema = z.object({
 });
 
 export type GitCommitInput = z.infer<typeof HerramientaGitCommitSchema>;
-```
+
+export const ToolResponseSchema = z.object({
+  success: z.boolean(),
+  errorMessage: z.string().optional(),
+  accion_requerida: z.string().optional(),
+  stdout: z.string().optional()
+});
 
 ## Reglas de Oro
 
 - **Idempotencia:** Ejecutar la misma herramienta con los mismos parámetros no debe causar estados inesperados.
 - **Trazabilidad:** Cada llamada genera un registro en el `trace_id` activo.
-- **Manejo de Errores:** Las herramientas NUNCA deben fallar silenciosamente; devuelven un objeto de error estructurado.
+- **Protocolo de Tool Safe Catch:** Las herramientas NUNCA arrojan un throw que mate el hilo. Siempre deben encasillar su salida en el `ToolResponseSchema`, indicando `success: false` con un `errorMessage` claro para que LangGraph lo capture e intente auto-corrección sin abortar.
 - **DRY:** Lógica reutilizable va a `/backend/src/helpers/`.

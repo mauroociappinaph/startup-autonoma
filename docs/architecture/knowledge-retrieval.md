@@ -31,7 +31,7 @@ Para garantizar eficiencia, los agentes deben seguir este flujo de recuperación
 2.  **Filtrado por Topic Key:**
     - Si busca preferencias -> `mem_search(query="...", topic="user/preferences")`
     - Si busca arquitectura -> `mem_search(query="...", topic="tech/decisions")`
-3.  **Inyección de Contexto:** El agente debe resumir la información recuperada y añadirla a su prompt de trabajo bajo la etiqueta `[CONTEXTO RECUPERADO]`.
+3.  **Inyección con Privilegio Mínimo (Least Privilege):** El agente orquestador CORTA el exceso de ruido. Debe tomar los registros crudos devueltos por `mem_search` y resumirlos en 2 o 3 directivas puntuales. Se prohíbe volcar el objeto entero de la memoria al prompt del Worker (previene el costo masivo de tokens y el "Lost in the Middle"). La inyección entra bajo el pre-prompt `[CONTEXTO RESUMIDO RECUPERADO]`.
 
 ## Triggers de Actualización (Feedback Loop)
 

@@ -34,7 +34,8 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── jobs/                      # Colas
 │   │   ├── controladores/             # Adaptadores HTTP
 │   │   ├── rutas/                     # Endpoints
-│   │   ├── contratos/                 # Backend ↔ AI Engine (OpenAPI/Zod)
+│   │   ├── contratos/                 # Schemas Zod y validaciones
+│   │   ├── puentos_mcp/               # Adaptadores a servidores MCP (stdio)
 │   │   ├── modelos/                   # Esquemas Core
 │   │   ├── middleware/                # Cross-cutting (Auth, Trace, Log)
 │   │   ├── observabilidad/            # Debug (Tracer, Logs, Persistencia)
@@ -44,23 +45,29 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── tests/
 │   └── package.json
 
-├── /ai-engine (Python - Ejecutor IA)
+├── /ai-engine (Python - Herramientas Pesadas)
 │   ├── app/
-│   │   ├── main.py                  # FastAPI Entrypoint
-│   │   ├── api/                     # Capa HTTP + Deps
-│   │   ├── workers/                 # Agentes especializados
-│   │   ├── razonamiento/            # Planning + Multistep logic
-│   │   ├── herramientas/            # Tools pesadas (ML/Scraping)
-│   │   ├── servicios/               # Orquestación interna
-│   │   ├── contratos/               # Sync con Backend
+│   │   ├── main.py                  # FastAPI / Servidor MCP (stdio)
+│   │   ├── api/                     # Endpoints REST (si aplica)
+│   │   ├── workers/                 # Lógica de scraping, ML, etc.
+│   │   ├── herramientas/            # Tools accesibles vía MCP
+│   │   ├── contratos/               # Modelos Pydantic
 │   │   ├── helpers/                 # Utils Python
 │   │   └── core/                    # Config + Settings
 │   ├── tests/
 │   └── requirements.txt
 
 ├── /frontend (Next.js 15)
-│   ├── src/...                      # Estructura standard (Components, Hooks, Store)
-
+│   ├── src
+│   │   ├── app/                     # App Router (Pages, Layouts, API Routes)
+│   │   ├── components/              # UI Atómico (Shadcn + Custom)
+│   │   ├── hooks/                   # Lógica de React compartida
+│   │   ├── store/                   # Zustand (Estado global de UI/SSE)
+│   │   ├── api/                     # Clientes Axios / TanStack Query
+│   │   ├── helpers/                 # Utilidades de transformación
+│   │   ├── styles/                  # Tailwind CSS y config
+│   │   └── types/                   # Interfaces locales del front
+│   └── public/                      # Assets estáticos
 ├── /types (Monorepo Compartido)
 ├── /docs                            # Arquitectura, ADRs, Specs
 ├── /skills                          # Prompts globales
@@ -89,23 +96,25 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 
 Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 
-1.  **Implementación:** Se desarrolla la lógica en `/backend/herramientas/` (o `/ai-engine/herramientas/` si requiere Python).
-2.  **Contrato:** Se define el schema de entrada y salida con **Zod** (o Pydantic en Python) para garantizar integridad.
-3.  **Registro:** Se exponen a través del **MCP Server** para que los agentes las descubran.
+1.  **Implementación:** Se desarrolla la lógica en `/backend/herramientas/` (o `/ai-engine/herramientas/` expuesta vía **MCP stdio** si es Python).
+2.  **Contrato Seguro:** Se define el schema de entrada y salida con **Zod** (o Pydantic). 
+3.  **Manejo de Errores (Safe Catch):** NINGUNA tool debe crashear el servidor. Todas devuelven un standard de error: `{ success: false, errorMessage: string, accion_requerida: string }`.
+4.  **Registro:** Se exponen a través de un **MCP Server** local para que LangGraph.js las consuma sin acoplamiento.
 
 ---
 
-## --- Automatización & CI/CD ---
+## --- Automatización, CI/CD y Autonomía ---
 
-- **GitHub CLI (`gh`):** Herramienta principal para operar sobre el repo.
-- **GitHub Actions:** Pipeline de tests, linting y despliegue continuo.
-- **Traceability:** Cada flujo genera un `trace_id` persistente para logs, transmitido nativamente en los headers de gRPC.
+- **Ciclo TDD Autónomo:** Antes de implementar código, se crean los tests (ej. Jest). El Chief ejecuta los tests en la CLI; si fallan, inyecta el `stderr` al Worker iterativamente hasta que pasen, minimizando la carga humana de auditoría.
+- **GitHub CLI (`gh`):** Herramienta principal para operar sobre el repo una vez los tests están en verde.
+- **GitHub Actions:** Pipeline final de CI/CD.
+- **Traceability por Stream:** Cada flujo genera un `trace_id`. La latencia al usuario se mitiga mediante Server-Sent Events (SSE) mostrando progreso en tiempo real.
 
 ---
 
 ## --- Fuentes de Verdad ---
 
 1.  **Docs de Arquitectura:** `/docs/architecture/`.
-2.  **Definición de Estado:** `/backend/src/graph/state.ts`.
-3.  **Memoria Semántica:** Conocimiento dinámico en **Engram**.
-4.  **Protocolo de Comunicación:** gRPC (Backend ↔ AI Engine) para baja latencia.
+2.  **Definición de Estado:** `/backend/src/graph/state.ts` (Incluye `Executive_Summary` y `retry_count`).
+3.  **Memoria Semántica:** Conocimiento dinámico en **Engram** (Acceso validado por *Least Privilege Contex* para evitar alucinaciones).
+4.  **Protocolo de Comunicación:** Model Context Protocol (MCP) y REST (Abandono explícito de gRPC para el MVP).

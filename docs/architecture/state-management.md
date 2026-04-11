@@ -14,16 +14,18 @@ El estado se implementa utilizando `TypedDict` y anotaciones Zod para controlar 
 | `refined_prompt` | `str` | Prompt optimizado por el Mirror. | Sobrescribir |
 | `plan` | `List[str]` | Tareas estratégicas del CEO. | Sobrescribir |
 | `active_chief` | `str` | Chief activo. | Sobrescribir |
-| `results` | `List[dict]` | Resultados de Workers. | `operator.add` |
+| `results` | `List[dict]` | Resultados granulares brutos de los Workers. | `operator.add` |
+| `executive_summary` | `str` | Resumen de los results (max 3 oraciones) para transiciones limpias y evitar overflow. | Sobrescribir |
 | `feedback` | `List[str]` | Comentarios del usuario. | `operator.add` |
 | `status` | `str` | Estado actual (planning, executing). | Sobrescribir |
+| `retry_count` | `int` | Contador para Strict TTL. Previene deadlocks. | Acumular / Resetear |
 | `trace_id` | `str` | Identificador único de traza. | Sobrescribir |
 | `metadata` | `dict` | Contexto adicional. | Sobrescribir |
 
-## Reducers: Acumulación vs Sobrescritura
+## Reducers y Prevención de Contexto
 
-- **Sobrescritura:** Campos de control (status, active_chief, trace_id) se reemplazan. Reflejan la decisión actual del grafo.
-- **Acumuladores (`operator.add`):** `results` y `feedback` crecen en el tiempo para mantener un historial auditable.
+- **Sobrescritura:** Campos de control (status, active_chief, trace_id, executive_summary) se reemplazan. Reflejan la decisión actual del grafo y mantienen los prompts de los agentes limpios (Principio del **Least Privilege Context**).
+- **Acumuladores (`operator.add`):** `results`, `feedback` y `retry_count`. Crecen en el tiempo pero NO se deben inyectar enteros al prompt de un trabajador, solo guardarlos por observabilidad y auditoría.
 
 ## Persistencia (Checkpoints)
 
