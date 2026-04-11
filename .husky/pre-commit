@@ -12,7 +12,15 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# 2. Correr Tests
+# 2. Validar Tipos (TypeScript)
+echo "🔍 Verificando integridad de tipos..."
+npm run check
+if [ $? -ne 0 ]; then
+  echo "❌ Error de tipos detectado. Corregí el código antes de commitear."
+  exit 1
+fi
+
+# 3. Correr Tests
 echo "🧪 Ejecutando Tests Globales (si existen)..."
 npm run test --workspaces --if-present
 if [ $? -ne 0 ]; then

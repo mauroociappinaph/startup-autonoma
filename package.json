@@ -15,7 +15,8 @@
     "dev:ai": "cd ai-engine && [ -d \".venv\" ] && source .venv/bin/activate || echo 'Sin entorno virtual' && uvicorn app.main:app --reload --port 8000",
     "test": "turbo run test",
     "build": "turbo run build",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "check": "turbo run check"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
