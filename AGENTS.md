@@ -31,6 +31,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── graph/                     # Instanciación del StateGraph general
 │   │   ├── state/                     # Definición de Estados y Reducers (TypedDict/Zod)
 │   │   ├── nodes/                     # Lógica atómica bloque a bloque (testable)
+│   │   ├── evals/                     # LLM-as-a-Judge (Evaluación de alucinaciones)
 │   │   ├── agents/                    # Prompts del sistema o ensamblador de sub-grafos
 │   │   ├── habilidades/               # Primitivas (Prompts + Chains + Bindings)
 │   │   ├── herramientas/ (Tools)      # Implementación (Local/Remoto + Zod Contracts)
@@ -109,6 +110,7 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 9.  **Types de Typescript:** Siempre van en `/types`. Nunca en los archivos donde se implementan.
 10. **Rutas relativas:** Siempre usar rutas relativas para importar módulos internos.
 11. **Linting y Formateo Automatizado:** El estilo de código NO se debate. Prettier y ESLint (Node/React) o Ruff (Python) deben ejecutarse **antes** de cualquier commit. Los agentes no deben gastar tokens discutiendo estilos.
+12. **Human-in-the-Loop (HITL):** Prohibido el vuelo libre en rutas críticas. Tareas de despliegue, gasto de dinero o envíos masivos deben incluir un breakpoint (`interrupt_before`) en LangGraph esperando la pre-aprobación humana desde el frontend (SSE).
 
 ---
 
@@ -129,6 +131,7 @@ Las herramientas son las manos de los agentes. Se crean siguiendo este ciclo:
 - **Pre-commit Hooks (Husky):** Evaluación estricta de las Leyes Sagradas (límite de líneas, rutas, convenciones) y ejecución de tests unitarios rápidos. *Nota Arquitectónica:* Nunca se corren operaciones pesadas (como Builders de Next.js) en este hook para no destruir la iteración veloz de los agentes.
 - **Orquestación Monorepo (Turbo):** El espacio de trabajo global emplea `Turborepo` para ejecutar la lógica de `dev`, `build` y `lint` en paralelo con caché nativa sobre Node.js y React, abarcando también la protección de `.venv` en Python.
 - **Seguridad Continua (Dependabot):** Escaneo semanal y apertura de PRs automáticos frente a librerías obsoletas tanto en Python (`pip`) como en Node (`npm`).
+- **Agentic Evals (LLM-as-a-Judge):** Más allá de los tests de código estructurado, todo *output narrativo o semántico* de un agente hacia el cliente es pre-auditado por un "LLM Juez" asíncrono para verificar consistencia, tono y ausencia de alucinaciones fatales.
 - **GitHub Actions (`.github/workflows`):** Nuestro pipeline maestro corre sobre `main` y `develop`. Asume la responsabilidad de construcción dura (`Turborepo build`) y verificación de Linters (Ruff, ESLint).
 - **Ciclo TDD Autónomo:** Antes de implementar código, se crean los tests (ej. Jest). El Chief ejecuta los tests en la CLI; si fallan, inyecta el `stderr` al Worker iterativamente hasta que pasen.
 
