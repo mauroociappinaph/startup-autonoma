@@ -38,11 +38,11 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── puentos_mcp/               # Adaptadores a servidores MCP (stdio)
 │   │   ├── modelos/                   # Esquemas Core
 │   │   ├── middleware/                # Cross-cutting (Auth, Trace, Log)
-│   │   ├── observabilidad/            # Debug (Tracer, Logs, Persistencia)
-│   │   ├── configuracion/             # Env Parsing tipado
 │   │   ├── helpers/                   # Utils puras (No side-effects)
 │   │   └── tipos/                     # Tipos internos
 │   ├── tests/
+│   ├── .eslintrc.json               # Reglas de linting Node
+│   ├── .prettierrc                  # Formateo Node
 │   └── package.json
 
 ├── /ai-engine (Python - Herramientas Pesadas)
@@ -55,6 +55,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── helpers/                 # Utils Python
 │   │   └── core/                    # Config + Settings
 │   ├── tests/
+│   ├── pyproject.toml               # Configuración de Ruff (Lint/Format Python)
 │   └── requirements.txt
 
 ├── /frontend (Next.js 15)
@@ -67,7 +68,9 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── helpers/                 # Utilidades de transformación
 │   │   ├── styles/                  # Tailwind CSS y config
 │   │   └── types/                   # Interfaces locales del front
-│   └── public/                      # Assets estáticos
+│   ├── public/                      # Assets estáticos
+│   ├── .eslintrc.json               # Reglas de linting React/Next
+│   └── .prettierrc                  # Formateo Frontend
 ├── /types (Monorepo Compartido)
 ├── /docs                            # Arquitectura, ADRs, Specs
 ├── /skills                          # Prompts globales
@@ -89,6 +92,7 @@ Estas reglas aplican a **Node.js, Python y React** sin excepción:
 6.  **JSDoc/Docstrings:** Documentación obligatoria en toda lógica pública o compleja.
 7.  **Types de Typescript:** Siempre van en `/types`. Nunca en los archivos donde se implementan.
 8.  **Rutas relativas:** Siempre usar rutas relativas para importar módulos.
+9.  **Linting y Formateo Automatizado:** El estilo de código NO se debate. Prettier y ESLint (Node/React) o Ruff (Python) deben ejecutarse **antes** de cualquier commit. Los agentes no deben gastar tokens discutiendo estilos.
 
 ---
 

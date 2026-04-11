@@ -16,7 +16,8 @@ El Git Worker es el brazo ejecutor técnico en el entorno de desarrollo local. S
 *Ubicadas en `/backend/src/tools/platform/git/`*
 - `github_cli_wrapper`: Operaciones avanzadas de PRs e Issues.
 - `fs_safe_writer`: Escritura de archivos con validación de sintaxis previa.
-- `linter_executor`: Ejecución de ruff/eslint antes del commit.
+- `linter_executor`: Ejecución de ESLint/Ruff antes de mandar a test.
+- `prettier_formatter`: Auto-corrección obligatoria de indentación, comillas y estilos para no gastar tokens del Software Chief en pavadas visuales.
 
 - **Atomic Operations (SRP):** Cada tarea debe resultar en un cambio mínimo y unitario. Archivos de más de 300 líneas deben dividirse.
 - **Barrel Files Enforcement:** Cada vez que el Worker crea un módulo, componente o utilidad nueva, TIENE LA OBLIGACIÓN de exportarlo desde el `index.ts` (Barrel file) correspondiente en el mismo PR.
