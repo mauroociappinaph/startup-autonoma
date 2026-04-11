@@ -69,9 +69,9 @@ export class LLMFactory {
    */
   public static getProviderForType(type: string): LLMProvider {
     if (type === "smart") {
-       return (process.env.PRIMARY_SMART_PROVIDER as LLMProvider) || "openai";
+       return (process.env.PRIMARY_SMART_PROVIDER as LLMProvider) || "nvidia";
     }
-    return (process.env.PRIMARY_FAST_PROVIDER as LLMProvider) || "groq";
+    return (process.env.PRIMARY_FAST_PROVIDER as LLMProvider) || "nvidia";
   }
 
   private static _getModelName(type: string, provider: LLMProvider): string {

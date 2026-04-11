@@ -32,10 +32,13 @@ export async function ceo_node(state: AgentStateType) {
 
     console.log(`✅ CEO Decision: ${response.next_step} -> ${response.reasoning}`);
 
-    // Retornamos la actualización del estado
+    // Si el CEO decide delegar, actualizamos el estado para que el Grafo tome el camino condicional
+    const nextPlan = response.next_step === "delegate" ? ["research"] : [];
+
+    // Retornamos la actualización del estado incluyendo el campo plan
     return {
       executive_summary: response.analysis,
-      // Aquí podríamos agregar lógica para el ruteo
+      plan: nextPlan
     };
   } catch (error) {
     console.error("❌ Fallo en el Nodo CEO:", error);
