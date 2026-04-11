@@ -13,6 +13,7 @@ export async function researcher_node(state: AgentStateType) {
   console.log("--- EJECUTANDO NODO RESEARCHER ---");
 
   // Usamos el modelo SMART (NVIDIA) para asegurar precisión en la búsqueda
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const model = LLMFactory.createModel({ type: "smart", temperature: 0 }) as any;
   
   // Binding de herramientas para que el modelo pueda "llamarlas"
@@ -55,6 +56,7 @@ export async function researcher_node(state: AgentStateType) {
       
       if (!tool || !toolCall.id) continue;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const toolResult = await (tool as any).invoke(toolCall.args);
       const content = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult);
       currentMessages.push(new ToolMessage({
