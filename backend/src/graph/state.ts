@@ -34,7 +34,15 @@ export const AgentAnnotation = Annotation.Root({
    * Lista de tareas estratégicas.
    */
   plan: Annotation<string[]>({
-    reducer: (prev, next) => next,
+    reducer: (prev, next) => next || prev, // Asegura que 'plan' se mantenga si es necesario
     default: () => [],
+  }),
+
+  /**
+   * Indica el nodo activo del Chief.
+   */
+  active_chief: Annotation<string | undefined>({
+    reducer: (prev, next) => next ?? prev, // Mantiene el valor anterior si el nuevo es undefined
+    default: () => undefined,
   }),
 });

@@ -37,7 +37,7 @@ export async function software_chief_node(state: AgentStateType) {
     // Por ahora, si la misión contiene 'research', delegamos al researcher
     return {
       active_chief: "software_chief",
-      plan: response.mision.includes("research") ? ["research"] : [],
+      plan: response.mision.toLowerCase().includes("research") || response.mision.toLowerCase().includes("investigar") || response.mision.toLowerCase().includes("analizar") ? ["research"] : [],
     };
   } catch (error) {
     console.error("❌ Fallo en el Nodo SoftwareChief:", error);
