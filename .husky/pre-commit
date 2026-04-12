@@ -5,6 +5,19 @@ echo "=========================================================="
 echo "🛡️  ANTIGRAVITY: Ejecutando verificación de Leyes Sagradas"
 echo "=========================================================="
 
+# 0. Sincronizar documentación de estructura (si es necesario)
+# echo "📚 Sincronizando estructura del proyecto en la documentación..."
+# npm run sync-docs
+# git add docs/ AGENTS.md README.md 2>/dev/null
+
+# 1. Correr chequeos de frontend
+echo "🔍 Verificando frontend con TSC..."
+npm run check --filter=frontend
+if [ $? -ne 0 ]; then
+  echo "❌ Frontend check fallido. Por favor, revisa los errores de TypeScript localmente."
+  exit 1
+fi
+
 # 0. Sincronizar documentación de estructura
 echo "📚 Sincronizando estructura del proyecto en la documentación..."
 npm run sync-docs
