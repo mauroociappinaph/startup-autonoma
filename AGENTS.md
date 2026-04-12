@@ -81,6 +81,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── /ux
 ├── /frontend
 │   ├── .eslintrc.json
+│   ├── next-env.d.ts
 │   ├── package.json
 │   ├── /public
 │   ├── /src
