@@ -4,6 +4,21 @@ import { execSync } from 'child_process';
 
 const MAX_LINES = 300;
 
+// Ley de Integridad Estructural: Cada paquete debe tener su propia configuración
+function checkStructuralIntegrity() {
+  const PACKAGES = ['backend', 'frontend'];
+  PACKAGES.forEach(pkg => {
+    const tsconfigPath = path.join(process.cwd(), pkg, 'tsconfig.json');
+    if (!fs.existsSync(tsconfigPath)) {
+      console.error(`🚨 [LEY DE INTEGRIDAD ROTA]: El paquete '${pkg}' no tiene un tsconfig.json. Esto rompe el aislamiento del monorepo.`);
+      errors++;
+    }
+  });
+}
+
+// Correr integridad antes del resto
+checkStructuralIntegrity();
+
 // Directorios a ignorar
 const IGNORE_DIRS = ['node_modules', 'dist', '.git', '.next', '.husky', '.github'];
 
