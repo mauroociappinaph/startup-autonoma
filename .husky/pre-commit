@@ -5,6 +5,12 @@ echo "=========================================================="
 echo "🛡️  ANTIGRAVITY: Ejecutando verificación de Leyes Sagradas"
 echo "=========================================================="
 
+# 0. Sincronizar documentación de estructura
+echo "📚 Sincronizando estructura del proyecto en la documentación..."
+npm run sync-docs
+# Si hubo cambios en los docs, los agregamos para que entren en este commit
+git add docs/ AGENTS.md README.md 2>/dev/null
+
 # 1. Validar reglas de arquitectura en archivos Stages
 node scripts/verify-sacred-laws.js
 if [ $? -ne 0 ]; then

@@ -26,7 +26,10 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ├── .gitignore
 ├── AGENTS.md
 ├── GEMINI.md
+├── README.md
 ├── /ai-engine
+│   ├── /.pytest_cache
+│   │   ├── /v
 │   ├── /app
 │   │   ├── /api
 │   │   ├── /contracts
@@ -57,10 +60,13 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── /services
 │   │   ├── /skills
 │   │   ├── /state
+│   │   ├── test-run.ts
+│   │   ├── test-workflow.ts
 │   │   ├── /tools
 │   │   ├── /types
 │   │   ├── /workers
 │   ├── /tests
+│   │   ├── software_chief.test.ts
 │   ├── tsconfig.json
 ├── commitlint.config.js
 ├── /docs
