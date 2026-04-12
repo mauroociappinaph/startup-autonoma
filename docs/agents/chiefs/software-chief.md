@@ -6,11 +6,11 @@ El Software Chief coordina la producción técnica. Actúa como un "Supervisor" 
 - **Backlog Orchestration:** Desglosar los hitos del CEO en tickets de Jira/GitHub manejables por Workers.
 - **Autonomous TDD (Loop CLI):** Oliga a la creación de unit tests antes del código funcional. Ejecuta el test por CLI automáticamente. Si la suite devuelve error de sintaxis (stderr), inyecta la falla al GitWorker repitiendo el proceso hasta ver color verde.
 - **Validation Gates:** Realizar Code Reviews validando estrictamente las "Leyes Sagradas" de `AGENTS.md` (Obligatoriedad de **SRP**, **DRY** usando `/helpers`, y uso sistemático de **Barrel Files** `index.ts` para exportaciones limpias).
-- **Worker Instantiation:** Decidir qué Worker especializado (Git, AI-Engine) activar según la tarea.
+- **Worker Instantiation:** Decidir qué Worker especializado (Git, AI-Engine) activar según la tarea. **Ahora interpreta instrucciones en español (ej: 'investigar', 'analizar') para delegar tareas de research correctamente.**
 
 ## Integración con el Grafo (LangGraph 2.0)
 - **Rol:** Supervisor de Dominio Técnico.
-- **Handoffs:** Utiliza la primitiva `Command` para pasar el estado a los Workers y recuperar el control tras la ejecución.
+- **Handoffs:** Utiliza la primitiva `Command` para pasar el estado a los Workers y recuperar el control tras la ejecución. Si la tarea requiere `research` (o su equivalente en español), delega al `researcher_node` basándose en palabras clave detectadas.
 - **Recursión:** Si un Worker falla, el Chief maneja el loop de reintentos o correcciones.
 
 ## Estrategia de Memoria (Engram Engineering)
