@@ -18,22 +18,17 @@ async function runWorkflowTest() {
 
   try {
     const stream = await graph.stream(initialInput, { streamMode: "values" });
-    
+
     for await (const step of stream) {
-      if (step.active_chief) {
-        console.log(`\n[CHIEF ACTIVE]: ${step.active_chief}`);
-        console.log(`[PLAN ACTUAL]: ${JSON.stringify(step.plan)}`);
-      }
-      
-      if (step.executive_summary && step.executive_summary.length > 50) {
-        console.log(`\n[SUMMARY]: ${step.executive_summary.substring(0, 100)}...`);
-      }
+      console.log("--- PASO DEL GRAFO ---");
+      console.log(JSON.stringify(step, null, 2));
     }
 
-    console.log("\n✅ Test finalizado.");
+    console.log("\n✅ Ejecución de prueba finalizada.");
   } catch (error) {
-    console.error("❌ Error en el test:", error);
+    console.error("❌ Error en la ejecución del grafo:", error);
   }
 }
 
 runWorkflowTest();
+
