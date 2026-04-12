@@ -1,10 +1,10 @@
-import { software_chief_node } from '@/nodes/chiefs/software_chief';
-import { LLMService } from '@/services/llmService';
-import { AgentStateType } from '@/types/state';
+import { software_chief_node } from '@/nodes/chiefs/software_chief.js';
+import { LLMService } from '@/services/llmService.js';
+import { AgentStateType } from '@/types/state.js';
 import { jest } from '@jest/globals';
 
 // Mockeamos el servicio de LLM
-jest.mock('@/services/llmService');
+jest.mock('@/services/llmService.js');
 
 describe('SoftwareChief Node', () => {
   let initialState: AgentStateType;
