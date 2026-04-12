@@ -89,9 +89,11 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── /components
 │   │   ├── /helpers
 │   │   ├── /hooks
+│   │   ├── index.ts
 │   │   ├── /store
 │   │   ├── /styles
 │   │   ├── /types
+│   ├── tsconfig.json
 ├── /infra
 ├── package-lock.json
 ├── package.json
