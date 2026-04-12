@@ -67,6 +67,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── /workers
 │   ├── /tests
 │   │   ├── ceo_agent.test.ts
+│   │   ├── context_manager.test.ts
 │   │   ├── software_chief.test.ts
 │   ├── tsconfig.json
 ├── commitlint.config.js
