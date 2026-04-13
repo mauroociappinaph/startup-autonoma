@@ -47,18 +47,19 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       }
 
       default:
-        throw new Error(`Acción no soportada: ${(payload as any).action}`);
+        // @ts-expect-error - Exhaustive check fallback
+        throw new Error(`Acción no soportada: ${payload.action}`);
     }
 
     console.log(`🚀 Ejecutando: ${gitCommand} en ${targetRepoPath}`);
     
     // Promesa manual para evitar problemas con promisify y mocks de Jest
     const { stdout, stderr } = await new Promise<{ stdout: string, stderr: string }>((resolve, reject) => {
-      exec(gitCommand, { cwd: targetRepoPath }, (error, stdout, stderr) => {
+      exec(gitCommand, { cwd: targetRepoPath }, (error, out, err) => {
         if (error) {
-          reject({ error, stdout, stderr });
+          reject({ error, stdout: out, stderr: err });
         } else {
-          resolve({ stdout, stderr });
+          resolve({ stdout: out, stderr: err });
         }
       });
     });
