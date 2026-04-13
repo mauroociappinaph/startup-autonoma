@@ -7,6 +7,7 @@ jest.mock('child_process', () => ({
 
 // Importamos exec para poder configurar el mock
 import { exec } from 'child_process';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Usamos any para evitar peleas con las sobrecargas y la propiedad __promisify__ de exec
 const mockedExec = exec as any;
 
@@ -36,6 +37,7 @@ describe('Git Worker Node', () => {
     });
 
     expect(result.success).toBe(true);
+    expect(result.commitId).toBeDefined();
     expect(result.commitId).toBe('abc1234');
   });
 
