@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BaseMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { LLMFactory } from "./llmFactory.js";
-import { LLMFactoryOptions } from "../types/llm.js";
+import { LLMFactoryOptions } from "@/types/llm.types.js";
 import { ContextManager } from "../helpers/contextManager.js";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 

@@ -1,21 +1,17 @@
 import { z } from 'zod';
 import { exec } from 'child_process';
-import { promisify } from 'util';
-import { 
-  GitCommandSchema, 
-  GitWorkerResponseSchema, 
+import {
+  GitCommandSchema,
+  GitWorkerResponseSchema,
   GitCommandInput,
   GitWorkerResponse
-} from '@/types/gitWorker.js';
+} from '@/types/git-worker.types.js';
 
 /**
  * Git Worker: Brazo ejecutor de operaciones de control de versiones.
  * Traduce intenciones de alto nivel (acciones) en comandos Git reales.
  */
 export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorkerResponse> {
-  // Promisificamos exec adentro para que los mocks de los tests funcionen correctamente
-  const execAsync = promisify(exec);
-  
   const { payload, repoPath } = GitCommandSchema.parse(commandInput);
   const targetRepoPath = repoPath || process.cwd();
   
@@ -57,7 +53,16 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
 
     console.log(`🚀 Ejecutando: ${gitCommand} en ${targetRepoPath}`);
     
-    const { stdout, stderr } = await execAsync(gitCommand, { cwd: targetRepoPath });
+    // Promesa manual para evitar problemas con promisify y mocks de Jest
+    const { stdout, stderr } = await new Promise<{ stdout: string, stderr: string }>((resolve, reject) => {
+      exec(gitCommand, { cwd: targetRepoPath }, (error, stdout, stderr) => {
+        if (error) {
+          reject({ error, stdout, stderr });
+        } else {
+          resolve({ stdout, stderr });
+        }
+      });
+    });
 
     const response: GitWorkerResponse = {
       success: true,
@@ -66,9 +71,21 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       stderr: stderr || undefined,
     };
 
+    // Extracción de Commit ID (robusta)
     if (payload.action === 'commit-all' && stdout) {
-      const commitMatch = stdout.match(/\s([a-f0-9]{7,40})\]/);
-      if (commitMatch) response.commitId = commitMatch[1];
+      const patterns = [
+        /\[\w+\s+([a-f0-9]{7,40})\]/, // [branch abc1234]
+        /\s([a-f0-9]{7,40})\]/,       //  abc1234]
+        /([a-f0-9]{7,40})/            // Cualquier hash hex de 7+ chars
+      ];
+
+      for (const pattern of patterns) {
+        const match = stdout.match(pattern);
+        if (match) {
+          response.commitId = match[1] || match[0];
+          break;
+        }
+      }
     }
 
     if (payload.action === 'create-branch') {
@@ -79,11 +96,11 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
     return response;
 
   } catch (error: any) {
-    console.error(`❌ Falló la acción ${actionName}: ${error.message}`);
+    console.error(`❌ Falló la acción ${actionName}: ${error.message || 'Error desconocido'}`);
     return {
       success: false,
       action: actionName,
-      errorMessage: error.message,
+      errorMessage: error.error?.message || error.message || 'Error ejecutando comando',
       stderr: error.stderr || undefined,
       stdout: error.stdout || undefined,
     };

@@ -1,6 +1,6 @@
-import { AgentStateType } from "@/types/state.js";
+import { AgentStateType } from "@/types/state.types.js";
 import { LLMService } from "@/services/llmService.js";
-import { ChiefMissionSchema } from "@/types/chief.js";
+import { ChiefMissionSchema } from "@/types/chief.types.js";
 import { SystemMessage } from "@langchain/core/messages";
 
 /**

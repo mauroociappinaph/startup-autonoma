@@ -1,6 +1,6 @@
 import { ceo_node } from '@/nodes/ceo.js';
 import { LLMService } from '@/services/llmService.js';
-import { AgentStateType } from '@/types/state.js';
+import { AgentStateType } from '@/types/state.types.js';
 import { jest } from '@jest/globals';
 
 // Mockeamos el servicio de LLM

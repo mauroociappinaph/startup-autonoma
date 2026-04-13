@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatGroq } from "@langchain/groq";
-import { LLMFactoryOptions, LLMProvider } from "../types/llm.js";
+import { LLMFactoryOptions, LLMProvider } from "@/types/llm.types.js";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 /**

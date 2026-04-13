@@ -1,6 +1,6 @@
 import { LLMService } from "../services/llmService.js";
 import { CEOResponseSchema } from "../contracts/ceo.js";
-import { AgentStateType } from "../types/state.js";
+import { AgentStateType } from "@/types/state.types.js";
 import { SystemMessage } from "@langchain/core/messages";
 
 /**

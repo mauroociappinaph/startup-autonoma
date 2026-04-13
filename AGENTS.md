@@ -24,6 +24,8 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── /ISSUE_TEMPLATE
 │   ├── /workflows
 ├── .gitignore
+├── /.qwen
+│   ├── settings.json
 ├── AGENTS.md
 ├── GEMINI.md
 ├── README.md
