@@ -96,6 +96,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
     return response;
 
   } catch (error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const err = error as any;
     console.error(`❌ Falló la acción ${actionName}: ${err.message || 'Error desconocido'}`);
     return {
