@@ -2,9 +2,11 @@ import { gitWorker } from '@/nodes/workers/gitWorker.js';
 import * as childProcess from 'child_process';
 import { jest } from '@jest/globals';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SpiedFunction = jest.MockedFunction<any>;
+
 describe('Git Worker Node', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let execSpy: any;
+  let execSpy: SpiedFunction;
 
   beforeAll(() => {
     // Usamos jest.spyOn para mockear la función exec de child_process
