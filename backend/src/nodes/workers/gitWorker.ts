@@ -1,64 +1,88 @@
 import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { GitCommandSchema, GitWorkerResponseSchema, GitCommandInput } from '@/types/gitWorker.js';
-import path from 'path';
-
-const execAsync = promisify(exec);
+import { 
+  GitCommandSchema, 
+  GitWorkerResponseSchema, 
+  GitCommandInput,
+  GitWorkerResponse
+} from '@/types/gitWorker.js';
 
 /**
- * Git Worker: Ejecuta comandos Git en el repositorio.
- * Se comunica con el Software Chief para realizar operaciones de control de versiones.
+ * Git Worker: Brazo ejecutor de operaciones de control de versiones.
+ * Traduce intenciones de alto nivel (acciones) en comandos Git reales.
  */
-export async function gitWorker(commandInput: GitCommandInput): Promise<z.infer<typeof GitWorkerResponseSchema>> {
-  console.log(`--- EJECUTANDO GIT WORKER ---`);
-  console.log(`Comando recibido: ${commandInput.command} con argumentos: ${commandInput.args}`);
+export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorkerResponse> {
+  // Promisificamos exec adentro para que los mocks de los tests funcionen correctamente
+  const execAsync = promisify(exec);
+  
+  const { payload, repoPath } = GitCommandSchema.parse(commandInput);
+  const targetRepoPath = repoPath || process.cwd();
+  
+  console.log(`--- [GIT WORKER] Ejecutando acción: ${payload.action} ---`);
+
+  let gitCommand = '';
+  let actionName = payload.action;
 
   try {
-    // Validamos la entrada antes de proceder
-    const validatedInput = GitCommandSchema.parse(commandInput);
-    const { command, args, repoPath, isolationId } = validatedInput;
+    switch (payload.action) {
+      case 'raw':
+        gitCommand = `git ${payload.command} ${payload.args.join(' ')}`;
+        break;
 
-    // Determinamos la ruta del repositorio. Si no se proporciona, usamos el directorio actual.
-    // Nota: La gestión de worktrees con isolationId se simplifica por ahora, asumiendo ejecución en el directorio base o uno especificado.
-    const targetRepoPath = repoPath || process.cwd();
-    const gitCommand = `git \${command} \${args.join(' ')}`;
+      case 'create-branch':
+        gitCommand = `git checkout ${payload.baseBranch} && git pull origin ${payload.baseBranch} && git checkout -b ${payload.branchName}`;
+        break;
 
-    console.log(`Ejecutando: ${gitCommand} en ${targetRepoPath}`);
+      case 'commit-all':
+        gitCommand = `git add . && git commit -m "${payload.message}"`;
+        break;
 
-    const { stdout, stderr } = await execAsync(gitCommand, { cwd: targetRepoPath });
+      case 'sync-develop':
+        gitCommand = `git checkout develop && git pull origin develop`;
+        break;
 
-    console.log(`✅ Comando Git ejecutado exitosamente.`);
-    console.log(`Stdout:
-${stdout}`);
-    if (stderr) {
-      console.warn(`Stderr:
-${stderr}`);
+      case 'pull':
+        gitCommand = `git pull`;
+        break;
+
+      case 'push':
+        const branch = payload.branchName || ''; 
+        gitCommand = `git push origin ${branch}`.trim();
+        break;
+
+      default:
+        throw new Error(`Acción no soportada: ${(payload as any).action}`);
     }
 
-    // Preparamos la respuesta basada en el comando ejecutado
-    const response: z.infer<typeof GitWorkerResponseSchema> = {
+    console.log(`🚀 Ejecutando: ${gitCommand} en ${targetRepoPath}`);
+    
+    const { stdout, stderr } = await execAsync(gitCommand, { cwd: targetRepoPath });
+
+    const response: GitWorkerResponse = {
       success: true,
+      action: actionName,
       stdout: stdout || undefined,
       stderr: stderr || undefined,
     };
 
-    if (command === 'commit' && stdout) {
-      // Intentamos extraer el hash del commit si es un commit
-      const commitMatch = stdout.match(/\[([a-f0-9]+)\]/);
-      if (commitMatch && commitMatch[1]) {
-        response.commitId = commitMatch[1];
-      }
+    if (payload.action === 'commit-all' && stdout) {
+      const commitMatch = stdout.match(/\s([a-f0-9]{7,40})\]/);
+      if (commitMatch) response.commitId = commitMatch[1];
     }
-    
-    // Podríamos añadir lógica para detectar el nombre de la branch si el comando fue 'checkout' o 'branch'
 
+    if (payload.action === 'create-branch') {
+      response.branchName = payload.branchName;
+    }
+
+    console.log(`✅ Acción ${actionName} completada con éxito.`);
     return response;
 
   } catch (error: any) {
-    console.error(`❌ Error ejecutando comando Git (\${commandInput.command}): ${error.message}`);
+    console.error(`❌ Falló la acción ${actionName}: ${error.message}`);
     return {
       success: false,
+      action: actionName,
       errorMessage: error.message,
       stderr: error.stderr || undefined,
       stdout: error.stdout || undefined,
