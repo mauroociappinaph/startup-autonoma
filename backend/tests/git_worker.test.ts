@@ -7,16 +7,16 @@ jest.mock('child_process', () => ({
 
 // Importamos exec para poder configurar el mock
 import { exec } from 'child_process';
-const mockedExec = exec as unknown as jest.MockedFunction<any>;
+const mockedExec = exec as unknown as jest.MockedFunction<(command: string, options: any, callback: any) => any>;
 
 describe('Git Worker Node', () => {
-  let gitWorker: any;
+  let gitWorkerNode: any;
 
   beforeEach(async () => {
     mockedExec.mockClear();
     // 2. Importamos dinámicamente para asegurarnos de que tome el mock fresco
-    const module = await import('@/nodes/workers/gitWorker.js');
-    gitWorker = module.gitWorker;
+    const module: any = await import('@/nodes/workers/gitWorker.js');
+    gitWorkerNode = module.gitWorker;
   });
 
   it('debería traducir la acción commit-all correctamente', async () => {
@@ -27,7 +27,7 @@ describe('Git Worker Node', () => {
       return {} as any;
     });
 
-    const result = await gitWorker({
+    const result = await gitWorkerNode({
       payload: {
         action: 'commit-all',
         message: 'feat: test commit'
@@ -48,7 +48,7 @@ describe('Git Worker Node', () => {
       return {} as any;
     });
 
-    const result = await gitWorker({
+    const result = await gitWorkerNode({
       payload: { action: 'pull' }
     });
 
@@ -63,7 +63,7 @@ describe('Git Worker Node', () => {
       return {} as any;
     });
 
-    const result = await gitWorker({
+    const result = await gitWorkerNode({
       payload: {
         action: 'create-branch',
         branchName: 'feat/nueva-feature',

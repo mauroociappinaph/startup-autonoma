@@ -1,8 +1,6 @@
-import { z } from 'zod';
 import { exec } from 'child_process';
 import {
   GitCommandSchema,
-  GitWorkerResponseSchema,
   GitCommandInput,
   GitWorkerResponse
 } from '@/types/git-worker.types.js';
@@ -18,7 +16,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
   console.log(`--- [GIT WORKER] Ejecutando acción: ${payload.action} ---`);
 
   let gitCommand = '';
-  let actionName = payload.action;
+  const actionName = payload.action;
 
   try {
     switch (payload.action) {
@@ -42,10 +40,11 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
         gitCommand = `git pull`;
         break;
 
-      case 'push':
+      case 'push': {
         const branch = payload.branchName || ''; 
         gitCommand = `git push origin ${branch}`.trim();
         break;
+      }
 
       default:
         throw new Error(`Acción no soportada: ${(payload as any).action}`);
