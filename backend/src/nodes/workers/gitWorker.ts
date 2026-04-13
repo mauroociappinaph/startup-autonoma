@@ -96,13 +96,15 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
     return response;
 
   } catch (error: any) {
-    console.error(`❌ Falló la acción ${actionName}: ${error.message || 'Error desconocido'}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any;
+    console.error(`❌ Falló la acción ${actionName}: ${err.message || 'Error desconocido'}`);
     return {
       success: false,
       action: actionName,
-      errorMessage: error.error?.message || error.message || 'Error ejecutando comando',
-      stderr: error.stderr || undefined,
-      stdout: error.stdout || undefined,
+      errorMessage: err.error?.message || err.message || 'Error ejecutando comando',
+      stderr: err.stderr || undefined,
+      stdout: err.stdout || undefined,
     };
   }
 }
