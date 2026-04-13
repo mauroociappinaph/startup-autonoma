@@ -106,6 +106,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ├── tsconfig.json
 ├── turbo.json
 ├── /types
+│   ├── index.ts
 ```
 
 ---
