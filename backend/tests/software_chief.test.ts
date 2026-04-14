@@ -1,51 +1,72 @@
 import { software_chief_node } from '@/nodes/chiefs/software_chief.js';
 import { LLMService } from '@/services/llmService.js';
 import { AgentStateType } from '@/types/state.types.js';
-import { jest } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { HumanMessage } from '@langchain/core/messages';
 
 // Mockeamos el servicio de LLM
 jest.mock('@/services/llmService.js');
 
-describe('SoftwareChief Node', () => {
+describe('SoftwareChief Node Delegation', () => {
   let initialState: AgentStateType;
 
   beforeEach(() => {
     initialState = {
-      messages: [],
+      messages: [new HumanMessage("Crea una branch para el refactor")],
       active_chief: '',
       plan: [],
-      original_prompt: '',
-      refined_prompt: '',
       executive_summary: '',
-      status: 'planning',
       retry_count: 0,
-      trace_id: 'test-trace',
-      metadata: {},
-      results: [],
-      feedback: []
     };
     jest.clearAllMocks();
   });
 
-  it('debe delegar a research cuando la misión incluye "investigar"', async () => {
-    // Configuramos el mock para que devuelva una misión con "investigar"
+  it('debe delegar al ResearchWorker cuando el razonamiento sugiere investigación', async () => {
     (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
-      mision: 'Debes investigar nuevas librerías de scraping'
+      decision: 'delegate_to_researcher',
+      reasoning: 'Necesitamos entender cómo está estructurado el código antes de cambiar nada.',
+      worker_instruction: 'Explora la carpeta src/nodes'
     });
 
     const result = await software_chief_node(initialState);
 
     expect(result.active_chief).toBe('software_chief');
     expect(result.plan).toContain('research');
+    expect(result.messages?.[0].content).toContain('Delegando investigación');
   });
 
-  it('debe devolver un plan vacío si no hay palabras clave de research', async () => {
+  it('debe delegar al GitWorker con el payload correcto para crear una branch', async () => {
+    const gitPayload = {
+      action: 'create-branch',
+      branchName: 'feat/refactor-auth',
+      baseBranch: 'develop'
+    };
+
     (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
-      mision: 'Implementa un nuevo barrel file'
+      decision: 'delegate_to_git_worker',
+      reasoning: 'Creando branch para iniciar el desarrollo.',
+      git_payload: gitPayload
+    });
+
+    const result = await software_chief_node(initialState);
+
+    expect(result.active_chief).toBe('software_chief');
+    expect(result.plan).toContain('git_operation');
+    
+    // Verificamos que los kwargs del mensaje contengan la instrucción para el Git Worker node
+    const delegationMessage = result.messages?.[0] as any;
+    expect(delegationMessage.additional_kwargs.git_instruction.payload).toEqual(gitPayload);
+  });
+
+  it('debe finalizar la misión cuando la decisión es "complete"', async () => {
+    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+      decision: 'complete',
+      reasoning: 'Todas las tareas técnicas han sido completadas con éxito.'
     });
 
     const result = await software_chief_node(initialState);
 
     expect(result.plan).toEqual([]);
+    expect(result.executive_summary).toBe('Todas las tareas técnicas han sido completadas con éxito.');
   });
 });
