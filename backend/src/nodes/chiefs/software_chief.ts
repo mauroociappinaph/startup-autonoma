@@ -17,9 +17,9 @@ const SoftwareChiefDecisionSchema = z.object({
     "need_clarification"
   ]),
   reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
-  worker_instruction: z.string().optional().describe("Instrucción en lenguaje natural para el worker (si aplica)."),
-  git_payload: GitActionSchema.optional().describe("Carga útil estructurada si se delega al Git Worker."),
-  test_payload: TestRunnerInputSchema.optional().describe("Carga útil estructurada si se delega al Test Runner."),
+  worker_instruction: z.string().nullable().optional().describe("Instrucción en lenguaje natural para el worker (si aplica)."),
+  git_payload: GitActionSchema.nullable().optional().describe("Carga útil estructurada si se delega al Git Worker."),
+  test_payload: TestRunnerInputSchema.nullable().optional().describe("Carga útil estructurada si se delega al Test Runner."),
 });
 
 /**
@@ -59,7 +59,7 @@ export async function software_chief_node(state: AgentStateType) {
     if (response.decision === "delegate_to_researcher") {
       updates.plan = ["research"];
       updates.messages = [new AIMessage({
-        content: `[CHIEF_DELEGATION] Delegando investigación: ${response.worker_instruction}`,
+        content: `[CHIEF_DELEGATION] Delegando investigación: ${response.worker_instruction || 'Investigación técnica requerida.'}`,
       })];
     } 
     else if (response.decision === "delegate_to_git_worker") {
@@ -68,7 +68,7 @@ export async function software_chief_node(state: AgentStateType) {
         content: `[CHIEF_DELEGATION] Delegando operación Git: ${response.reasoning}`,
         additional_kwargs: {
           git_instruction: {
-            payload: response.git_payload,
+            payload: response.git_payload!,
             repoPath: process.cwd()
           }
         }
@@ -79,8 +79,15 @@ export async function software_chief_node(state: AgentStateType) {
       updates.messages = [new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando validación de tests: ${response.reasoning}`,
         additional_kwargs: {
-          test_instruction: response.test_payload as TestRunnerInput
+          test_instruction: response.test_payload!
         }
+      })];
+    }
+    else if (response.decision === "need_clarification") {
+      updates.plan = [];
+      updates.executive_summary = `El Software Chief necesita aclaración: ${response.reasoning}`;
+      updates.messages = [new AIMessage({
+        content: `[CHIEF_CLARIFICATION] ${response.reasoning}`,
       })];
     }
     else if (response.decision === "complete") {
