@@ -33,14 +33,20 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ├── /ai-engine
 │   ├── /.pytest_cache
 │   │   ├── /v
+│   ├── /.venv
+│   │   ├── /bin
+│   │   ├── /include
+│   │   ├── /lib
 │   ├── /app
 │   │   ├── /api
 │   │   ├── /contracts
 │   │   ├── /core
+│   │   ├── /grpc
 │   │   ├── /helpers
 │   │   ├── /tools
 │   │   ├── /workers
 │   ├── package.json
+│   ├── /scripts
 │   ├── /tests
 ├── /backend
 │   ├── package.json
@@ -104,6 +110,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ├── /infra
 ├── package-lock.json
 ├── package.json
+├── /protos
 ├── /scripts
 ├── /skills
 ├── tsconfig.json
