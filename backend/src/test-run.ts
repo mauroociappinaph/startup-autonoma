@@ -33,6 +33,7 @@ async function runTest() {
     
     for await (const step of stream) {
       const nodeName = Object.keys(step)[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const output = (step as any)[nodeName];
 
       console.log(`\n--- 🔄 PASO: [${nodeName.toUpperCase()}] ---`);
@@ -61,7 +62,9 @@ async function runTest() {
     console.log("✅ FLUJO FINALIZADO CON ÉXITO");
     console.log("==========================================================");
   } catch (error: any) {
-    console.error("\n❌ ERROR CRÍTICO EN EL GRAFO:", error.message);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any;
+    console.error("\n❌ ERROR CRÍTICO EN EL GRAFO:", err.message);
   }
 }
 
