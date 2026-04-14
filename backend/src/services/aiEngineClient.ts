@@ -23,6 +23,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 });
 
 // Tipado dinámico del paquete gRPC
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const aiEngineProto = grpc.loadPackageDefinition(packageDefinition).ai_engine as any;
 
 /**
@@ -30,6 +31,7 @@ const aiEngineProto = grpc.loadPackageDefinition(packageDefinition).ai_engine as
  * Permite ejecutar tareas pesadas y recibir streaming de progreso.
  */
 export class AIEngineClient {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private client: any;
 
   constructor(address: string = 'localhost:50051') {
@@ -43,10 +45,12 @@ export class AIEngineClient {
   /**
    * Ejecuta una tarea en un Worker de Python de forma asíncrona.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async executeTask(request: any): Promise<any> {
     console.log(`--- [gRPC CLIENT] Enviando tarea: ${request.worker_name} ---`);
     
     return new Promise((resolve, reject) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.client.ExecuteWorkerTask(request, (error: any, response: any) => {
         if (error) {
           console.error(`❌ Error en llamada gRPC: ${error.message}`);
@@ -61,6 +65,7 @@ export class AIEngineClient {
   /**
    * Inicia un flujo de streaming para ver el progreso del worker en tiempo real.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   streamProgress(request: any): grpc.ClientReadableStream<any> {
     console.log(`--- [gRPC CLIENT] Iniciando stream de progreso para: ${request.worker_name} ---`);
     return this.client.StreamWorkerProgress(request);
