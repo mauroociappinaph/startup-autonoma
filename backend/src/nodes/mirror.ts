@@ -52,8 +52,10 @@ export async function mirror_node(state: AgentStateType) {
         additional_kwargs: { mirror_data: response }
       })]
     };
-  } catch (error: any) {
-    console.error("❌ Fallo en el Nodo Mirror:", error);
-    throw error;
+  } catch (error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any;
+    console.error("❌ Fallo en el Nodo Mirror:", err.message);
+    throw err;
   }
 }
