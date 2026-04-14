@@ -3,7 +3,7 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { GitActionSchema } from "@/types/git-worker.types.js";
-import { TestRunnerInputSchema, TestRunnerInput } from "@/types/software-tools.types.js";
+import { TestRunnerInputSchema } from "@/types/software-tools.types.js";
 
 /**
  * Esquema de decisión interna del Software Chief.
