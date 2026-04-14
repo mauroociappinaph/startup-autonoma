@@ -61,7 +61,7 @@ async function runTest() {
     console.log("\n==========================================================");
     console.log("✅ FLUJO FINALIZADO CON ÉXITO");
     console.log("==========================================================");
-  } catch (error: any) {
+  } catch (error: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const err = error as any;
     console.error("\n❌ ERROR CRÍTICO EN EL GRAFO:", err.message);
