@@ -5,6 +5,8 @@ import { BaseMessage } from "@langchain/core/messages";
  * Cumple con la Ley #7 (Centralización de Tipos).
  */
 export interface AgentStateType {
+  original_prompt: string; // El input crudo del humano
+  refined_prompt: string;  // El input optimizado por el Mirror
   messages: BaseMessage[];
   executive_summary: string;
   retry_count: number;

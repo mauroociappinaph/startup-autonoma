@@ -1,5 +1,6 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { AgentAnnotation } from "@/graph/state.js";
+import { mirror_node } from "@/nodes/mirror.js";
 import { ceo_node } from "@/nodes/ceo.js";
 import { software_chief_node } from "@/nodes/chiefs/software_chief.js";
 import { researcher_node } from "@/nodes/researcher.js";
@@ -7,21 +8,26 @@ import { git_worker_node } from "@/nodes/workers/git_worker_node.js";
 import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
 
 /**
- * Orquestador Principal de la Startup. 
- * Ensambla el flujo jerárquico: CEO -> SoftwareChief -> Workers.
+ * Orquestador Principal de la Startup Autónoma. 
+ * Jerarquía: Mirror (Introspección) -> CEO (Estrategia) -> Chiefs (Coordinación) -> Workers (Ejecución).
  */
 export const createGraph = () => {
     const workflow = new StateGraph(AgentAnnotation)
+        .addNode("mirror", mirror_node)
         .addNode("ceo", ceo_node)
         .addNode("software_chief", software_chief_node)
         .addNode("researcher", researcher_node)
         .addNode("git_worker", git_worker_node)
         .addNode("test_runner", test_runner_node)
 
-        .addEdge(START, "ceo");
+        // El flujo siempre arranca en el Mirror para introspección y refinamiento
+        .addEdge(START, "mirror")
+        
+        // Del Mirror saltamos al CEO (Nota: aquí es donde aplicaremos el interrupt_before)
+        .addEdge("mirror", "ceo")
 
-    // Arista: CEO delega al SoftwareChief
-    workflow.addEdge("ceo", "software_chief");
+        // El CEO delega a los Chiefs
+        .addEdge("ceo", "software_chief");
 
     // Arista condicional: El Chief decide a qué Worker delegar
     workflow.addConditionalEdges(
@@ -58,8 +64,12 @@ export const createGraph = () => {
     workflow.addEdge("git_worker", "software_chief");
     workflow.addEdge("test_runner", "software_chief");
 
-    // El Chief puede volver al CEO cuando termina su misión o necesita reporte
+    // El Chief vuelve al CEO para reporte final o nuevo hito
     workflow.addEdge("software_chief", "ceo");
+
+    // El CEO puede decidir volver al Mirror si el usuario requiere cambios manuales
+    // O finalizar el flujo si la visión se ha cumplido
+    workflow.addEdge("ceo", END);
 
     return workflow.compile();
 };

@@ -13,6 +13,8 @@ describe('SoftwareChief Node Delegation', () => {
 
   beforeEach(() => {
     initialState = {
+      original_prompt: "Crea una branch para el refactor",
+      refined_prompt: "Crea una branch para el refactor",
       messages: [new HumanMessage("Crea una branch para el refactor")],
       active_chief: '',
       plan: [],

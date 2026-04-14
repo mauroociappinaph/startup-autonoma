@@ -72,6 +72,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── context_manager.test.ts
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
+│   │   ├── mirror_node.test.ts
 │   │   ├── software_chief.test.ts
 │   │   ├── test_runner_node.test.ts
 │   ├── tsconfig.json

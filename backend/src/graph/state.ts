@@ -7,6 +7,22 @@ import { BaseMessage } from "@langchain/core/messages";
  */
 export const AgentAnnotation = Annotation.Root({
   /**
+   * Prompt original del usuario.
+   */
+  original_prompt: Annotation<string>({
+    reducer: (prev, next) => next || prev,
+    default: () => "",
+  }),
+
+  /**
+   * Prompt optimizado por el Mirror.
+   */
+  refined_prompt: Annotation<string>({
+    reducer: (prev, next) => next || prev,
+    default: () => "",
+  }),
+
+  /**
    * Historial de mensajes.
    */
   messages: Annotation<BaseMessage[]>({
