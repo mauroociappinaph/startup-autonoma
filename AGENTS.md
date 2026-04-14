@@ -10,9 +10,10 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 - Capaces de tomar decisiones, delegar y aprender vía **Engram**.
 
 **Jerarquía:**
+0.  **Agente Mirror (Aduana):** Entrada oficial del grafo. Refina la intención y valida con el humano (HITL).
 1.  **Agente CEO (Estratega):** Orquestador principal. Descompone objetivos en planes maestros.
 2.  **Agentes Chief:** Coordinan áreas (Software, Business). Gestionan el loop de Workers.
-3.  **Agentes Workers:** Ejecutan tareas atómicas (Git, LeadGen, etc.).
+3.  **Agentes Workers:** Ejecutan tareas atómicas (Git, Researcher, TestRunner).
 
 ---
 
