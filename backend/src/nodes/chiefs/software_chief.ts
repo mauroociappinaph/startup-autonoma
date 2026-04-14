@@ -3,11 +3,10 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { GitActionSchema } from "@/types/git-worker.types.js";
-import { TestRunnerInputSchema } from "@/types/software-tools.types.js";
+import { TestRunnerInputSchema, TestRunnerInput } from "@/types/software-tools.types.js";
 
 /**
  * Esquema de decisión interna del Software Chief.
- * Determina el siguiente paso técnico y la instrucción para el worker.
  */
 const SoftwareChiefDecisionSchema = z.object({
   decision: z.enum([
@@ -25,7 +24,6 @@ const SoftwareChiefDecisionSchema = z.object({
 
 /**
  * Nodo SoftwareChief: Supervisor Técnico de Elite.
- * Coordina Workers, desglosa tareas y asegura el cumplimiento de estándares.
  */
 export async function software_chief_node(state: AgentStateType) {
   console.log("--- EJECUTANDO NODO SOFTWARE CHIEF ---");
@@ -40,14 +38,8 @@ export async function software_chief_node(state: AgentStateType) {
     3. TestRunner: Para ejecutar suites de tests y validar la calidad del código.
 
     ESTRATEGIA:
-    - Si la misión requiere entender código existente, delega al ResearchWorker.
-    - Si la misión requiere preparar el entorno o guardar cambios, delega al GitWorker.
     - SIEMPRE que un Worker técnico entregue trabajo, debes delegar al TestRunner para validar que no haya regresiones.
-    - Si los tests fallan, el razonamiento debe explicar el fallo y decidir el siguiente paso (reintentar o corregir).
     - Solo marca la misión como "complete" si los tests pasaron y se cumplen las Leyes Sagradas.
-
-    LEYES SAGRADAS (Debes vigilar que se cumplan):
-    - SRP, DRY, Barrel Files, Límite de 300 líneas por archivo.
   `);
 
   try {
@@ -87,7 +79,7 @@ export async function software_chief_node(state: AgentStateType) {
       updates.messages = [new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando validación de tests: ${response.reasoning}`,
         additional_kwargs: {
-          test_instruction: response.test_payload
+          test_instruction: response.test_payload as TestRunnerInput
         }
       })];
     }
@@ -97,8 +89,10 @@ export async function software_chief_node(state: AgentStateType) {
     }
 
     return updates;
-  } catch (error: any) {
-    console.error("❌ Fallo en el Nodo SoftwareChief:", error);
-    throw error;
+  } catch (error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any;
+    console.error("❌ Fallo en el Nodo SoftwareChief:", err.message);
+    throw err;
   }
 }

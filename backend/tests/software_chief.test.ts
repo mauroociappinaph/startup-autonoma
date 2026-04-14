@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { software_chief_node } from '@/nodes/chiefs/software_chief.js';
 import { LLMService } from '@/services/llmService.js';
 import { AgentStateType } from '@/types/state.types.js';

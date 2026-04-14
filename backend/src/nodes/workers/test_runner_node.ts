@@ -11,7 +11,6 @@ export async function test_runner_node(state: AgentStateType) {
   console.log("--- EJECUTANDO NODO TEST RUNNER ---");
 
   // Buscamos la instrucción para el Test Runner en los mensajes
-  // El Software Chief debería haber dejado un mensaje con la instrucción técnica
   const lastMessage = state.messages[state.messages.length - 1];
   
   if (!lastMessage || !lastMessage.additional_kwargs?.test_instruction) {
@@ -45,10 +44,12 @@ export async function test_runner_node(state: AgentStateType) {
         })]
       };
     }
-  } catch (error: any) {
-    console.error("❌ Fallo crítico en el Nodo TestRunner:", error);
+  } catch (error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any;
+    console.error("❌ Fallo crítico en el Nodo TestRunner:", err.message);
     return {
-      executive_summary: `Fallo crítico en Test Runner: ${error.message}`,
+      executive_summary: `Fallo crítico en Test Runner: ${err.message}`,
     };
   }
 }

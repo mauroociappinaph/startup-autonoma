@@ -45,10 +45,12 @@ export async function git_worker_node(state: AgentStateType) {
         })]
       };
     }
-  } catch (error: any) {
-    console.error("❌ Fallo crítico en el Nodo GitWorker:", error);
+  } catch (error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any;
+    console.error("❌ Fallo crítico en el Nodo GitWorker:", err.message);
     return {
-      executive_summary: `Fallo crítico en Git Worker: ${error.message}`,
+      executive_summary: `Fallo crítico en Git Worker: ${err.message}`,
     };
   }
 }

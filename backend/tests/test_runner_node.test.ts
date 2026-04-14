@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 // 1. Mockeamos child_process.exec ANTES de cualquier import
