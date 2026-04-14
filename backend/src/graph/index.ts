@@ -4,6 +4,7 @@ import { ceo_node } from "@/nodes/ceo.js";
 import { software_chief_node } from "@/nodes/chiefs/software_chief.js";
 import { researcher_node } from "@/nodes/researcher.js";
 import { git_worker_node } from "@/nodes/workers/git_worker_node.js";
+import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
 
 /**
  * Orquestador Principal de la Startup. 
@@ -15,6 +16,7 @@ export const createGraph = () => {
         .addNode("software_chief", software_chief_node)
         .addNode("researcher", researcher_node)
         .addNode("git_worker", git_worker_node)
+        .addNode("test_runner", test_runner_node)
 
         .addEdge(START, "ceo");
 
@@ -37,11 +39,16 @@ export const createGraph = () => {
                 return "git_worker";
             }
 
+            if (state.plan.includes("test_operation")) {
+                return "test_runner";
+            }
+
             return END;
         },
         {
             researcher: "researcher",
             git_worker: "git_worker",
+            test_runner: "test_runner",
             __end__: END,
         }
     );
@@ -49,6 +56,7 @@ export const createGraph = () => {
     // Retorno de los Workers al Chief (para validación del resultado)
     workflow.addEdge("researcher", "software_chief");
     workflow.addEdge("git_worker", "software_chief");
+    workflow.addEdge("test_runner", "software_chief");
 
     // El Chief puede volver al CEO cuando termina su misión o necesita reporte
     workflow.addEdge("software_chief", "ceo");

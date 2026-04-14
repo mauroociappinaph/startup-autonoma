@@ -58,6 +58,27 @@ describe('SoftwareChief Node Delegation', () => {
     expect(delegationMessage.additional_kwargs.git_instruction.payload).toEqual(gitPayload);
   });
 
+  it('debe delegar al TestRunner con el payload correcto para validar calidad', async () => {
+    const testPayload = {
+      package: 'backend' as const,
+      filter: 'git_worker'
+    };
+
+    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+      decision: 'delegate_to_test_runner',
+      reasoning: 'Validando que los cambios no rompan la suite de tests.',
+      test_payload: testPayload
+    });
+
+    const result = await software_chief_node(initialState);
+
+    expect(result.active_chief).toBe('software_chief');
+    expect(result.plan).toContain('test_operation');
+    
+    const delegationMessage = result.messages?.[0] as any;
+    expect(delegationMessage.additional_kwargs.test_instruction).toEqual(testPayload);
+  });
+
   it('debe finalizar la misión cuando la decisión es "complete"', async () => {
     (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
       decision: 'complete',

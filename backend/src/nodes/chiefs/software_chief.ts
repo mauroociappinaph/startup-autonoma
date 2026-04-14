@@ -3,16 +3,24 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { GitActionSchema } from "@/types/git-worker.types.js";
+import { TestRunnerInputSchema } from "@/types/software-tools.types.js";
 
 /**
  * Esquema de decisión interna del Software Chief.
  * Determina el siguiente paso técnico y la instrucción para el worker.
  */
 const SoftwareChiefDecisionSchema = z.object({
-  decision: z.enum(["delegate_to_researcher", "delegate_to_git_worker", "complete", "need_clarification"]),
+  decision: z.enum([
+    "delegate_to_researcher", 
+    "delegate_to_git_worker", 
+    "delegate_to_test_runner",
+    "complete", 
+    "need_clarification"
+  ]),
   reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
   worker_instruction: z.string().optional().describe("Instrucción en lenguaje natural para el worker (si aplica)."),
   git_payload: GitActionSchema.optional().describe("Carga útil estructurada si se delega al Git Worker."),
+  test_payload: TestRunnerInputSchema.optional().describe("Carga útil estructurada si se delega al Test Runner."),
 });
 
 /**
@@ -29,12 +37,14 @@ export async function software_chief_node(state: AgentStateType) {
     TUS HERRAMIENTAS (WORKERS):
     1. ResearchWorker: Para explorar el repo, leer archivos y entender la arquitectura actual.
     2. GitWorker: Para crear branches, hacer commits, pull/push y sincronizar el repo.
+    3. TestRunner: Para ejecutar suites de tests y validar la calidad del código.
 
     ESTRATEGIA:
-    - Si la misión requiere entender código existente o investigar librerías, delega al ResearchWorker.
-    - Si la misión requiere preparar el entorno (ej: crear una branch para una feature), delega al GitWorker.
-    - Asegúrate de que las acciones de Git sean coherentes (ej: no intentes commitear si no hay cambios).
-    - Siempre explica tu razonamiento técnico.
+    - Si la misión requiere entender código existente, delega al ResearchWorker.
+    - Si la misión requiere preparar el entorno o guardar cambios, delega al GitWorker.
+    - SIEMPRE que un Worker técnico entregue trabajo, debes delegar al TestRunner para validar que no haya regresiones.
+    - Si los tests fallan, el razonamiento debe explicar el fallo y decidir el siguiente paso (reintentar o corregir).
+    - Solo marca la misión como "complete" si los tests pasaron y se cumplen las Leyes Sagradas.
 
     LEYES SAGRADAS (Debes vigilar que se cumplan):
     - SRP, DRY, Barrel Files, Límite de 300 líneas por archivo.
@@ -69,6 +79,15 @@ export async function software_chief_node(state: AgentStateType) {
             payload: response.git_payload,
             repoPath: process.cwd()
           }
+        }
+      })];
+    }
+    else if (response.decision === "delegate_to_test_runner") {
+      updates.plan = ["test_operation"];
+      updates.messages = [new AIMessage({
+        content: `[CHIEF_DELEGATION] Delegando validación de tests: ${response.reasoning}`,
+        additional_kwargs: {
+          test_instruction: response.test_payload
         }
       })];
     }

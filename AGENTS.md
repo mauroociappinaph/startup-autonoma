@@ -73,6 +73,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
 │   │   ├── software_chief.test.ts
+│   │   ├── test_runner_node.test.ts
 │   ├── tsconfig.json
 ├── commitlint.config.js
 ├── /docs
