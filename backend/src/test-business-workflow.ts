@@ -8,9 +8,9 @@ import { HumanMessage } from "@langchain/core/messages";
 async function runBusinessWorkflowTest() {
   console.log("💼 Iniciando Test de Workflow de Negocio (Startup Autónoma)...");
 
-  // Prompt que dispara el flujo comercial
+  // Prompt hiper-específico para que el Business Chief no pida aclaraciones
   const initialInput = {
-    messages: [new HumanMessage("Necesito identificar 5 clientes potenciales para mi agencia de software en el sector Fintech de México.")],
+    messages: [new HumanMessage("Busca 5 leads de empresas Fintech en México, específicamente en el sector de 'Préstamos Personales', que estén en etapa 'Serie A'. Necesito nombre, email de contacto y su ubicación.")],
     plan: [],
     executive_summary: "",
     retry_count: 0,

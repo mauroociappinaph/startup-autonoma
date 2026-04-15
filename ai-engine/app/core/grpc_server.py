@@ -7,9 +7,9 @@ import logging
 import os
 import sys
 
-# Asegurarse de que el path de 'app' sea accesible para importar workers
-# Esto es crucial si el script se corre desde la raíz o un subdirectorio
+# Asegurarse de que el path de 'app' y 'grpc' sea accesible
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../grpc')))
 
 # Importamos la función del worker
 from workers.lead_gen_worker import process_lead_generation_task 

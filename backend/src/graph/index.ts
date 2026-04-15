@@ -8,6 +8,7 @@ import { researcher_node } from "@/nodes/researcher.js";
 import { git_worker_node } from "@/nodes/workers/git_worker_node.js";
 import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
 import { ai_engine_worker_node } from "@/nodes/workers/ai_engine_worker_node.js";
+import { persistence_node } from "@/nodes/workers/persistence_node.js";
 import { mirror_node } from "@/nodes/mirror.js";
 
 /**
@@ -24,6 +25,7 @@ export const createGraph = () => {
         .addNode("git_worker", git_worker_node)
         .addNode("test_runner", test_runner_node)
         .addNode("ai_engine_worker", ai_engine_worker_node)
+        .addNode("persistence_worker", persistence_node)
 
         // El flujo siempre arranca en el Mirror
         .addEdge(START, "mirror")
@@ -66,6 +68,7 @@ export const createGraph = () => {
         if (state.plan.includes("git_operation")) return "git_worker";
         if (state.plan.includes("test_operation")) return "test_runner";
         if (state.plan.includes("ai_engine_task")) return "ai_engine_worker";
+        if (state.plan.includes("persist_memory")) return "persistence_worker";
 
         return "ceo";
     };
@@ -76,6 +79,7 @@ export const createGraph = () => {
         git_worker: "git_worker",
         test_runner: "test_runner",
         ai_engine_worker: "ai_engine_worker",
+        persistence_worker: "persistence_worker",
         ceo: "ceo"
     };
 
@@ -101,6 +105,7 @@ export const createGraph = () => {
     workflow.addConditionalEdges("git_worker", workerReturnRouter, workerReturnMappings);
     workflow.addConditionalEdges("test_runner", workerReturnRouter, workerReturnMappings);
     workflow.addConditionalEdges("ai_engine_worker", workerReturnRouter, workerReturnMappings);
+    workflow.addConditionalEdges("persistence_worker", workerReturnRouter, workerReturnMappings);
 
     return workflow.compile();
 };
