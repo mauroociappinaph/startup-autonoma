@@ -31,6 +31,7 @@ export async function persistence_node(state: AgentStateType) {
     const result = await save_to_engram.invoke(engramData);
     
     // Manejo seguro del resultado de la tool (para satisfacer a TSC)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const successMessage = typeof result === 'string' 
       ? result 
       : (result as any).message || "Hito guardado con éxito.";

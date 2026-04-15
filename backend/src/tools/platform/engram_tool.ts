@@ -6,12 +6,12 @@ import { z } from "zod";
  * Permite a los agentes persistir conocimiento organizacional.
  */
 export const save_to_engram = tool(
-  async ({ title, type, topic_key, content }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async ({ title, _type, topic_key, _content }: any) => {
     console.log(`--- [ENGRAM TOOL] Guardando memoria: ${title} ---`);
     
     // Aquí iría la llamada real al MCP de Engram. 
     // Por ahora simulamos el éxito para que el grafo fluya.
-    // En un entorno real, usaríamos el cliente de Engram configurado.
     
     return {
       success: true,
