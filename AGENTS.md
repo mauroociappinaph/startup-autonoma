@@ -25,6 +25,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── /ISSUE_TEMPLATE
 │   ├── /workflows
 ├── .gitignore
+├── .opencodeignore.save
 ├── /.qwen
 │   ├── settings.json
 ├── /.windsurf

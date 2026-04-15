@@ -3,8 +3,9 @@ import * as protoLoader from '@grpc/proto-loader';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Obtenemos __filename y __dirname de forma segura para módulos ES
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = path.dirname(__filename);
 
 /**
  * Ruta al archivo .proto (asumimos que la raíz está tres niveles arriba desde src/services)
@@ -23,7 +24,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 });
 
 // Tipado dinámico del paquete gRPC
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Aconsejo usar `any` aquí ya que el código generado puede ser complejo de tipar estáticamente.
 const aiEngineProto = grpc.loadPackageDefinition(packageDefinition).ai_engine as any;
 
 /**
@@ -36,6 +37,7 @@ export class AIEngineClient {
 
   constructor(address: string = 'localhost:50051') {
     // Inicializamos el cliente con credenciales inseguras para desarrollo local
+    // En producción, usar credenciales seguras (TLS) es MANDATORIO.
     this.client = new aiEngineProto.AIEngine(
       address,
       grpc.credentials.createInsecure()
@@ -44,18 +46,27 @@ export class AIEngineClient {
 
   /**
    * Ejecuta una tarea en un Worker de Python de forma asíncrona.
+   * @param request - Objeto con la descripción de la tarea y payload.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async executeTask(request: any): Promise<any> {
+  async executeTask(request: { worker_name: string; task_description: string; trace_id: string; payload?: object }): Promise<any> {
     console.log(`--- [gRPC CLIENT] Enviando tarea: ${request.worker_name} ---`);
-    
+
+    // Mapeamos el request a la estructura esperada por el proto
+    const grpcRequest = {
+      worker_name: request.worker_name,
+      task_description: request.task_description,
+      trace_id: request.trace_id,
+      payload: request.payload || {}, // Payload es opcional
+    };
+
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.client.ExecuteWorkerTask(request, (error: any, response: any) => {
+      this.client.ExecuteWorkerTask(grpcRequest, (error: any, response: any) => {
         if (error) {
-          console.error(`❌ Error en llamada gRPC: ${error.message}`);
+          console.error(`❌ Error en llamada gRPC (ExecuteTask): ${error.message}`);
           reject(error);
         } else {
+          console.log(`✅ Tarea ${request.worker_name} completada.`);
           resolve(response);
         }
       });
@@ -64,11 +75,18 @@ export class AIEngineClient {
 
   /**
    * Inicia un flujo de streaming para ver el progreso del worker en tiempo real.
+   * Devuelve un stream de objetos WorkerProgressUpdate.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  streamProgress(request: any): grpc.ClientReadableStream<any> {
+  streamProgress(request: { worker_name: string; task_description: string; trace_id: string; payload?: object }): grpc.ClientReadableStream<any> {
     console.log(`--- [gRPC CLIENT] Iniciando stream de progreso para: ${request.worker_name} ---`);
-    return this.client.StreamWorkerProgress(request);
+
+    const grpcRequest = {
+      worker_name: request.worker_name,
+      task_description: request.task_description,
+      trace_id: request.trace_id,
+      payload: request.payload || {},
+    };
+    return this.client.StreamWorkerProgress(grpcRequest);
   }
 }
 

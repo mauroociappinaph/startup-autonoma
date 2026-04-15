@@ -1,11 +1,11 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { AgentAnnotation } from "@/graph/state.js";
-import { mirror_node } from "@/nodes/mirror.js";
 import { ceo_node } from "@/nodes/ceo.js";
 import { software_chief_node } from "@/nodes/chiefs/software_chief.js";
 import { researcher_node } from "@/nodes/researcher.js";
 import { git_worker_node } from "@/nodes/workers/git_worker_node.js";
 import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
+import { mirror_node } from "@/nodes/mirror.js"; // Importamos el mirror node
 
 /**
  * Orquestador Principal de la Startup Autónoma. 
@@ -13,7 +13,7 @@ import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
  */
 export const createGraph = () => {
     const workflow = new StateGraph(AgentAnnotation)
-        .addNode("mirror", mirror_node)
+        .addNode("mirror", mirror_node) // Añadimos el nodo Mirror como primer paso
         .addNode("ceo", ceo_node)
         .addNode("software_chief", software_chief_node)
         .addNode("researcher", researcher_node)
@@ -21,20 +21,22 @@ export const createGraph = () => {
         .addNode("test_runner", test_runner_node)
 
         // El flujo siempre arranca en el Mirror para introspección y refinamiento
-        .addEdge(START, "mirror")
+        .addEdge(START, "mirror");
         
-        // Del Mirror saltamos al CEO (Nota: aquí es donde aplicaremos el interrupt_before)
-        .addEdge("mirror", "ceo")
+    // Arista: Mirror refina y pasa al CEO
+    workflow.addEdge("mirror", "ceo");
 
-        // El CEO delega a los Chiefs
-        .addEdge("ceo", "software_chief");
+    // Arista: CEO delega al SoftwareChief (o BusinessChief en el futuro)
+    workflow.addEdge("ceo", "software_chief");
 
-    // Arista condicional: El Chief decide a qué Worker delegar
+    // Arista condicional: El Chief decide a qué Worker delegar o finalizar
     workflow.addConditionalEdges(
         "software_chief",
         (state) => {
+            // Si no hay plan o está vacío, el Chief termina la tarea para él
             if (!state.plan || state.plan.length === 0) {
-                return END;
+                // Si el Chief termina y no hay más tareas, vuelve al CEO para consolidar
+                return "ceo"; 
             }
             
             if (state.plan.includes("research")) {
@@ -49,12 +51,21 @@ export const createGraph = () => {
                 return "test_runner";
             }
 
-            return END;
+            if (state.plan.includes("ai_engine_task")) {
+                // Aquí delegaría al nodo que llama al cliente gRPC
+                // Por ahora, simulamos que si la tarea es de AI, vuelve al CEO para reporte
+                // TODO: Implementar nodo AI Engine
+                console.log("Delegación a AI Engine pendiente de implementación de nodo.");
+                return "ceo"; 
+            }
+
+            return END; // Si no hay plan, terminamos (este caso debería cubrirse antes)
         },
         {
             researcher: "researcher",
             git_worker: "git_worker",
             test_runner: "test_runner",
+            ceo: "ceo", // Volver al CEO para consolidar resultados
             __end__: END,
         }
     );
@@ -64,12 +75,8 @@ export const createGraph = () => {
     workflow.addEdge("git_worker", "software_chief");
     workflow.addEdge("test_runner", "software_chief");
 
-    // El Chief vuelve al CEO para reporte final o nuevo hito
+    // El Chief consolida y vuelve al CEO
     workflow.addEdge("software_chief", "ceo");
-
-    // El CEO puede decidir volver al Mirror si el usuario requiere cambios manuales
-    // O finalizar el flujo si la visión se ha cumplido
-    workflow.addEdge("ceo", END);
 
     return workflow.compile();
 };

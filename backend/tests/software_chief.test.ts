@@ -35,7 +35,11 @@ describe('SoftwareChief Node Delegation', () => {
 
     expect(result.active_chief).toBe('software_chief');
     expect(result.plan).toContain('research');
-    expect(result.messages?.[0].content).toContain('Delegando investigación');
+
+    // Verificar el contenido del último mensaje agregado
+    const lastMessage = result.messages?.[result.messages.length - 1];
+    expect(lastMessage).toBeDefined();
+    expect(lastMessage?.content).toContain('Delegando investigación');
   });
 
   it('debe delegar al GitWorker con el payload correcto para crear una branch', async () => {
@@ -55,10 +59,13 @@ describe('SoftwareChief Node Delegation', () => {
 
     expect(result.active_chief).toBe('software_chief');
     expect(result.plan).toContain('git_operation');
-    
-    // Verificamos que los kwargs del mensaje contengan la instrucción para el Git Worker node
-    const delegationMessage = result.messages?.[0] as any;
-    expect(delegationMessage.additional_kwargs.git_instruction.payload).toEqual(gitPayload);
+
+    // Verificamos que el último mensaje contenga la instrucción para el Git Worker
+    const lastMessage = result.messages?.[result.messages.length - 1] as any;
+    expect(lastMessage).toBeDefined();
+    expect(lastMessage.additional_kwargs).toBeDefined();
+    expect(lastMessage.additional_kwargs.git_instruction).toBeDefined();
+    expect(lastMessage.additional_kwargs.git_instruction.payload).toEqual(gitPayload);
   });
 
   it('debe delegar al TestRunner con el payload correcto para validar calidad', async () => {
@@ -77,9 +84,13 @@ describe('SoftwareChief Node Delegation', () => {
 
     expect(result.active_chief).toBe('software_chief');
     expect(result.plan).toContain('test_operation');
-    
-    const delegationMessage = result.messages?.[0] as any;
-    expect(delegationMessage.additional_kwargs.test_instruction).toEqual(testPayload);
+
+    // Verificamos el último mensaje agregado
+    const lastMessage = result.messages?.[result.messages.length - 1] as any;
+    expect(lastMessage).toBeDefined();
+    expect(lastMessage.additional_kwargs).toBeDefined();
+    expect(lastMessage.additional_kwargs.test_instruction).toBeDefined();
+    expect(lastMessage.additional_kwargs.test_instruction).toEqual(testPayload);
   });
 
   it('debe finalizar la misión cuando la decisión es "complete"', async () => {
