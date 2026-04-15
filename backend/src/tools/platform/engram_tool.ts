@@ -1,21 +1,20 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { EngramToolArgs } from "@/types/engram.types.js";
 
 /**
  * Tool: save_to_engram
  * Permite a los agentes persistir conocimiento organizacional.
  */
 export const save_to_engram = tool(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async ({ title, _type, topic_key, _content }: any) => {
-    console.log(`--- [ENGRAM TOOL] Guardando memoria: ${title} ---`);
+  async (args: EngramToolArgs) => {
+    console.log(`--- [ENGRAM TOOL] Guardando memoria: ${args.title} ---`);
     
     // Aquí iría la llamada real al MCP de Engram. 
-    // Por ahora simulamos el éxito para que el grafo fluya.
     
     return {
       success: true,
-      message: `Memoria persistida en topic: ${topic_key}`,
+      message: `Memoria persistida en topic: ${args.topic_key}`,
       id: `mem-${Date.now()}`
     };
   },

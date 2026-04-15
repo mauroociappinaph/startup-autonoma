@@ -1,5 +1,6 @@
 import { AgentStateType } from "@/types/state.types.js";
 import { save_to_engram } from "@/tools/platform/engram_tool.js";
+import { EngramToolArgs, EngramResult } from "@/types/engram.types.js";
 import { AIMessage } from "@langchain/core/messages";
 
 /**
@@ -11,8 +12,9 @@ export async function persistence_node(state: AgentStateType) {
 
   // Recuperamos la data a persistir de los additional_kwargs del último mensaje
   const lastMessage = state.messages[state.messages.length - 1];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const engramData = lastMessage.additional_kwargs?.engram_data as any;
+  
+  // Tipado seguro para la data de Engram
+  const engramData = lastMessage.additional_kwargs?.engram_data as EngramToolArgs | undefined;
 
   if (!engramData) {
     console.error("❌ No se encontró información para persistir en el historial.");
@@ -30,11 +32,9 @@ export async function persistence_node(state: AgentStateType) {
     // Llamamos a la tool real (simulada por ahora)
     const result = await save_to_engram.invoke(engramData);
     
-    // Manejo seguro del resultado de la tool (para satisfacer a TSC)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const successMessage = typeof result === 'string' 
-      ? result 
-      : (result as any).message || "Hito guardado con éxito.";
+    // Manejo seguro del resultado de la tool (usando unknown para el puente de tipos)
+    const engramResult = result as unknown as EngramResult;
+    const successMessage = engramResult.message || "Hito guardado con éxito.";
 
     return {
       messages: state.messages.concat([new AIMessage({
