@@ -55,19 +55,15 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── package.json
 │   ├── /src
 │   │   ├── /agents
-│   │   ├── /config
 │   │   ├── /contracts
 │   │   ├── /controllers
 │   │   ├── /db
-│   │   ├── /evals
 │   │   ├── /graph
 │   │   ├── /helpers
 │   │   ├── /jobs
 │   │   ├── /mcp_ports
 │   │   ├── /middleware
-│   │   ├── /models
 │   │   ├── /nodes
-│   │   ├── /observability
 │   │   ├── /routes
 │   │   ├── /services
 │   │   ├── /skills
