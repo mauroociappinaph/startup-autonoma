@@ -1,54 +1,89 @@
 # lead_gen_worker.py
 
 import time
-import json
-from typing import Dict, Any
-from google.protobuf import json_format
-from ai_engine_pb2 import WorkerTaskResponse, WorkerProgressUpdate # Asumiendo que estos se generan al compilar el proto
+import logging
+from typing import Dict, Any, List
+from google.protobuf import json_format, struct_pb2
+import ai_engine_pb2
 
-def process_lead_generation_task(request_payload: Dict[str, Any], trace_id: str) -> WorkerTaskResponse:
+# Configuración de logging para el worker
+logger = logging.getLogger(__name__)
+
+def simulate_search(niche: str, location: str = "") -> List[Dict[str, Any]]:
     """
-    Simula la generación de leads, extrayendo datos y devolviendo un resultado.
-    En un escenario real, esto interactuaría con APIs externas o web scraping.
+    Simula una búsqueda estructurada de leads basada en nicho y ubicación.
+    Idealmente aquí se llamaría a una API de búsqueda o un scraper real.
     """
-    print(f"--- [LEAD GEN WORKER] Procesando tarea con trace_id: {trace_id} ---")
-    print(f"Payload recibido: {json.format_string(json.dumps(request_payload, indent=2))}") # Usar format_string para serialización
+    logger.info(f"🔎 Buscando leads para: {niche} en {location or 'Global'}")
+    
+    # Base de datos simulada de empresas (para demostrar el razonamiento)
+    mock_directory = [
+        {"name": "FinTech Soluciones México", "email": "contacto@fintechsol.mx", "industry": "FinTech", "location": "Ciudad de México"},
+        {"name": "Digital Payments Latam", "email": "info@digipay.mx", "industry": "FinTech", "location": "Monterrey"},
+        {"name": "CrediAgil", "email": "ventas@crediagil.com", "industry": "FinTech", "location": "Guadalajara"},
+        {"name": "Neobank MX", "email": "hr@neobank.mx", "industry": "FinTech", "location": "Ciudad de México"},
+        {"name": "PaySmart Systems", "email": "support@paysmart.mx", "industry": "FinTech", "location": "Puebla"},
+        {"name": "Global Tech Corp", "email": "hello@globaltech.com", "industry": "Software", "location": "USA"},
+    ]
+    
+    # Filtramos por nicho y locación
+    filtered = [
+        lead for lead in mock_directory 
+        if niche.lower() in lead["industry"].lower() and 
+        (not location or location.lower() in lead["location"].lower())
+    ]
+    
+    return filtered[:10] # Limitamos a 10 leads
+
+def process_lead_generation_task(request_payload: struct_pb2.Struct, trace_id: str) -> ai_engine_pb2.WorkerTaskResponse:
+    """
+    Procesa la tarea de generación de leads extrayendo datos y devolviendo un resultado estructurado.
+    """
+    # Convertimos el Struct de gRPC a un diccionario de Python
+    payload = json_format.MessageToDict(request_payload)
+    
+    niche = payload.get("niche", "software_development")
+    location = payload.get("location", "")
+    limit = payload.get("limit", 5)
+
+    print(f"--- [LEAD GEN WORKER] Iniciando prospección para: {niche} ---")
 
     try:
-        # Simulación de trabajo pesado
-        time.sleep(2) 
+        # 1. Simulación de latencia de red (Scraping)
+        time.sleep(1.5)
         
-        # Simulación de resultados
-        leads_data = [
-            {"name": "Juan Perez", "email": "juan.perez@example.com", "company": "TechCorp"},
-            {"name": "Maria Garcia", "email": "maria.garcia@example.com", "company": "InnovateLtd"}
-        ]
+        # 2. Ejecución de la búsqueda
+        leads = simulate_search(niche, location)
         
-        result_payload = {
-            "status": "completed",
-            "output": leads_data,
-            "source": "simulated_web_scraping",
-            "generated_leads_count": len(leads_data)
+        # 3. Formateo de resultados
+        result_data = {
+            "status": "success",
+            "leads_found": len(leads),
+            "data": leads[:limit],
+            "niche": niche,
+            "location": location or "Not specified",
+            "message": f"Se encontraron {len(leads)} leads potenciales."
         }
         
-        print(f"--- [LEAD GEN WORKER] Tarea completada para trace_id: {trace_id} ---")
+        # 4. Construimos la respuesta gRPC
+        # El campo 'result' en el proto es un google.protobuf.Struct
+        result_struct = struct_pb2.Struct()
+        json_format.ParseDict(result_data, result_struct)
+
+        print(f"--- [LEAD GEN WORKER] Tarea completada. {len(leads)} leads enviados ---")
         
-        # Devolvemos la respuesta estructurada según el proto
-        return WorkerTaskResponse(
+        return ai_engine_pb2.WorkerTaskResponse(
             success=True,
-            message=f"{len(leads_data)} leads generados exitosamente.",
-            result=json_format.ParseDict(result_data, WorkerTaskResponse().result),
+            message=f"Proceso de Lead Generation exitoso para {niche}.",
+            result=result_struct,
             trace_id=trace_id
         )
         
     except Exception as e:
-        print(f"❌ Error en Lead Gen Worker (trace_id={trace_id}): {e}")
-        return WorkerTaskResponse(
+        logger.error(f"❌ Error en Lead Gen Worker: {str(e)}")
+        return ai_engine_pb2.WorkerTaskResponse(
             success=False,
-            message=f"Error al procesar tarea de lead generation: {e}",
-            error_code="LEADGEN_ERROR",
+            message=f"Error interno en el worker de Python: {str(e)}",
+            error_code="PYTHON_WORKER_ERROR",
             trace_id=trace_id
         )
-
-# Nota: Para streaming, necesitaríamos una función generadora separada
-# que use 'yield' para enviar WorkerProgressUpdate.

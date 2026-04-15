@@ -2,7 +2,7 @@
 
 Este documento define la estructura de mando y ejecución del ecosistema de agentes. La jerarquía es estricta para garantizar la alineación estratégica y la calidad técnica.
 
-## 🗺️ Mapa Jerárquico
+## 🗺️ Mapa Jerárquico Actualizado (2026)
 
 ```mermaid
 graph TD
@@ -11,25 +11,30 @@ graph TD
     Mirror -- "Prompt Refinado" --> CEO[🏢 CEO Agent]
     
     subgraph Chiefs [Capa de Coordinación]
-        CEO --> SC[👨‍💼 Software Chief]
-        CEO --> BC[💼 Business Chief]
+        CEO -- "Delegación Dinámica (Enum)" --> SC[👨‍💼 Software Chief]
+        CEO -- "Delegación Dinámica (Enum)" --> BC[💼 Business Chief]
     end
     
     subgraph Workers [Capa de Ejecución]
         SC --> GW[🛠️ Git Worker]
         SC --> RW[🔍 Research Worker]
         SC --> TR[🧪 Test Runner]
+        SC --> AIW[🤖 AI Engine Worker]
         
-        BC --> LGW[🎯 Lead Gen Worker]
-        BC --> MAW[📊 Market Analyst]
+        BC --> AIW
+        BC --> RW
+    end
+    
+    subgraph Engine [Motor Externo]
+        AIW -- "gRPC (Port 50051)" --> PY[🐍 Python AI-Engine]
+        PY --> LGW[🎯 Lead Gen Worker]
+        PY --> MAW[📊 Market Analyst]
     end
     
     GW -- Reporte --> SC
-    RW -- Reporte --> SC
+    RW -- Reporte --> SC/BC
     TR -- Reporte --> SC
-    
-    LGW -- Leads --> BC
-    MAW -- Insights --> BC
+    AIW -- Reporte --> SC/BC
     
     SC -- Consolidado --> CEO
     BC -- Consolidado --> CEO
@@ -37,27 +42,23 @@ graph TD
     CEO -- "Resultado Final" --> User
 ```
 
-## 🎭 Roles y Responsabilidades
+## 🎭 Roles y Responsabilidades Clave
 
-### 0. Mirror Agent (The Style Guard)
-- **Misión:** Aduana de entrada. Clarifica la intención del usuario.
-- **Acción Clave:** Pide aprobación humana antes de arrancar el gasto de tokens.
+### 1. CEO Agent (The Dynamic Orchestrator)
+- **Hito:** Ahora usa `CEOResponseSchema` con enums estrictos para evitar alucinaciones en la delegación.
+- **Acción:** Mapea misiones a `software_chief` o `business_chief`.
 
-### 1. CEO Agent (The Strategic Orchestrator)
-- **Misión:** Traducir visión en mandatos. Gestiona el plan maestro.
-- **Acción Clave:** Decide a qué Chief activar según el objetivo de negocio.
+### 2. Business Chief (The Growth Driver)
+- **Hito:** Implementado para manejar el pipeline comercial.
+- **Acción:** Genera payloads gRPC para el AI Engine pidiendo leads o análisis.
 
-### 2. Chiefs (The Domain Supervisors)
-- **Software Chief:** Responsable de la arquitectura, calidad y código. Maneja el ciclo TDD.
-- **Business Chief:** Responsable del crecimiento, leads y validación de mercado.
-
-### 3. Workers (The Specialists)
-- **Git Worker:** Ejecuta operaciones de repositorio (branches, commits).
-- **Research Worker:** Investiga el código y documentación existente.
-- **Test Runner:** Ejecuta validaciones automáticas para asegurar que nada se rompa.
-- **Lead Gen Worker:** Busca oportunidades de negocio en la web (LinkedIn, etc.).
+### 3. AI Engine Worker (The Python Bridge)
+- **Hito:** Nodo genérico en el backend (Node.js) que se comunica con el AI-Engine (Python).
+- **Acción:** Ejecuta tareas de larga duración como scraping sin bloquear el grafo principal.
 
 ---
 
 ## 🧠 Persistencia Semántica (Engram)
-Todos los niveles jerárquicos consultan y guardan conocimiento en **Engram**, asegurando que la startup tenga una "sabiduría acumulada" y no repita errores del pasado.
+Todos los agentes guardan sus hitos en Engram. 
+- `architecture/*`: Decisiones de diseño.
+- `achievement/*`: Tareas completadas con éxito.

@@ -10,6 +10,7 @@ const BusinessChiefDecisionSchema = z.object({
   decision: z.enum([
     "delegate_to_researcher",
     "delegate_to_lead_gen",
+    "persist_results_to_engram",
     "complete",
     "need_strategic_clarification"
   ]),
@@ -29,20 +30,36 @@ const BusinessChiefDecisionSchema = z.object({
 export async function business_chief_node(state: AgentStateType) {
   console.log("--- EJECUTANDO NODO BUSINESS CHIEF ---");
 
+  // Verificamos si acabamos de recibir resultados de un worker
+  const lastMessage = state.messages[state.messages.length - 1];
+  
+  // Aseguramos que el contenido sea string para la búsqueda (Ley de Robustez)
+  const content = typeof lastMessage.content === 'string' 
+    ? lastMessage.content 
+    : JSON.stringify(lastMessage.content);
+
+  const hasWorkerResult = content.includes("[WORKER_RESULT]");
+  const aiEngineResult = lastMessage.additional_kwargs?.ai_engine_result;
+
   const system_prompt = new SystemMessage(`
     Eres el BusinessChief de una Startup Autónoma.
     Tu misión es ejecutar la visión estratégica del CEO en términos de mercado, clientes y crecimiento.
 
     TUS RECURSOS:
-    1. Researcher: Worker para investigar competidores, tendencias de mercado y perfiles de clientes.
-    2. LeadGen (AI Engine): Worker especializado en Python para extraer y calificar leads reales.
+    1. Researcher: Worker para investigar competidores y mercado.
+    2. LeadGen (AI Engine): Worker en Python para extraer leads reales.
+    3. Tool: save_to_engram: Para persistir prospectos y hallazgos clave.
     
+    ESTADO ACTUAL:
+    ${hasWorkerResult ? "Acabas de recibir resultados de un worker. Evalúa si deben ser persistidos en Engram antes de terminar." : "Esperando nueva misión o procesando delegación."}
+    ${aiEngineResult ? `RESULTADOS RECIBIDOS: ${JSON.stringify(aiEngineResult)}` : ""}
+
     ESTRATEGIA:
-    - Si el CEO pide conocer el mercado o la competencia, delega al Researcher.
-    - Si el objetivo es conseguir clientes, prospectos o emails, delega al LeadGen en el AI Engine.
-    - Mantén siempre el foco en el Retorno de Inversión (ROI) y la viabilidad del modelo de negocio.
+    - Si recibes leads del AI Engine, tu prioridad es PERSISTIRLOS en Engram usando 'persist_results_to_engram'.
+    - Si el CEO pide conocer el mercado, delega al Researcher.
+    - Si el objetivo es conseguir clientes, delega al LeadGen.
     
-    Solo marca como "complete" cuando los resultados (investigación o leads) sean accionables para la Startup.
+    REGLA DE ORO: No des por terminada una misión de Lead Gen hasta que los prospectos estén seguros en Engram.
   `);
 
   try {
@@ -53,7 +70,6 @@ export async function business_chief_node(state: AgentStateType) {
     );
 
     console.log(`🧠 Business Chief Reasoning: ${response.reasoning}`);
-    console.log(`🎯 Decision: ${response.decision}`);
 
     const updates: Partial<AgentStateType> = {
       active_chief: "business_chief",
@@ -65,29 +81,38 @@ export async function business_chief_node(state: AgentStateType) {
 
     if (response.decision === "delegate_to_researcher") {
       updates.plan = ["research"];
-      updates.messages?.push(new AIMessage({
-        content: `[BUSINESS_DELEGATION] Delegando investigación de mercado: ${response.worker_instruction || 'Análisis de mercado requerido.'}`,
-      }));
     }
     else if (response.decision === "delegate_to_lead_gen") {
       updates.plan = ["ai_engine_task"];
       updates.messages?.push(new AIMessage({
-        content: `[BUSINESS_DELEGATION] Iniciando proceso de Lead Generation: ${response.reasoning}`,
+        content: `[BUSINESS_DELEGATION] Iniciando Lead Generation: ${response.reasoning}`,
         additional_kwargs: {
           ai_engine_task: {
             worker_name: "lead_gen",
-            task_description: response.worker_instruction || `Buscar leads para el nicho: ${response.lead_gen_payload?.niche}`,
-            trace_id: state.trace_id || "biz-trace",
+            task_description: response.worker_instruction || `Prospección para: ${response.lead_gen_payload?.niche}`,
+            trace_id: String(state.trace_id || Date.now()),
             payload: response.lead_gen_payload || {},
           }
         }
       }));
     }
-    else if (response.decision === "need_strategic_clarification") {
-      updates.plan = [];
-      updates.executive_summary = `El Business Chief requiere definiciones del CEO: ${response.reasoning}`;
+    else if (response.decision === "persist_results_to_engram") {
+      // Inyectamos la acción de llamar a la tool en el plan
+      updates.plan = ["persist_memory"]; 
       updates.messages?.push(new AIMessage({
-        content: `[BUSINESS_CLARIFICATION] ${response.reasoning}`,
+        content: `[BUSINESS_PERSISTENCE] Guardando hallazgos en Engram: ${response.reasoning}`,
+        additional_kwargs: {
+          engram_data: {
+            title: `Leads generados para ${response.lead_gen_payload?.niche || 'nicho desconocido'}`,
+            type: "lead",
+            topic_key: `leads/${response.lead_gen_payload?.niche || 'general'}`,
+            content: {
+              What: "Generación de leads estructurados desde AI Engine.",
+              Why: "Persistencia para futuras campañas de marketing.",
+              Data: aiEngineResult
+            }
+          }
+        }
       }));
     }
     else if (response.decision === "complete") {
@@ -99,11 +124,8 @@ export async function business_chief_node(state: AgentStateType) {
   } catch (error) {
     console.error("❌ Error en el Business Chief:", error);
     return {
-      messages: state.messages.concat([new AIMessage({
-        content: `[BUSINESS_CHIEF_ERROR] Falla en el procesamiento estratégico: ${error instanceof Error ? error.message : String(error)}`
-      })]),
       plan: [],
-      executive_summary: `Error crítico en Business Chief: ${error instanceof Error ? error.message : String(error)}`
+      executive_summary: "Error crítico en Business Chief."
     };
   }
 }
