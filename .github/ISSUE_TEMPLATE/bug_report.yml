@@ -1,0 +1,26 @@
+name: 🐛 Bug Report
+description: Se detectó una falla en el flujo o código roto
+title: "fix(modulo): [Qué se rompió]"
+labels: ["bug"]
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 🔬 Pasos para reproducir (Opcional si es obvio)
+      description: Explicá exactamente cómo el agente o vos pueden recrear el problema para debuggearlo.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Comportamiento Esperado
+      description: ¿Qué debería haber pasado?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 📜 Logs de Error (stderr)
+      description: Copia acá la salida de la terminal o el LangGraph Trace ID para inyectarlo al GitWorker.
+    validations:
+      required: false

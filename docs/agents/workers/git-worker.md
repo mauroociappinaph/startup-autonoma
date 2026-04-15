@@ -10,14 +10,15 @@ El Git Worker es el brazo ejecutor técnico en el entorno de desarrollo local. S
 ## Integración con el Grafo (LangGraph 2.0)
 - **Rol:** Operativo / Ejecutor.
 - **Output:** Reporte de cambios, IDs de commits y estado de la salud del repo.
-- **Lugar de Ejecución:** `/backend/src/workers/agent.worker.ts`.
+- **Lugar de Ejecución:** `/backend/src/nodes/workers/git-worker.ts`.
 
 ## Herramientas (Tools)
 *Ubicadas en `/backend/src/tools/platform/git/`*
 - `github_cli_wrapper`: Operaciones avanzadas de PRs e Issues.
 - `fs_safe_writer`: Escritura de archivos con validación de sintaxis previa.
-- `linter_executor`: Ejecución de ruff/eslint antes del commit.
+- `linter_executor`: Ejecución de ESLint/Ruff antes de mandar a test.
+- `prettier_formatter`: Auto-corrección obligatoria de indentación, comillas y estilos para no gastar tokens del Software Chief en pavadas visuales.
 
-## Principios Operativos
-- **Atomic Operations:** Cada tarea debe resultar en un cambio mínimo y funcional.
-- **Zero Pollution:** No dejar archivos temporales o estados de git "sucios".
+- **Atomic Operations (SRP):** Cada tarea debe resultar en un cambio mínimo y unitario. Archivos de más de 300 líneas deben dividirse.
+- **Barrel Files Enforcement:** Cada vez que el Worker crea un módulo, componente o utilidad nueva, TIENE LA OBLIGACIÓN de exportarlo desde el `index.ts` (Barrel file) correspondiente en el mismo PR.
+- **Zero Pollution:** No dejar archivos temporales, repetir lógica (romper **DRY**) o arrastrar estados de git "sucios".

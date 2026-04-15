@@ -6,13 +6,13 @@ Las herramientas (Tools) son los mecanismos mediante los cuales los agentes inte
 
 Las herramientas deben seguir una estructura estricta según su tipo:
 
-### 1. Herramientas de Dominio (Business / Software)
-Residen en: `/backend/src/herramientas/dominio/`
-- Ejemplos: `analizador_de_mercado`, `validador_de_leads`, `analizador_de_codigo`.
+### 1. Domain Tools (Business / Software)
+Residen en: `/backend/src/tools/domain/`
+- Ejemplos: `market_analyzer`, `lead_validator`, `code_analyzer`.
 
-### 2. Herramientas de Plataforma (Core)
-Residen en: `/backend/src/herramientas/plataforma/`
-- Ejemplos: `memoria_engram`, `git_cli`, `sistema_de_archivos`.
+### 2. Platform Tools (Core)
+Residen en: `/backend/src/tools/platform/`
+- Ejemplos: `engram_memory`, `git_cli`, `file_system`.
 
 ---
 
@@ -37,11 +37,17 @@ export const HerramientaGitCommitSchema = z.object({
 });
 
 export type GitCommitInput = z.infer<typeof HerramientaGitCommitSchema>;
-```
+
+export const ToolResponseSchema = z.object({
+  success: z.boolean(),
+  errorMessage: z.string().optional(),
+  accion_requerida: z.string().optional(),
+  stdout: z.string().optional()
+});
 
 ## Reglas de Oro
 
 - **Idempotencia:** Ejecutar la misma herramienta con los mismos parámetros no debe causar estados inesperados.
 - **Trazabilidad:** Cada llamada genera un registro en el `trace_id` activo.
-- **Manejo de Errores:** Las herramientas NUNCA deben fallar silenciosamente; devuelven un objeto de error estructurado.
+- **Protocolo de Tool Safe Catch:** Las herramientas NUNCA arrojan un throw que mate el hilo. Siempre deben encasillar su salida en el `ToolResponseSchema`, indicando `success: false` con un `errorMessage` claro para que LangGraph lo capture e intente auto-corrección sin abortar.
 - **DRY:** Lógica reutilizable va a `/backend/src/helpers/`.

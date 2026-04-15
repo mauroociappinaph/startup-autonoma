@@ -13,24 +13,33 @@ El estado se implementa utilizando `TypedDict` y anotaciones Zod para controlar 
 | `original_prompt` | `str` | Prompt original del usuario. | Sobrescribir |
 | `refined_prompt` | `str` | Prompt optimizado por el Mirror. | Sobrescribir |
 | `plan` | `List[str]` | Tareas estratégicas del CEO. | Sobrescribir |
+| `messages` | `List[AnyMessage]` | Historial conversacional del Agente. | `add_messages` |
 | `active_chief` | `str` | Chief activo. | Sobrescribir |
-| `results` | `List[dict]` | Resultados de Workers. | `operator.add` |
+| `results` | `List[dict]` | Resultados granulares brutos de los Workers. | `operator.add` |
+| `executive_summary` | `str` | Resumen de los results (max 3 oraciones) para transiciones limpias y evitar overflow. | Sobrescribir |
 | `feedback` | `List[str]` | Comentarios del usuario. | `operator.add` |
 | `status` | `str` | Estado actual (planning, executing). | Sobrescribir |
+| `retry_count` | `int` | Contador para Strict TTL. Previene deadlocks. | Acumular / Resetear |
 | `trace_id` | `str` | Identificador único de traza. | Sobrescribir |
 | `metadata` | `dict` | Contexto adicional. | Sobrescribir |
 
-## Reducers: Acumulación vs Sobrescritura
+## Context Window (Truncamiento Obligatorio)
 
-- **Sobrescritura:** Campos de control (status, active_chief, trace_id) se reemplazan. Reflejan la decisión actual del grafo.
-- **Acumuladores (`operator.add`):** `results` y `feedback` crecen en el tiempo para mantener un historial auditable.
+La matriz `messages` usa `add_messages`, lo que implica un crecimiento infinito por diseño. Por orden arquitectónica:
+- Queda **prohibido** inyectar el estado `messages` crudo en `llm.invoke()`.
+- Se debe aplicar obligatoriamente la utilidad `trim_messages` (ej: reteniendo las últimas 10 transacciones o limitando a `max_tokens=6000`) **antes** de procesar cualquier nodo llm, evitando colapsos 429 de Rate Limit y Window Overflow.
 
-## Persistencia (Checkpoints)
+## Reducers y Prevención de Contexto
 
-LangGraph permite persistir este estado. Esto habilita:
-1.  **Time Travel:** Regresar a un punto del grafo para corregir decisiones.
-2.  **Long-Running Tasks:** Retomar procesos tras pausas largas.
-3.  **Human-in-the-loop:** Pausa en puntos críticos (ej: aprobación de costos) con estado "congelado".
+- **Sobrescritura:** Campos de control (status, active_chief, trace_id, executive_summary) se reemplazan. Reflejan la decisión actual del grafo y mantienen los prompts limpios (Ley del *Least Privilege Context*).
+- **Acumuladores:** `results` y `feedback`. Crecen en el tiempo pero NO se inyectan a agentes; fungen como log de auditoría local.
+
+## Persistencia Integrada (Checkpoints)
+
+LangGraph implementa persistencia usando Checkpointers (`MemorySaver` para dev, `PostgresSaver` para prod). Esto vuelve **obsoleto** a esquemas externos tipo BullMQ para procesos aislados. 
+El Checkpointer natural habilita:
+1.  **Human-in-the-Loop:** Pone el grafo en estado "congelado/sleeping" vía `interrupt_before`.
+2.  **Long-Running / Resumption:** Retoma operaciones desde llamadas de red caídas.
 
 ## Sincronización con Engram
 

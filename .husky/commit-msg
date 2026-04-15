@@ -1,0 +1,18 @@
+# Asegurar que los binarios comunes estén en el PATH para Husky
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
+
+echo "=========================================================="
+echo "🛡️  ANTIGRAVITY: Evaluando estructura del Mensaje de Commit"
+echo "=========================================================="
+
+npx --no -- commitlint --edit "$1"
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ El mensaje de commit NO cumple con la convención."
+  echo "   Usa el formato: tipo(scope): mensaje"
+  echo "   Ejemplo: feat(auth): agregar login con github"
+  exit 1
+fi
+
+echo "✅ Formato aceptado."

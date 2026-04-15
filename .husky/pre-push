@@ -1,0 +1,24 @@
+# Asegurar que los binarios comunes estén en el PATH para Husky
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
+
+echo "=========================================================="
+echo "🚀 ANTIGRAVITY: Verificación Final antes del PUSH"
+echo "=========================================================="
+
+# Correr lint y types en todo el proyecto antes de subir
+echo "🔍 Validando lint y tipos en todo el monorepo..."
+npm run lint && npm run check
+if [ $? -ne 0 ]; then
+  echo "❌ Error de consistencia detectado. No podés subir código que rompa el CI."
+  exit 1
+fi
+
+# Correr tests unitarios
+echo "🧪 Ejecutando suite de tests completa..."
+npm run test
+if [ $? -ne 0 ]; then
+  echo "❌ Los tests fallaron. El Push ha sido interceptado."
+  exit 1
+fi
+
+echo "✅ Verificación exitosa. Despegue autorizado."

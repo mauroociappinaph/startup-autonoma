@@ -9,7 +9,9 @@ El sistema se define como un `StateGraph` dinámico. Utilizamos la **primitiva `
 ### Componentes de Vanguardia
 - **Nodos Inteligentes (Smart Nodes):** Cada agente (CEO, Chief, Worker) devuelve un `Command` que especifica el siguiente destino o estado de interrupción.
 - **Aristas Fluidas:** El CEO puede saltar directamente a un Worker o volver al Mirror sin redefinir el grafo.
-- **Estado (State):** Un canal de comunicación tipado (Zod) validado en cada frontera de nodo.
+- **Estado Estricto (State):** Un canal de comunicación tipado (Zod) validado en cada frontera de nodo.
+- **Design for failure:** Cada nodo y subgraph espera fallar. Se atrapan errores localmente. Nunca deben abortar el ciclo principal.
+- **Environment Strictness:** Todos los secretos requeridos para APIs u orquestación (API_KEYS, DB URL) pasan por un pre-validador Zod al arranque, evitando que el bot opere ciego.
 
 ## Jerarquía de Operación
 
@@ -40,11 +42,11 @@ graph TD
 
 ## Estructura de Implementación
 
-- **`/backend` (Node.js)**: Cerebro lógico (LangGraph.js), servicios, herramientas, observabilidad.
-- **`/ai-engine` (Python)**: Motor de razonamiento pesado (FastAPI, Agentes, Tools ML).
+- **`/backend` (Node.js)**: Cerebro lógico (LangGraph.js), services, tools, observability.
+- **`/ai-engine` (Python)**: Motor para Heavy Tools (Scraping, AI). Comunicación vía **MCP (stdio) o FastAPI (REST)** abstraída del orquestador principal.
 - **`/frontend` (Next.js 15)**: Consola de control.
 
 ## Persistencia y Memoria
 - **Operativa:** Gestionada por LangGraph Checkpoints (pausa/reanudación).
 - **Semántica:** Gestionada por Engram (Persistencia de largo plazo: decisiones, estilos, aprendizajes).
-- **Observabilidad:** `trace_id` único compartido entre Backend y AI Engine para trazabilidad completa.
+- **Observabilidad/UX:** `trace_id` único compartido entre Backend y AI Engine. Eventos asíncronos mediante **Server-Sent Events (SSE)** para visualizar el streaming de razonamiento de los agentes en el Frontend (evita latencia percibida).
