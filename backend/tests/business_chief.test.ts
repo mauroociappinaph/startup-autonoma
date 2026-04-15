@@ -19,6 +19,7 @@ describe('Business Chief Node', () => {
       worker_instruction: 'Analiza los 3 competidores principales de CRM para startups.'
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
 
     const initialState: AgentStateType = {
@@ -54,6 +55,7 @@ describe('Business Chief Node', () => {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
 
     const initialState: AgentStateType = {
@@ -75,6 +77,7 @@ describe('Business Chief Node', () => {
 
     expect(result.plan).toContain('ai_engine_task');
     const lastMsg = result.messages![result.messages!.length - 1] as AIMessage;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const aiTask = lastMsg.additional_kwargs.ai_engine_task as any;
     expect(aiTask.worker_name).toBe('lead_gen');
   });
