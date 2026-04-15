@@ -23,9 +23,26 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   oneofs: true,
 });
 
+/**
+ * Interfaces para los mensajes gRPC
+ */
+interface WorkerTaskResponse {
+  success: boolean;
+  message: string;
+  result?: object;
+  error_code?: string;
+}
+
+interface WorkerProgressUpdate {
+  status: string;
+  progress_percentage: number;
+  log_message: string;
+  trace_id: string;
+}
+
 // Tipado dinámico del paquete gRPC
-// Aconsejo usar `any` aquí ya que el código generado puede ser complejo de tipar estáticamente.
-const aiEngineProto = grpc.loadPackageDefinition(packageDefinition).ai_engine as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const aiEngineProto = (grpc.loadPackageDefinition(packageDefinition).ai_engine as any);
 
 /**
  * Cliente gRPC para comunicarse con el AI-Engine en Python.
@@ -48,7 +65,7 @@ export class AIEngineClient {
    * Ejecuta una tarea en un Worker de Python de forma asíncrona.
    * @param request - Objeto con la descripción de la tarea y payload.
    */
-  async executeTask(request: { worker_name: string; task_description: string; trace_id: string; payload?: object }): Promise<any> {
+  async executeTask(request: { worker_name: string; task_description: string; trace_id: string; payload?: object }): Promise<WorkerTaskResponse> {
     console.log(`--- [gRPC CLIENT] Enviando tarea: ${request.worker_name} ---`);
 
     // Mapeamos el request a la estructura esperada por el proto
@@ -60,8 +77,7 @@ export class AIEngineClient {
     };
 
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.client.ExecuteWorkerTask(grpcRequest, (error: any, response: any) => {
+      this.client.ExecuteWorkerTask(grpcRequest, (error: grpc.ServiceError | null, response: WorkerTaskResponse) => {
         if (error) {
           console.error(`❌ Error en llamada gRPC (ExecuteTask): ${error.message}`);
           reject(error);
@@ -77,7 +93,7 @@ export class AIEngineClient {
    * Inicia un flujo de streaming para ver el progreso del worker en tiempo real.
    * Devuelve un stream de objetos WorkerProgressUpdate.
    */
-  streamProgress(request: { worker_name: string; task_description: string; trace_id: string; payload?: object }): grpc.ClientReadableStream<any> {
+  streamProgress(request: { worker_name: string; task_description: string; trace_id: string; payload?: object }): grpc.ClientReadableStream<WorkerProgressUpdate> {
     console.log(`--- [gRPC CLIENT] Iniciando stream de progreso para: ${request.worker_name} ---`);
 
     const grpcRequest = {
