@@ -65,4 +65,7 @@ yarn-error.log*
 
 # Turbo
 .turbo/
+
+# AI Agents (project-local, never commit)
 .qwen/
+.windsurf/workflows/
