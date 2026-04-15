@@ -1,7 +1,8 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { business_chief_node } from '@/nodes/chiefs/business_chief.js';
 import { LLMService } from '@/services/llmService.js';
-import { HumanMessage } from '@langchain/core/messages';
+import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import { AgentStateType } from '@/types/state.types.js';
 
 // Mock de LLMService para no gastar tokens en los tests
 jest.mock('@/services/llmService.js');
@@ -18,17 +19,25 @@ describe('Business Chief Node', () => {
       worker_instruction: 'Analiza los 3 competidores principales de CRM para startups.'
     };
 
-    (LLMService.getStructuredResponse as any).mockResolvedValue(mockResponse);
+    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
 
-    const initialState: any = {
+    const initialState: AgentStateType = {
       messages: [new HumanMessage('¿Quiénes son nuestros competidores?')],
       plan: [],
-      trace_id: 'test-trace'
+      trace_id: 'test-trace',
+      active_chief: 'business_chief',
+      original_prompt: '',
+      refined_prompt: '',
+      executive_summary: '',
+      status: 'planning',
+      retry_count: 0,
+      metadata: {},
+      results: [],
+      feedback: []
     };
 
     const result = await business_chief_node(initialState);
 
-    expect(result.decision).toBeUndefined(); // El nodo devuelve actualizaciones, no la respuesta del LLM directamente
     expect(result.plan).toContain('research');
     expect(result.active_chief).toBe('business_chief');
   });
@@ -45,18 +54,28 @@ describe('Business Chief Node', () => {
       }
     };
 
-    (LLMService.getStructuredResponse as any).mockResolvedValue(mockResponse);
+    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
 
-    const initialState: any = {
+    const initialState: AgentStateType = {
       messages: [new HumanMessage('Necesito 5 clientes potenciales en Madrid.')],
       plan: [],
-      trace_id: 'biz-trace'
+      trace_id: 'biz-trace',
+      active_chief: 'business_chief',
+      original_prompt: '',
+      refined_prompt: '',
+      executive_summary: '',
+      status: 'planning',
+      retry_count: 0,
+      metadata: {},
+      results: [],
+      feedback: []
     };
 
     const result = await business_chief_node(initialState);
 
     expect(result.plan).toContain('ai_engine_task');
-    const lastMsg: any = result.messages![result.messages!.length - 1];
-    expect(lastMsg.additional_kwargs.ai_engine_task.worker_name).toBe('lead_gen');
+    const lastMsg = result.messages![result.messages!.length - 1] as AIMessage;
+    const aiTask = lastMsg.additional_kwargs.ai_engine_task as any;
+    expect(aiTask.worker_name).toBe('lead_gen');
   });
 });

@@ -1,5 +1,6 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { AgentAnnotation } from "@/graph/state.js";
+import { AgentStateType } from "@/types/state.types.js";
 import { ceo_node } from "@/nodes/ceo.js";
 import { software_chief_node } from "@/nodes/chiefs/software_chief.js";
 import { business_chief_node } from "@/nodes/chiefs/business_chief.js";
@@ -31,7 +32,7 @@ export const createGraph = () => {
     // Arista condicional del CEO: Decide a qué área (Chief) delegar
     workflow.addConditionalEdges(
         "ceo",
-        (state) => {
+        (state: AgentStateType) => {
             if (!state.plan || state.plan.length === 0) {
                 return "end";
             }
@@ -56,7 +57,7 @@ export const createGraph = () => {
     /**
      * Lógica de Delegación para los Chiefs
      */
-    const chiefRouter = (state: any) => {
+    const chiefRouter = (state: AgentStateType) => {
         if (!state.plan || state.plan.length === 0) {
             return "ceo";
         }
@@ -69,36 +70,37 @@ export const createGraph = () => {
         return "ceo";
     };
 
-    // Mappings casteados para satisfacer a TSC y LangGraph
-    const chiefMappings = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chiefMappings: any = {
         researcher: "researcher",
         git_worker: "git_worker",
         test_runner: "test_runner",
         ai_engine_worker: "ai_engine_worker",
         ceo: "ceo"
-    } as const;
+    };
 
     // Aristas condicionales para ambos Chiefs
-    workflow.addConditionalEdges("software_chief", chiefRouter, chiefMappings as any);
-    workflow.addConditionalEdges("business_chief", chiefRouter, chiefMappings as any);
+    workflow.addConditionalEdges("software_chief", chiefRouter, chiefMappings);
+    workflow.addConditionalEdges("business_chief", chiefRouter, chiefMappings);
 
     /**
      * Retorno de los Workers al Chief que los invocó
      */
-    const workerReturnRouter = (state: any) => {
+    const workerReturnRouter = (state: AgentStateType) => {
         return state.active_chief || "ceo";
     };
 
-    const workerReturnMappings = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const workerReturnMappings: any = {
         software_chief: "software_chief",
         business_chief: "business_chief",
         ceo: "ceo"
-    } as const;
+    };
 
-    workflow.addConditionalEdges("researcher", workerReturnRouter, workerReturnMappings as any);
-    workflow.addConditionalEdges("git_worker", workerReturnRouter, workerReturnMappings as any);
-    workflow.addConditionalEdges("test_runner", workerReturnRouter, workerReturnMappings as any);
-    workflow.addConditionalEdges("ai_engine_worker", workerReturnRouter, workerReturnMappings as any);
+    workflow.addConditionalEdges("researcher", workerReturnRouter, workerReturnMappings);
+    workflow.addConditionalEdges("git_worker", workerReturnRouter, workerReturnMappings);
+    workflow.addConditionalEdges("test_runner", workerReturnRouter, workerReturnMappings);
+    workflow.addConditionalEdges("ai_engine_worker", workerReturnRouter, workerReturnMappings);
 
     return workflow.compile();
 };

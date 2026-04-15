@@ -1,7 +1,7 @@
 import { ceo_node } from '@/nodes/ceo.js';
 import { LLMService } from '@/services/llmService.js';
 import { AgentStateType } from '@/types/state.types.js';
-import { jest } from '@jest/globals';
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 
 // Mockeamos el servicio de LLM
 jest.mock('@/services/llmService.js');
@@ -28,11 +28,12 @@ describe('CEO Agent Node', () => {
   });
 
   it('debe actualizar el plan con el jefe correspondiente cuando el CEO decide delegar', async () => {
-    (LLMService.getStructuredResponse as any).mockResolvedValue({
+    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue({
       analysis: 'Análisis de prueba',
       next_step: 'delegate',
       delegated_to: 'business_chief',
-      reasoning: 'Necesitamos investigar el mercado'
+      reasoning: 'Necesitamos investigar el mercado',
+      is_complete: false
     });
 
     const result = await ceo_node(initialState);
@@ -43,7 +44,7 @@ describe('CEO Agent Node', () => {
   });
 
   it('debe devolver un plan vacío cuando el paso no es delegar', async () => {
-    (LLMService.getStructuredResponse as any).mockResolvedValue({
+    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue({
       analysis: 'Todo listo',
       next_step: 'finish',
       reasoning: 'No hay más tareas',

@@ -2,6 +2,13 @@ import { AgentStateType } from "@/types/state.types.js";
 import { aiEngineClient } from "@/services/aiEngineClient.js";
 import { AIMessage } from "@langchain/core/messages";
 
+interface AIEngineTask {
+  worker_name: string;
+  task_description: string;
+  trace_id?: string;
+  payload?: object;
+}
+
 /**
  * Nodo AI Engine Worker: Interfaz con el motor de Python vía gRPC.
  * Ejecuta tareas pesadas como Lead Gen, Scraping o ML.
@@ -11,7 +18,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
 
   // Recuperamos la instrucción del mensaje del Chief (buscamos en los additional_kwargs)
   const lastMessage = state.messages[state.messages.length - 1];
-  const aiTask = lastMessage.additional_kwargs?.ai_engine_task as any;
+  const aiTask = lastMessage.additional_kwargs?.ai_engine_task as AIEngineTask | undefined;
 
   if (!aiTask) {
     console.error("❌ No se encontró una tarea válida para el AI Engine en el historial.");
@@ -26,10 +33,13 @@ export async function ai_engine_worker_node(state: AgentStateType) {
   try {
     console.log(`🚀 Llamando a Worker Python: ${aiTask.worker_name}...`);
     
+    // Aseguramos que trace_id sea un string
+    const traceId = aiTask.trace_id || (state.trace_id ? String(state.trace_id) : "unknown");
+
     const response = await aiEngineClient.executeTask({
       worker_name: aiTask.worker_name,
       task_description: aiTask.task_description,
-      trace_id: aiTask.trace_id || state.trace_id || "unknown",
+      trace_id: traceId,
       payload: aiTask.payload || {}
     });
 
