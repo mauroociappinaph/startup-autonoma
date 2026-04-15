@@ -2,81 +2,103 @@ import { StateGraph, START, END } from "@langchain/langgraph";
 import { AgentAnnotation } from "@/graph/state.js";
 import { ceo_node } from "@/nodes/ceo.js";
 import { software_chief_node } from "@/nodes/chiefs/software_chief.js";
+import { business_chief_node } from "@/nodes/chiefs/business_chief.js";
 import { researcher_node } from "@/nodes/researcher.js";
 import { git_worker_node } from "@/nodes/workers/git_worker_node.js";
 import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
-import { mirror_node } from "@/nodes/mirror.js"; // Importamos el mirror node
+import { ai_engine_worker_node } from "@/nodes/workers/ai_engine_worker_node.js";
+import { mirror_node } from "@/nodes/mirror.js";
 
 /**
  * Orquestador Principal de la Startup Autónoma. 
- * Jerarquía: Mirror (Introspección) -> CEO (Estrategia) -> Chiefs (Coordinación) -> Workers (Ejecución).
+ * Jerarquía: Mirror (Aduana) -> CEO (Estrategia) -> Chiefs (Áreas) -> Workers (Ejecución).
  */
 export const createGraph = () => {
     const workflow = new StateGraph(AgentAnnotation)
-        .addNode("mirror", mirror_node) // Añadimos el nodo Mirror como primer paso
+        .addNode("mirror", mirror_node)
         .addNode("ceo", ceo_node)
         .addNode("software_chief", software_chief_node)
+        .addNode("business_chief", business_chief_node)
         .addNode("researcher", researcher_node)
         .addNode("git_worker", git_worker_node)
         .addNode("test_runner", test_runner_node)
+        .addNode("ai_engine_worker", ai_engine_worker_node)
 
-        // El flujo siempre arranca en el Mirror para introspección y refinamiento
-        .addEdge(START, "mirror");
-        
-    // Arista: Mirror refina y pasa al CEO
-    workflow.addEdge("mirror", "ceo");
+        // El flujo siempre arranca en el Mirror
+        .addEdge(START, "mirror")
+        .addEdge("mirror", "ceo");
 
-    // Arista: CEO delega al SoftwareChief (o BusinessChief en el futuro)
-    workflow.addEdge("ceo", "software_chief");
-
-    // Arista condicional: El Chief decide a qué Worker delegar o finalizar
+    // Arista condicional del CEO: Decide a qué área (Chief) delegar
     workflow.addConditionalEdges(
-        "software_chief",
+        "ceo",
         (state) => {
-            // Si no hay plan o está vacío, el Chief termina la tarea para él
             if (!state.plan || state.plan.length === 0) {
-                // Si el Chief termina y no hay más tareas, vuelve al CEO para consolidar
-                return "ceo"; 
+                return "end";
             }
             
-            if (state.plan.includes("research")) {
-                return "researcher";
+            if (state.plan.includes("software_chief")) {
+                return "software_chief";
             }
             
-            if (state.plan.includes("git_operation")) {
-                return "git_worker";
+            if (state.plan.includes("business_chief")) {
+                return "business_chief";
             }
 
-            if (state.plan.includes("test_operation")) {
-                return "test_runner";
-            }
-
-            if (state.plan.includes("ai_engine_task")) {
-                // Aquí delegaría al nodo que llama al cliente gRPC
-                // Por ahora, simulamos que si la tarea es de AI, vuelve al CEO para reporte
-                // TODO: Implementar nodo AI Engine
-                console.log("Delegación a AI Engine pendiente de implementación de nodo.");
-                return "ceo"; 
-            }
-
-            return END; // Si no hay plan, terminamos (este caso debería cubrirse antes)
+            return "end";
         },
         {
-            researcher: "researcher",
-            git_worker: "git_worker",
-            test_runner: "test_runner",
-            ceo: "ceo", // Volver al CEO para consolidar resultados
-            __end__: END,
+            software_chief: "software_chief",
+            business_chief: "business_chief",
+            end: END
         }
     );
 
-    // Retorno de los Workers al Chief (para validación del resultado)
-    workflow.addEdge("researcher", "software_chief");
-    workflow.addEdge("git_worker", "software_chief");
-    workflow.addEdge("test_runner", "software_chief");
+    /**
+     * Lógica de Delegación para los Chiefs
+     */
+    const chiefRouter = (state: any) => {
+        if (!state.plan || state.plan.length === 0) {
+            return "ceo";
+        }
+        
+        if (state.plan.includes("research")) return "researcher";
+        if (state.plan.includes("git_operation")) return "git_worker";
+        if (state.plan.includes("test_operation")) return "test_runner";
+        if (state.plan.includes("ai_engine_task")) return "ai_engine_worker";
 
-    // El Chief consolida y vuelve al CEO
-    workflow.addEdge("software_chief", "ceo");
+        return "ceo";
+    };
+
+    // Mappings casteados para satisfacer a TSC y LangGraph
+    const chiefMappings = {
+        researcher: "researcher",
+        git_worker: "git_worker",
+        test_runner: "test_runner",
+        ai_engine_worker: "ai_engine_worker",
+        ceo: "ceo"
+    } as const;
+
+    // Aristas condicionales para ambos Chiefs
+    workflow.addConditionalEdges("software_chief", chiefRouter, chiefMappings as any);
+    workflow.addConditionalEdges("business_chief", chiefRouter, chiefMappings as any);
+
+    /**
+     * Retorno de los Workers al Chief que los invocó
+     */
+    const workerReturnRouter = (state: any) => {
+        return state.active_chief || "ceo";
+    };
+
+    const workerReturnMappings = {
+        software_chief: "software_chief",
+        business_chief: "business_chief",
+        ceo: "ceo"
+    } as const;
+
+    workflow.addConditionalEdges("researcher", workerReturnRouter, workerReturnMappings as any);
+    workflow.addConditionalEdges("git_worker", workerReturnRouter, workerReturnMappings as any);
+    workflow.addConditionalEdges("test_runner", workerReturnRouter, workerReturnMappings as any);
+    workflow.addConditionalEdges("ai_engine_worker", workerReturnRouter, workerReturnMappings as any);
 
     return workflow.compile();
 };

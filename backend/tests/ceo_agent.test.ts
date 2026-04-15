@@ -12,7 +12,7 @@ describe('CEO Agent Node', () => {
   beforeEach(() => {
     initialState = {
       messages: [],
-      active_chief: '',
+      active_chief: 'software_chief', // Inicializamos con un valor válido
       plan: [],
       original_prompt: '',
       refined_prompt: '',
@@ -27,24 +27,27 @@ describe('CEO Agent Node', () => {
     jest.clearAllMocks();
   });
 
-  it('debe actualizar el plan a ["research"] cuando el CEO decide delegar', async () => {
-    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+  it('debe actualizar el plan con el jefe correspondiente cuando el CEO decide delegar', async () => {
+    (LLMService.getStructuredResponse as any).mockResolvedValue({
       analysis: 'Análisis de prueba',
       next_step: 'delegate',
+      delegated_to: 'business_chief',
       reasoning: 'Necesitamos investigar el mercado'
     });
 
     const result = await ceo_node(initialState);
 
     expect(result.executive_summary).toBe('Análisis de prueba');
-    expect(result.plan).toContain('research');
+    expect(result.plan).toContain('business_chief');
+    expect(result.active_chief).toBe('business_chief');
   });
 
   it('debe devolver un plan vacío cuando el paso no es delegar', async () => {
-    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+    (LLMService.getStructuredResponse as any).mockResolvedValue({
       analysis: 'Todo listo',
-      next_step: 'complete',
-      reasoning: 'No hay más tareas'
+      next_step: 'finish',
+      reasoning: 'No hay más tareas',
+      is_complete: true
     });
 
     const result = await ceo_node(initialState);

@@ -68,12 +68,14 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── /services
 │   │   ├── /skills
 │   │   ├── /state
+│   │   ├── test-business-workflow.ts
 │   │   ├── test-run.ts
 │   │   ├── test-workflow.ts
 │   │   ├── /tools
 │   │   ├── /types
 │   │   ├── /workers
 │   ├── /tests
+│   │   ├── business_chief.test.ts
 │   │   ├── ceo_agent.test.ts
 │   │   ├── context_manager.test.ts
 │   │   ├── git_worker.test.ts

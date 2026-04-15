@@ -1,26 +1,30 @@
 import { LLMService } from "../services/llmService.js";
 import { CEOResponseSchema } from "../contracts/ceo.js";
 import { AgentStateType } from "@/types/state.types.js";
-import { SystemMessage } from "@langchain/core/messages";
+import { SystemMessage, AIMessage } from "@langchain/core/messages";
 
 /**
  * Nodo CEO: Orquestador Principal del Grafo.
- * Su misión es analizar y delegar.
+ * Su misión es analizar, planificar y delegar a los Chiefs correspondientes.
  */
 export async function ceo_node(state: AgentStateType) {
   console.log("--- EJECUTANDO NODO CEO ---");
 
   const system_prompt = new SystemMessage(`
     Actúa como el CEO de una Startup Autónoma de IA. 
-    Tu objetivo es coordinar a un equipo de agentes (Chiefs y Workers) para cumplir con el pedido del usuario.
+    Tu objetivo es coordinar a un equipo de agentes para cumplir con el pedido del usuario.
+    
+    ESTRUCTURA DE TU EQUIPO:
+    1. Software Chief: Para todo lo relacionado con código, arquitectura, tests y despliegue técnico.
+    2. Business Chief: Para investigación de mercado, competidores, lead generation y estrategia comercial.
     
     ESTRATEGIA:
-    1. Analiza el historial de mensajes y el progreso actual.
-    2. Si el objetivo es complejo, descompónlo en pasos.
-    3. Delega tareas atómicas a los agentes correspondientes (ej: GitWorker, ResearchWorker).
-    4. Si todo está listo, marca el proceso como completo.
+    1. Analiza el historial de mensajes.
+    2. Decide si el pedido requiere un enfoque técnico (Software) o comercial (Business).
+    3. Delega la misión al Chief correspondiente usando 'delegated_to'.
+    4. Si la misión de un Chief terminó, evalúa si falta algo más o si el objetivo global se cumplió.
     
-    REGLA DE ORO: No hagas el trabajo tú mismo, DELEGA.
+    REGLA DE ORO: DELEGA. No intentes resolver detalles técnicos o de mercado tú mismo.
   `);
 
   try {
@@ -31,17 +35,34 @@ export async function ceo_node(state: AgentStateType) {
     );
 
     console.log(`✅ CEO Decision: ${response.next_step} -> ${response.reasoning}`);
+    console.log(`🎯 Delegado: ${response.delegated_to || "Ninguno"}`);
 
-    // Si el CEO decide delegar, actualizamos el estado para que el Grafo tome el camino condicional
-    const nextPlan = response.next_step === "delegate" ? ["research"] : [];
-
-    // Retornamos la actualización del estado incluyendo el campo plan
-    return {
+    const updates: Partial<AgentStateType> = {
       executive_summary: response.analysis,
-      plan: nextPlan
+      active_chief: (response.delegated_to as "software_chief" | "business_chief" | undefined),
+      messages: state.messages.concat([new AIMessage({
+        content: `[CEO_THOUGHT] ${response.reasoning}
+[CEO_DECISION] ${response.next_step} ${response.delegated_to ? `a ${response.delegated_to}` : ""}`,
+      })])
     };
+
+    // Si el CEO delega, el plan indica a qué jefe ir.
+    // Usamos el campo 'active_chief' como señal para las aristas condicionales del grafo.
+    if (response.next_step === "delegate" && response.delegated_to) {
+      updates.plan = [response.delegated_to];
+    } else {
+      updates.plan = [];
+    }
+
+    return updates;
   } catch (error) {
     console.error("❌ Fallo en el Nodo CEO:", error);
-    throw error;
+    return {
+      messages: state.messages.concat([new AIMessage({
+        content: `[CEO_ERROR] Fallo crítico en la orquestación: ${error instanceof Error ? error.message : String(error)}`
+      })]),
+      plan: [],
+      executive_summary: "Error interno en el CEO."
+    };
   }
 }
