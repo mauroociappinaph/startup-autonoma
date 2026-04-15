@@ -1,0 +1,57 @@
+name: Dependabot → Issue
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: [ main, develop ]
+  workflow_call:
+    inputs:
+      github-token:
+        required: true
+        type: string
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    concurrency:
+      group: dependabot-issue
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
+            sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] \
+            https://cli.github.com/packages stable main" | \
+            sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install gh
+
+      - name: Create Issue in GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="🔧 Dependabot Update: ${{ github.event.pull_request.title }}"
+          BODY="Se ha generado el PR #${{ github.event.pull_request.number }}\n\n**Título:** ${{ github.event.pull_request.title }}\n\n**Cuerpo:**\n${{ github.event.pull_request.body }}\n\n**Dependencias afectadas:**\n\`\`\`\n${{ join(merge-list(dependency-updates()), '\n'), }} \n\`\`\`\n"
+
+          gh issue create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --label "automated" \
+            --label "dependency-update" \
+            --label "dependabot" \
+            --label "${{ github.event.pull_request.base.ref }}" \
+            --title "🔧 Dependabot Update: ${github.event.pull_request.title}"
+
+      - name: Add comment to PR with Issue link
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_URL=$(gh issue list --label "automated" --limit 1 --json url -q '.[0].url')
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "✅ Issue automático creado: [$ISSUE_URL](<$ISSUE_URL>)"
