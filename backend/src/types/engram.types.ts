@@ -9,7 +9,7 @@ export interface EngramToolArgs {
   content: {
     What: string;
     Why: string;
-    Data?: any; 
+    Data?: Record<string, unknown>; 
   };
 }
 
