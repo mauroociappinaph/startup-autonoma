@@ -1,7 +1,14 @@
-export * from "./business-chief.types.js";
+import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage } from "@langchain/core/messages";
+
+export interface StreamEvent {
+  agent: string;
+  text: string;
+  time: string;
+}
+
 export * from "./ceo.types.js";
 export * from "./chief.types.js";
-export * from "./engram.types.js";
 export * from "./git-worker.types.js";
 export * from "./jest-helpers.types.js";
 export * from "./llm.types.js";
@@ -10,3 +17,5 @@ export * from "./researcher.types.js";
 export * from "./software-chief.types.js";
 export * from "./software-tools.types.js";
 export * from "./state.types.js";
+export * from "./business-chief.types.js";
+export * from "./engram.types.js";

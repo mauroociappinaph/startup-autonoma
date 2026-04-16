@@ -34,7 +34,7 @@ export async function mirror_node(state: AgentStateType) {
   `);
 
   try {
-    const response = await LLMService.getStructuredResponse(
+    const response = await LLMService.getStructuredData(
       { type: "smart", temperature: 0 },
       [system_prompt, new HumanMessage(`Optimiza esta petición: "${originalPrompt}"`)],
       MirrorResponseSchema

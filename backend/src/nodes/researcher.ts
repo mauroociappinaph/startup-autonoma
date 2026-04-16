@@ -77,7 +77,7 @@ export async function researcher_node(state: AgentStateType) {
   // SÍNTESIS FINAL
   console.log("📊 Sintetizando hallazgos de investigación...");
 
-  const synthesisResponse = await LLMService.getStructuredResponse(
+  const synthesisResponse = await LLMService.getStructuredData(
     { type: "smart", temperature: 0 },
     [
       new SystemMessage("Sintetiza los hallazgos de la investigación técnica en un reporte estructurado."),

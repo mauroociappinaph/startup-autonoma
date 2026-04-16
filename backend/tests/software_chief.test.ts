@@ -25,7 +25,7 @@ describe('SoftwareChief Node Delegation', () => {
   });
 
   it('debe delegar al ResearchWorker cuando el razonamiento sugiere investigación', async () => {
-    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
       decision: 'delegate_to_researcher',
       reasoning: 'Necesitamos entender cómo está estructurado el código antes de cambiar nada.',
       worker_instruction: 'Explora la carpeta src/nodes'
@@ -49,7 +49,7 @@ describe('SoftwareChief Node Delegation', () => {
       baseBranch: 'develop'
     };
 
-    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
       decision: 'delegate_to_git_worker',
       reasoning: 'Creando branch para iniciar el desarrollo.',
       git_payload: gitPayload
@@ -74,7 +74,7 @@ describe('SoftwareChief Node Delegation', () => {
       filter: 'git_worker'
     };
 
-    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
       decision: 'delegate_to_test_runner',
       reasoning: 'Validando que los cambios no rompan la suite de tests.',
       test_payload: testPayload
@@ -94,7 +94,7 @@ describe('SoftwareChief Node Delegation', () => {
   });
 
   it('debe finalizar la misión cuando la decisión es "complete"', async () => {
-    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
       decision: 'complete',
       reasoning: 'Todas las tareas técnicas han sido completadas con éxito.'
     });

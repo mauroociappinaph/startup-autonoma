@@ -28,7 +28,7 @@ describe('MirrorAgent Node', () => {
     const mockRefined = "Crear una nueva rama de desarrollo y realizar un commit con los cambios actuales.";
     const mockIntentions = ["crear branch", "realizar commit"];
 
-    (LLMService.getStructuredResponse as jest.MockedFunction<typeof LLMService.getStructuredResponse>).mockResolvedValue({
+    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
       refined_prompt: mockRefined,
       intentions: mockIntentions,
       missing_info: ["nombre de la branch"],

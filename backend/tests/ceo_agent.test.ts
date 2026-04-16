@@ -29,7 +29,7 @@ describe('CEO Agent Node', () => {
 
   it('debe actualizar el plan con el jefe correspondiente cuando el CEO decide delegar', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue({
+    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
       analysis: 'Análisis de prueba',
       next_step: 'delegate',
       delegated_to: 'business_chief',
@@ -46,7 +46,7 @@ describe('CEO Agent Node', () => {
 
   it('debe devolver un plan vacío cuando el paso no es delegar', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue({
+    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
       analysis: 'Todo listo',
       next_step: 'finish',
       reasoning: 'No hay más tareas',

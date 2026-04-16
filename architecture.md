@@ -90,7 +90,9 @@
 │   │   │   ├── ceo.ts
 │   │   │   └── researcher.ts
 │   │   ├── controllers/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   ├── agentController.ts
+│   │   │   └── systemController.ts
 │   │   ├── db/
 │   │   │   └── .gitkeep
 │   │   ├── graph/
@@ -123,9 +125,11 @@
 │   │   │   ├── mirror.ts
 │   │   │   └── researcher.ts
 │   │   ├── routes/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   └── agentRoutes.ts
 │   │   ├── services/
 │   │   │   ├── aiEngineClient.ts
+│   │   │   ├── graphService.ts
 │   │   │   ├── llmFactory.ts
 │   │   │   └── llmService.ts
 │   │   ├── skills/
@@ -157,6 +161,7 @@
 │   │   │   └── state.types.ts
 │   │   ├── workers/
 │   │   │   └── .gitkeep
+│   │   ├── index.ts
 │   │   ├── test-business-workflow.ts
 │   │   ├── test-run.ts
 │   │   └── test-workflow.ts
@@ -226,6 +231,7 @@
 │   │   ├── helpers/
 │   │   │   ├── .gitkeep
 │   │   │   ├── index.ts
+│   │   │   ├── useAgentStream.ts
 │   │   │   └── utils.ts
 │   │   ├── hooks/
 │   │   │   └── .gitkeep
@@ -255,7 +261,8 @@
 │   ├── .gitkeep
 │   ├── generate-architecture.js
 │   ├── sync-project-structure.js
-│   └── verify-sacred-laws.js
+│   ├── verify-sacred-laws.js
+│   └── verify-srp.js
 ├── skills/
 │   └── .gitkeep
 ├── types/

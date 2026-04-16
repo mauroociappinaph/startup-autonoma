@@ -20,7 +20,7 @@ describe('Business Chief Node', () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
+    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
 
     const initialState: AgentStateType = {
       messages: [new HumanMessage('¿Quiénes son nuestros competidores?')],
@@ -56,7 +56,7 @@ describe('Business Chief Node', () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredResponse as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
+    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
 
     const initialState: AgentStateType = {
       messages: [new HumanMessage('Necesito 5 clientes potenciales en Madrid.')],
