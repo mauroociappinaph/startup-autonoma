@@ -1,0 +1,28 @@
+- id: milestone-phase-a
+  type: milestone
+  title: "Fase A Completada: Autonomía Comercial"
+  date: "2026-04-15"
+  content:
+    What: "Business Chief operativo, Lead Gen Worker (Python/gRPC) y Persistence Loop integrados."
+    Why: "Habilitar prospección autónoma de clientes."
+    Learned: "El tipado estricto en nodos de persistencia y gRPC es crítico para el CI."
+  status: active
+
+- id: milestone-phase-b-init
+  type: milestone
+  title: "Fase B: Infraestructura UI inicializada"
+  date: "2026-04-15"
+  content:
+    What: "Configuración de Next.js 15, Tailwind CSS y shadcn/ui. Dashboard base funcional."
+    Why: "Visualización en tiempo real del razonamiento de agentes."
+    Learned: "React 19 requiere --legacy-peer-deps para compatibilidad con shadcn."
+  status: active
+
+- id: architecture-decision-ui
+  type: decision
+  title: "Estándar de UI: Tailwind + shadcn"
+  date: "2026-04-15"
+  content:
+    What: "Se establece el uso obligatorio de Tailwind y componentes de shadcn para todo el frontend."
+    Why: "Mantener consistencia estética y velocidad de desarrollo."
+  status: active
