@@ -50,14 +50,13 @@ const aiEngineProto = (grpc.loadPackageDefinition(packageDefinition).ai_engine a
  * Cliente gRPC para comunicarse con el AI-Engine en Python.
  */
 export class AIEngineClient {
-  private client; // Inferencia de tipo (Ley de No Any)
+  private client: unknown; 
 
   constructor(address: string = 'localhost:50051') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.client = new aiEngineProto.AIEngine(
       address,
       grpc.credentials.createInsecure()
-    ) as any;
+    );
   }
 
   /**
@@ -74,8 +73,8 @@ export class AIEngineClient {
     };
 
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this.client as any).ExecuteWorkerTask(grpcInput, (error: grpc.ServiceError | null, output: WorkerTaskOutput) => {
+      // @ts-expect-error - El cliente de gRPC es dinámico
+      this.client.ExecuteWorkerTask(grpcInput, (error: grpc.ServiceError | null, output: WorkerTaskOutput) => {
         if (error) {
           console.error(`❌ Error en llamada gRPC (ExecuteTask): ${error.message}`);
           reject(error);
@@ -99,8 +98,8 @@ export class AIEngineClient {
       trace_id: input.trace_id,
       payload: input.payload || {},
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this.client as any).StreamWorkerProgress(grpcInput);
+    // @ts-expect-error - El cliente de gRPC es dinámico
+    return this.client.StreamWorkerProgress(grpcInput);
   }
 }
 
