@@ -3,6 +3,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 const MAX_LINES = 300;
+let errors = 0;
 
 // Ley de Integridad Estructural: Cada paquete debe tener su propia configuración
 function checkStructuralIntegrity() {
@@ -16,13 +17,8 @@ function checkStructuralIntegrity() {
   });
 }
 
-// Correr integridad antes del resto
-checkStructuralIntegrity();
-
 // Directorios a ignorar
 const IGNORE_DIRS = ['node_modules', 'dist', '.git', '.next', '.husky', '.github'];
-
-let errors = 0;
 
 function walkDir(dir, callback) {
   if (!fs.existsSync(dir)) return;
@@ -43,7 +39,7 @@ function checkSacredLaws(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
 
-  // Regla 3: Límite de Archivo (Máximo 300 líneas)
+  // LEY #3: Límite de Archivo (Máximo 300 líneas)
   if (lines.length > MAX_LINES) {
     console.error(`🚨 [LEY #3 ROTA]: ${filePath} tiene ${lines.length} líneas (Máximo ${MAX_LINES}). Refactoriza y divide.`);
     errors++;
@@ -52,25 +48,42 @@ function checkSacredLaws(filePath) {
   // Análisis exclusivo para TypeScript
   if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
     const isInsideTypesFolder = filePath.includes('/types/');
+    const isNodeFile = filePath.includes('/nodes/');
+
+    // LEY #8: Reasoning-First (Obligatorio en Nodos del Backend)
+    if (isNodeFile && content.includes('Schema = z.object({')) {
+      if (!content.includes('reasoning:')) {
+        console.error(`🚨 [LEY #8 ROTA]: El nodo ${filePath} define un esquema Zod sin el campo 'reasoning'. Prohibido ejecutar sin justificación.`);
+        errors++;
+      }
+    }
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      // Regla 7: Types de TypeScript siempre van en /types
+      // LEY #7 (v1): Types de TypeScript siempre van en /types
       if (!isInsideTypesFolder && (line.includes('export interface ') || line.includes('export type '))) {
         console.error(`🚨 [LEY #7 ROTA]: ${filePath}:${i + 1} exporta un tipo o interfaz fuera de la carpeta /types.`);
         errors++;
       }
 
-      // Regla 10: Path Aliases (Prohibidas las relativas complejas)
-      // Buscamos imports espagueti estilo import x from '../../../../algo'
+      // LEY #10: Path Aliases (Prohibidas las relativas complejas)
       if (line.match(/import\s+.*from\s+['"]\.\.\/\.\.\//)) {
          console.error(`🚨 [LEY #10 ROTA]: ${filePath}:${i + 1} usa un import relativo muy profundo ('../../'). Usa los Path Aliases configurados ('@/...') para ayudar a las IAs.`);
          errors++;
       }
+
+      // LEY #5: No Any (Tolerancia Cero en código productivo)
+      if (!filePath.includes('.test.ts') && line.includes(': any') && !line.includes('eslint-disable')) {
+        console.error(`🚨 [LEY #5 ROTA]: ${filePath}:${i + 1} utiliza 'any'. El tipado debe ser estricto.`);
+        errors++;
+      }
     }
   }
 }
+
+// Iniciar auditoría
+checkStructuralIntegrity();
 
 // Recolección de archivos a auditar
 let filesToAudit = [];
@@ -78,7 +91,6 @@ let filesToAudit = [];
 if (process.env.CI) {
   console.log('📡 Entorno CI detectado: Escaneando todo el proyecto...');
   walkDir(process.cwd(), (fsPath) => {
-    // Solo auditamos archivos de código fuente relevantes
     if (fsPath.endsWith('.ts') || fsPath.endsWith('.tsx') || fsPath.endsWith('.py')) {
       filesToAudit.push(fsPath);
     }
@@ -112,5 +124,5 @@ if (errors > 0) {
   console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura en los archivos a subir.`);
   process.exit(1);
 } else {
-  console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla en tu commit.');
+  console.log('✅ Todas las Leyes Sagradas (incluyendo Reasoning-First) se cumplen a rajatabla.');
 }

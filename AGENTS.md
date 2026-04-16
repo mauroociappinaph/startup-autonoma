@@ -26,39 +26,41 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 ---
 
-## --- Estructura del Proyecto (Versión 2026 - Fase B) ---
-
-```text
-/
-├── AGENTS.md
-├── /ai-engine            # Python (Cerebro IA) ✅ Fase A OK
-├── /backend              # Node.js (Orquestador) ✅ Fase A OK
-│   ├── /src/nodes        # Nodos del grafo (CEO, Mirror, Chiefs)
-│   ├── /src/graph        # Lógica de LangGraph
-│   ├── /src/tools        # Herramientas de dominio y plataforma
-├── /frontend             # UI Control Panel (Next.js 15) 🚧 Fase B
-│   ├── /src/app          # App Router (Dashboard, Layout)
-│   ├── /src/components/ui# Shadcn/UI (Card, Button, Badge)
-│   ├── /src/helpers      # Utils (cn, SSE hooks)
-├── /docs                 # Documentación viva
-├── /protos               # Contratos gRPC
-```
-
----
-
 ## --- Convenciones de Ingeniería (Leyes Sagradas) ---
 
 1.  **SRP & DRY:** Cada componente hace una cosa. Lógica común en `/helpers`.
 2.  **Barrel Files:** Obligatorio usar `index.ts` para exportar nodos y tipos.
 3.  **Tipado Estricto (No Any):** Prohibido el uso de `any` en código productivo. Solo se permite en mocks de tests bajo `eslint-disable`.
 4.  **Structured Outputs:** Obligatorio usar `llm.withStructuredOutput(schema)`.
-5.  **UI Standards:** Uso obligatorio de **Tailwind CSS** y **shadcn/ui**. Prohibido el CSS inline o estilos fuera del sistema de diseño.
+5.  **UI Standards:** Uso obligatorio de **Tailwind CSS** y **shadcn/ui**. Prohibido el CSS inline.
 6.  **Memoria Permanente:** Toda decisión estratégica debe persistirse en Engram.
+
+### --- Nuevas Leyes de Autonomía y Seguridad (v2.0) ---
+
+7.  **Idempotencia Obligatoria:** Todo Worker debe ser diseñado para que, si se ejecuta dos veces con el mismo input, el resultado sea el mismo sin duplicar archivos o estados (Ej: chequear si una branch existe antes de crearla).
+8.  **Reasoning-First:** Prohibido ejecutar una acción técnica (Command/Tool) sin haber guardado antes en el estado un campo `reasoning` que explique el "por qué" de la decisión.
+9.  **Autocorrección Inmediata:** Después de cada cambio (escritura de archivo o comando), el agente debe verificar el resultado al instante. Si hay un error, debe intentar arreglarlo antes de devolver el control al Chief.
+
+---
+
+## --- Estructura del Proyecto (Versión 2026) ---
+
+```text
+/
+├── AGENTS.md             # Leyes y misión (Source of Truth)
+├── architecture.md       # Mapa vivo (Auto-generado)
+├── /ai-engine            # Python (Cerebro IA)
+├── /backend              # Node.js (Orquestador)
+├── /frontend             # UI Control Panel (Next.js 15)
+├── /docs                 # Documentación y Memoria PARA
+├── /protos               # Contratos gRPC
+├── /scripts              # Automatización (Sync Arch, Docs)
+```
 
 ---
 
 ## --- Automatización y Calidad ---
 
 - **Conventional Commits:** `tipo(scope): mensaje`. Evaluado por Husky.
-- **Pipeline Local:** `pre-commit` (Check + Test) y `pre-push` (Lint + Full Check).
-- **Frontend Stack:** Next.js 15, React 19, Lucide Icons, Radix UI.
+- **Pipeline Local:** `pre-commit` (Sync Arch + Check + Test) y `pre-push` (Lint + Full Check). 
+- **Comunicación:** gRPC de alta performance.
