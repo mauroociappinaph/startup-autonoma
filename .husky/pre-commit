@@ -48,3 +48,4 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Código aprobado por las Leyes de Arquitectura y los Tests Unitarios. Commiteando..."
+npm run sync-arch && git add architecture.md
