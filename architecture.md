@@ -232,6 +232,14 @@
 │   │   ├── api/
 │   │   │   └── .gitkeep
 │   │   ├── app/
+│   │   │   ├── logs/
+│   │   │   │   └── page.tsx
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx
+│   │   │   ├── terminal/
+│   │   │   │   └── page.tsx
+│   │   │   ├── workspace/
+│   │   │   │   └── page.tsx
 │   │   │   ├── .gitkeep
 │   │   │   ├── globals.css
 │   │   │   ├── layout.tsx
