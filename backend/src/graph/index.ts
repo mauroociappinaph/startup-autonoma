@@ -85,41 +85,29 @@ export const createGraph = () => {
     /**
      * Lógica de Delegación para los Chiefs
      */
-    const chiefRouter = (state: AgentStateType) => {
-        if (!state.plan || state.plan.length === 0) {
-            return "circuit_breaker"; // Volvemos al CEO vía guardian
-        }
-        
-        return "circuit_breaker"; // Siempre pasamos por el guardian
-    };
+    // Eliminamos chiefRouter no utilizado para limpiar logs de lint
 
     // Tipado estricto para los mappings de LangGraph (Ley #3)
     type NodeName = "software_chief" | "business_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "circuit_breaker" | "__start__" | "__end__";
     
     // Aristas condicionales para ambos Chiefs
-    workflow.addConditionalEdges("software_chief", (state) => {
-        // Antes de ir al worker, seteamos el next_node en base al plan
-        let next: NodeName = "ceo";
-        if (state.plan?.includes("research")) next = "researcher";
-        if (state.plan?.includes("git_operation")) next = "git_worker";
-        if (state.plan?.includes("test_operation")) next = "test_runner";
-        if (state.plan?.includes("ai_engine_task")) next = "ai_engine_worker";
-        if (state.plan?.includes("persist_memory")) next = "persistence_worker";
-        if (state.plan?.includes("code_research")) next = "code_researcher";
-
-        // Devolvemos circuit_breaker, pero la arista requiere un mapeo a ese nombre
+    workflow.addConditionalEdges("software_chief", (state: AgentStateType) => {
+        // Antes de ir al worker, validamos el plan para asegurar trazabilidad si fuera necesaria
+        if (state.plan?.includes("research")) { /* tracking futuro */ }
+        
+        // Devolvemos circuit_breaker para validación de seguridad centralizada
         return "circuit_breaker";
     }, { circuit_breaker: "circuit_breaker" });
 
-    workflow.addConditionalEdges("business_chief", (state) => {
+    workflow.addConditionalEdges("business_chief", (_state: AgentStateType) => {
         return "circuit_breaker";
     }, { circuit_breaker: "circuit_breaker" });
 
     /**
      * Retorno de los Workers al Chief que los invocó
      */
-    const workerReturnRouter = (state: AgentStateType) => {
-        return "circuit_breaker";
+    const workerReturnRouter = (_state: AgentStateType) => {
+        return "circuit_breaker" as const;
     };
 
     const workerReturnMappings: Record<string, NodeName> = {

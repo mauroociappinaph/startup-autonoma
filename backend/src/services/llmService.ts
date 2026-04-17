@@ -33,9 +33,9 @@ export class LLMService {
     try {
       // Usamos includeRaw para capturar usage_metadata
       const modelWithStructuredOutput = rawModel.withStructuredOutput(schema, { includeRaw: true });
-      const response = await modelWithStructuredOutput.invoke(trimmedMessages);
+      const response = (await modelWithStructuredOutput.invoke(trimmedMessages)) as { parsed: z.infer<T>, raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } };
       
-      const usage = (response.raw as any).usage_metadata || {
+      const usage = response.raw.usage_metadata || {
         input_tokens: 0,
         output_tokens: 0,
         total_tokens: 0
@@ -83,7 +83,9 @@ export class LLMService {
     const response = await model.invoke(formattedMessages);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
-    const usage = (response as any).usage_metadata || {
+    // Cast seguro para evitar eslint error de no-explicit-any
+    const responseWithMetadata = response as { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } };
+    const usage = responseWithMetadata.usage_metadata || {
       input_tokens: 0,
       output_tokens: 0,
       total_tokens: 0
