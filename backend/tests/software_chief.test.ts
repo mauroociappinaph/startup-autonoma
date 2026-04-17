@@ -18,6 +18,7 @@ describe('SoftwareChief Node Delegation', () => {
       messages: [new HumanMessage("Crea una branch para el refactor")],
       active_chief: '',
       plan: [],
+      completed_steps: [],
       executive_summary: '',
       retry_count: 0,
     };

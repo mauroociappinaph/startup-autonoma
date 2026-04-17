@@ -88,6 +88,7 @@ export async function researcher_node(state: AgentStateType) {
 
   return {
     executive_summary: synthesisResponse.findings,
+    completed_steps: ["research"],
     messages: [new AIMessage(`[RESEARCH_REPORT] ${synthesisResponse.conclusion}`)]
   };
 }

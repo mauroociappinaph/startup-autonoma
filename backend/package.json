@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nodemon src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "test": "jest --passWithNoTests",
     "lint": "eslint '{src,tests}/**/*.ts' --max-warnings=0",

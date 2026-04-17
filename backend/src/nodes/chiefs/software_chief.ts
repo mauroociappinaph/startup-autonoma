@@ -125,6 +125,7 @@ export async function software_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "complete") {
       updates.plan = [];
+      updates.completed_steps = ["software_chief"];
       updates.executive_summary = response.reasoning;
     }
 

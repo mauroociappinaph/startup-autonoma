@@ -41,6 +41,7 @@ export async function persistence_node(state: AgentStateType) {
         content: `[WORKER_RESULT] Datos persistidos correctamente: ${successMessage}`,
         additional_kwargs: { engram_result: result }
       })]),
+      completed_steps: ["persist_memory"],
       plan: [] // Vuelve al Chief para consolidar
     };
   } catch (error) {

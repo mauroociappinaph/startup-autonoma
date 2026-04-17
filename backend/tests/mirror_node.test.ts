@@ -18,6 +18,7 @@ describe('MirrorAgent Node', () => {
       messages: [new HumanMessage("creame una branch y hace un commit")],
       active_chief: '',
       plan: [],
+      completed_steps: [],
       executive_summary: '',
       retry_count: 0,
     };

@@ -2,6 +2,10 @@ export interface StreamEvent {
   agent: string;
   text: string;
   time: string;
+  activeNode?: string;
+  plan?: string[];
+  completedSteps?: string[];
+  executiveSummary?: string;
 }
 
 export * from "./ceo.types.js";

@@ -20,21 +20,33 @@ export class GraphService {
     };
 
     const stream = await graph.stream(initialInput, { 
-      streamMode: "values" 
+      streamMode: "updates" 
     });
 
-    for await (const step of stream) {
-      const lastMsg = step.messages[step.messages.length - 1];
-      const content = typeof lastMsg.content === 'string' 
-        ? lastMsg.content 
-        : JSON.stringify(lastMsg.content);
+    for await (const update of stream) {
+      const nodeName = Object.keys(update)[0];
+      const nodeData = (update as Record<string, any>)[nodeName];
 
-      if (content.includes("[CEO_") || content.includes("[BUSINESS_") || content.includes("[WORKER_")) {
-        yield {
-          agent: content.match(/\[(.*?)\]/)?.[1] || "SYSTEM",
-          text: content.replace(/\[.*?\]/, "").trim(),
-          time: new Date().toLocaleTimeString()
-        } as StreamEvent;
+      if (nodeData && nodeData.messages && nodeData.messages.length > 0) {
+        const lastMsg = nodeData.messages[nodeData.messages.length - 1];
+        const content = typeof lastMsg.content === 'string' 
+          ? lastMsg.content 
+          : JSON.stringify(lastMsg.content);
+
+        // Capturamos cualquier mensaje que tenga el formato [TAG]
+        const tagMatch = content.match(/\[(.*?)\]/);
+        
+        if (tagMatch) {
+          yield {
+            agent: tagMatch[1],
+            text: content.replace(/\[.*?\]/g, "").trim(),
+            time: new Date().toLocaleTimeString(),
+            activeNode: nodeName,
+            plan: nodeData.plan || undefined,
+            completedSteps: nodeData.completed_steps || undefined,
+            executiveSummary: nodeData.executive_summary || undefined
+          } as StreamEvent;
+        }
       }
     }
   }

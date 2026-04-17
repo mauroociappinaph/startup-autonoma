@@ -25,6 +25,7 @@ describe('Business Chief Node', () => {
     const initialState: AgentStateType = {
       messages: [new HumanMessage('¿Quiénes son nuestros competidores?')],
       plan: [],
+      completed_steps: [],
       trace_id: 'test-trace',
       active_chief: 'business_chief',
       original_prompt: '',
@@ -61,6 +62,7 @@ describe('Business Chief Node', () => {
     const initialState: AgentStateType = {
       messages: [new HumanMessage('Necesito 5 clientes potenciales en Madrid.')],
       plan: [],
+      completed_steps: [],
       trace_id: 'biz-trace',
       active_chief: 'business_chief',
       original_prompt: '',

@@ -30,6 +30,7 @@ export async function git_worker_node(state: AgentStateType) {
       console.log(`✅ Operación Git [${result.action}] exitosa.`);
       return {
         executive_summary: `Git Worker ejecutó con éxito: ${result.action}. Stdout: ${result.stdout || 'N/A'}`,
+        completed_steps: ["git_operation"],
         messages: [new AIMessage({
           content: `[GIT_REPORT] Operación ${result.action} completada.`,
           additional_kwargs: { git_result: result }

@@ -117,6 +117,7 @@ export async function business_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "complete") {
       updates.plan = [];
+      updates.completed_steps = ["business_chief"];
       updates.executive_summary = response.reasoning;
     }
 

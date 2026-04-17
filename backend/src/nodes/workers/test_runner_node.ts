@@ -29,6 +29,7 @@ export async function test_runner_node(state: AgentStateType) {
       console.log(`✅ Tests en [${testInstruction.package}] pasaron: ${result.summary}`);
       return {
         executive_summary: `Validación exitosa en ${testInstruction.package}: ${result.summary}`,
+        completed_steps: ["test_operation"],
         messages: [new AIMessage({
           content: `[TEST_REPORT] ÉXITO: ${result.summary}`,
           additional_kwargs: { test_result: result }

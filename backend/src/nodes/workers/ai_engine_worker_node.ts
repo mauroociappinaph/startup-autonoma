@@ -50,6 +50,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
           content: `[WORKER_RESULT] Resultado de ${aiTask.worker_name}: ${response.message}`,
           additional_kwargs: { ai_engine_result: response.result }
         })]),
+        completed_steps: ["ai_engine_task"],
         plan: [] // Tarea terminada, vuelve al Chief
       };
     } else {

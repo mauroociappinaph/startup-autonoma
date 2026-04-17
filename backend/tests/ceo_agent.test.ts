@@ -14,6 +14,7 @@ describe('CEO Agent Node', () => {
       messages: [],
       active_chief: 'software_chief', // Inicializamos con un valor válido
       plan: [],
+      completed_steps: [],
       original_prompt: '',
       refined_prompt: '',
       executive_summary: '',

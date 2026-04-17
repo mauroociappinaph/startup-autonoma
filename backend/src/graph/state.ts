@@ -55,6 +55,14 @@ export const AgentAnnotation = Annotation.Root({
   }),
 
   /**
+   * Lista de tareas completadas.
+   */
+  completed_steps: Annotation<string[]>({
+    reducer: (prev, next) => Array.from(new Set([...prev, ...next])),
+    default: () => [],
+  }),
+
+  /**
    * Indica el nodo activo del Chief.
    */
   active_chief: Annotation<string | undefined>({

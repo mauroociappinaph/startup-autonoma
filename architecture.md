@@ -45,6 +45,8 @@
 ├── .qwen/
 │   ├── settings.json
 │   └── settings.json.orig
+├── .vscode/
+│   └── extensions.json
 ├── .windsurf/
 │   └── workflows/
 │       └── sdd-new.md
