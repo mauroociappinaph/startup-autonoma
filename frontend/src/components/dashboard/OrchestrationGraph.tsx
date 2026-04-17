@@ -1,114 +1,134 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { 
+  ReactFlow, 
+  Background, 
+  Controls, 
+  useNodesState, 
+  useEdgesState,
+  ConnectionLineType,
+  Edge,
+  Node
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { CustomAgentNode } from "./CustomAgentNode";
+import { type AgentNodeData } from "@/types/index";
 import { motion } from "framer-motion";
-import { Share2, Zap, Shield, Cpu, Github, TestTube, Database, Network } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
-interface NodeProps {
-  id: string;
-  label: string;
-  isActive: boolean;
-  type: "root" | "chief" | "worker";
-  icon?: React.ReactNode;
-}
-
-const Node: React.FC<NodeProps> = ({ label, isActive, type, icon }) => {
-  const variants = {
-    inactive: { scale: 1, opacity: 0.5, filter: "blur(2px)" },
-    active: { 
-      scale: 1.1, 
-      opacity: 1, 
-      filter: "blur(0px)",
-      transition: { type: "spring" as const, stiffness: 300, damping: 20 }
-    }
-  };
-
-  const getStyle = () => {
-    switch (type) {
-      case "root": return isActive ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 glow-emerald" : "border-white/10 bg-white/5 text-muted-foreground";
-      case "chief": return isActive ? "border-blue-500 bg-blue-500/10 text-blue-400 glow-blue scale-110" : "border-white/10 bg-white/5 text-muted-foreground";
-      case "worker": return isActive ? "border-primary bg-primary/20 text-primary-foreground font-bold shadow-lg" : "border-white/5 bg-white/2 text-muted-foreground opacity-50";
-    }
-  };
-
-  return (
-    <motion.div
-      variants={variants}
-      animate={isActive ? "active" : "inactive"}
-      className={`relative px-4 py-2 rounded-lg border transition-all duration-500 flex items-center gap-3 ${getStyle()}`}
-    >
-      {icon && <div className={`${isActive ? "animate-pulse" : ""}`}>{icon}</div>}
-      <span className={`text-[11px] uppercase tracking-tighter ${type === "chief" ? "font-black" : "font-medium"}`}>
-        {label}
-      </span>
-      {isActive && (
-        <motion.div 
-          layoutId="active-glow"
-          className="absolute -inset-1 rounded-lg bg-current opacity-10 blur-xl px-2"
-        />
-      )}
-    </motion.div>
-  );
+const nodeTypes = {
+  agentNode: CustomAgentNode,
 };
 
 interface OrchestrationGraphProps {
   activeNode: string | null;
 }
 
-export const OrchestrationGraph: React.FC<OrchestrationGraphProps> = ({ activeNode }) => {
-  const isActive = (id: string) => activeNode === id;
+const initialNodes: Node<AgentNodeData>[] = [
+  { 
+    id: "mirror", 
+    type: "agentNode", 
+    position: { x: 250, y: 0 }, 
+    data: { label: "Mirror Node", isActive: false, type: "mirror", agentId: "mirror" } 
+  },
+  { 
+    id: "ceo", 
+    type: "agentNode", 
+    position: { x: 250, y: 100 }, 
+    data: { label: "CEO strategist", isActive: false, type: "ceo", agentId: "ceo" } 
+  },
+  { 
+    id: "software_chief", 
+    type: "agentNode", 
+    position: { x: 50, y: 200 }, 
+    data: { label: "Software Chief", isActive: false, type: "chief", agentId: "software_chief" } 
+  },
+  { 
+    id: "business_chief", 
+    type: "agentNode", 
+    position: { x: 450, y: 200 }, 
+    data: { label: "Business Chief", isActive: false, type: "chief", agentId: "business_chief" } 
+  },
+  // Workers
+  { id: "researcher", type: "agentNode", position: { x: -100, y: 350 }, data: { label: "Researcher", isActive: false, type: "worker", agentId: "researcher" } },
+  { id: "git_worker", type: "agentNode", position: { x: 50, y: 350 }, data: { label: "Git Worker", isActive: false, type: "worker", agentId: "git_worker" } },
+  { id: "test_runner", type: "agentNode", position: { x: 200, y: 350 }, data: { label: "Test Runner", isActive: false, type: "worker", agentId: "test_runner" } },
+  { id: "ai_engine_worker", type: "agentNode", position: { x: 450, y: 350 }, data: { label: "AI Engine", isActive: false, type: "worker", agentId: "ai_engine_worker" } },
+  { id: "persistence_worker", type: "agentNode", position: { x: 600, y: 350 }, data: { label: "Persistence", isActive: false, type: "worker", agentId: "persistence_worker" } },
+];
 
-  const workers = [
-    { id: "researcher", label: "Researcher", icon: <Cpu size={14} /> },
-    { id: "git_worker", label: "Git", icon: <Github size={14} /> },
-    { id: "test_runner", label: "Tests", icon: <TestTube size={14} /> },
-    { id: "ai_engine_worker", label: "AI Engine", icon: <Zap size={14} /> },
-    { id: "persistence_worker", label: "DB", icon: <Database size={14} /> }
-  ];
+const initialEdges: Edge[] = [
+  { id: "e-m-c", source: "mirror", target: "ceo", animated: true, type: ConnectionLineType.SmoothStep },
+  { id: "e-c-s", source: "ceo", target: "software_chief", animated: true, type: ConnectionLineType.SmoothStep },
+  { id: "e-c-b", source: "ceo", target: "business_chief", animated: true, type: ConnectionLineType.SmoothStep },
+  // Links to workers
+  { id: "e-s-r", source: "software_chief", target: "researcher", animated: true },
+  { id: "e-s-g", source: "software_chief", target: "git_worker", animated: true },
+  { id: "e-s-t", source: "software_chief", target: "test_runner", animated: true },
+  { id: "e-b-a", source: "business_chief", target: "ai_engine_worker", animated: true },
+  { id: "e-b-p", source: "business_chief", target: "persistence_worker", animated: true },
+];
+
+export const OrchestrationGraph: React.FC<OrchestrationGraphProps> = ({ activeNode }) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          isActive: node.id === activeNode,
+        },
+      }))
+    );
+    
+    setEdges((eds) => 
+      eds.map((edge) => ({
+        ...edge,
+        animated: edge.source === activeNode || edge.target === activeNode,
+        style: { stroke: (edge.source === activeNode || edge.target === activeNode) ? "#3b82f6" : "rgba(255,255,255,0.1)", strokeWidth: (edge.source === activeNode || edge.target === activeNode) ? 2 : 1 },
+      }))
+    );
+  }, [activeNode, setNodes, setEdges]);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center gap-6 p-8 overflow-hidden">
-      {/* Background Grid */}
-      <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"></div>
-
-      <Node id="mirror" label="Mirror Introspección" isActive={isActive("mirror")} type="root" icon={<Shield size={16} />} />
-      
-      <div className="w-px h-10 bg-gradient-to-b from-emerald-500/50 to-blue-500/50 relative">
-        {isActive("mirror") && <motion.div initial={{ y: 0 }} animate={{ y: 40 }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute -left-[1px] w-[3px] h-4 bg-emerald-400 blur-[1px]" />}
-      </div>
-
-      <Node id="ceo" label="CEO Strategist" isActive={isActive("ceo")} type="chief" icon={<Network size={18} />} />
-
-      <div className="w-px h-10 bg-gradient-to-b from-blue-500/50 to-purple-500/50 relative">
-        {isActive("ceo") && <motion.div initial={{ y: 0 }} animate={{ y: 40 }} transition={{ repeat: Infinity, duration: 2 }} className="absolute -left-[1px] w-[3px] h-4 bg-blue-400 blur-[1px]" />}
-      </div>
-
-      <div className="flex gap-16 relative">
-        <Node id="software_chief" label="Software Chief" isActive={isActive("software_chief")} type="chief" icon={<Cpu size={16} />} />
-        <Node id="business_chief" label="Business Chief" isActive={isActive("business_chief")} type="chief" icon={<Zap size={16} />} />
-      </div>
-
-      {/* Workers Row */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-8 flex flex-wrap justify-center gap-4 max-w-2xl px-4"
+    <div className="w-full h-full relative">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        fitView
+        colorMode="dark"
+        className="bg-transparent"
+        minZoom={0.5}
+        maxZoom={1.5}
       >
-        {workers.map(worker => (
-          <Node key={worker.id} {...worker} isActive={isActive(worker.id)} type="worker" />
-        ))}
-      </motion.div>
-
-      {/* Header Info */}
-      <div className="absolute top-4 left-4 flex items-center gap-4 z-10">
-        <div className="flex items-center gap-2">
-          <Share2 size={16} className="text-blue-500" />
-          <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground pt-0.5">Topology Matrix</span>
-        </div>
-        <Badge variant="outline" className="text-[9px] font-mono border-white/10 bg-black/20 text-blue-400/70 py-0 h-5 px-3">
-          SECURE-PROTOCOL_v2
-        </Badge>
+        <Background 
+          color="#333" 
+          gap={30} 
+          size={1} 
+          className="opacity-20"
+        />
+        <Controls className="!bg-black/40 !border-white/10 !fill-white" />
+      </ReactFlow>
+      
+      {/* Topology Header */}
+      <div className="absolute top-6 left-6 z-10 flex items-center gap-4 pointer-events-none">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }} 
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col"
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+            <h1 className="text-[11px] font-black uppercase tracking-[0.3em] text-white">Topology Matrix v3</h1>
+          </div>
+          <span className="text-[9px] text-muted-foreground font-mono mt-1 opacity-40">INTERACTIVE_GRAPH_MODE :: ZOOM_DRAG_ENABLED</span>
+        </motion.div>
       </div>
     </div>
   );

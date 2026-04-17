@@ -20,10 +20,10 @@ export const ReasoningFeed: React.FC<ReasoningFeedProps> = ({ thoughts, isStream
   }, [thoughts, isStreaming]);
 
   return (
-    <div className="flex flex-col h-full bg-black/20 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden shadow-2xl">
-      <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+    <div className="flex flex-col h-full bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="p-4 border-b border-white/5 bg-white/2 flex items-center justify-between">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
           Reasoning Stream
         </h3>
         {isStreaming && (
@@ -53,13 +53,12 @@ export const ReasoningFeed: React.FC<ReasoningFeedProps> = ({ thoughts, isStream
             thoughts.map((thought, index) => (
               <motion.div
                 key={`${thought.time}-${index}`}
-                initial={{ opacity: 0, x: 20, filter: "blur(10px)" }}
-                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 className={`group p-4 rounded-xl border transition-all duration-300 ${
                   thought.isPartial 
-                    ? "bg-blue-500/5 border-blue-500/20 glow-blue" 
-                    : "bg-white/5 border-white/5 hover:bg-white/[0.08]"
+                    ? "bg-white/[0.05] border-white/20" 
+                    : "bg-white/[0.02] border-white/5 hover:bg-white/[0.04]"
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">

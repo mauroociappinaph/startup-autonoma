@@ -13,3 +13,10 @@ export interface AgentThought {
 }
 
 export * from "./ui.types";
+
+export type AgentNodeData = {
+  label: string;
+  isActive: boolean;
+  type: "mirror" | "ceo" | "chief" | "worker";
+  agentId: string;
+};

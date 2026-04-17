@@ -239,9 +239,11 @@
 │   │   ├── components/
 │   │   │   ├── dashboard/
 │   │   │   │   ├── CommandBar.tsx
+│   │   │   │   ├── CustomAgentNode.tsx
 │   │   │   │   ├── OrchestrationGraph.tsx
 │   │   │   │   ├── ReasoningFeed.tsx
-│   │   │   │   └── StrategyCard.tsx
+│   │   │   │   ├── StrategyCard.tsx
+│   │   │   │   └── SystemHealth.tsx
 │   │   │   ├── ui/
 │   │   │   │   ├── badge.tsx
 │   │   │   │   ├── button.tsx
