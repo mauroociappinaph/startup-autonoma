@@ -1,6 +1,6 @@
 import { enqueueAgentJob } from "../src/jobs/agentQueue.js";
 import { agentWorker } from "../src/jobs/agentWorker.js";
-import { getRedisConnection, closeRedisConnections } from "../src/db/redis.js";
+import { closeRedisConnections } from "../src/db/redis.js";
 
 /**
  * Test de estrés/concurrencia para verificar que BullMQ maneja múltiples jobs

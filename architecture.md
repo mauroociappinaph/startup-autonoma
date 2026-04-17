@@ -176,6 +176,7 @@
 │   │   │   ├── jest-helpers.types.ts
 │   │   │   ├── llm.types.ts
 │   │   │   ├── mirror.types.ts
+│   │   │   ├── project.types.ts
 │   │   │   ├── researcher.types.ts
 │   │   │   ├── software-chief.types.ts
 │   │   │   ├── software-tools.types.ts
