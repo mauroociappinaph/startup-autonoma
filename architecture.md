@@ -237,6 +237,11 @@
 │   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
 │   │   ├── components/
+│   │   │   ├── dashboard/
+│   │   │   │   ├── CommandBar.tsx
+│   │   │   │   ├── OrchestrationGraph.tsx
+│   │   │   │   ├── ReasoningFeed.tsx
+│   │   │   │   └── StrategyCard.tsx
 │   │   │   ├── ui/
 │   │   │   │   ├── badge.tsx
 │   │   │   │   ├── button.tsx
