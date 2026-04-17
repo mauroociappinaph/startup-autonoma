@@ -13,7 +13,7 @@ interface NodeProps {
   icon?: React.ReactNode;
 }
 
-const Node: React.FC<NodeProps> = ({ id, label, isActive, type, icon }) => {
+const Node: React.FC<NodeProps> = ({ label, isActive, type, icon }) => {
   const variants = {
     inactive: { scale: 1, opacity: 0.5, filter: "blur(2px)" },
     active: { 

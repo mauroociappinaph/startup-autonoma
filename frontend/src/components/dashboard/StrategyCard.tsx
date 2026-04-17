@@ -53,7 +53,7 @@ export const StrategyCard: React.FC<StrategyCardProps> = ({ summary, plan, compl
                   <Info size={10} className="text-blue-500/50" />
                 </div>
                 <p className="text-[12px] text-slate-200 leading-relaxed font-medium italic">
-                  "{summary}"
+                  &quot;{summary}&quot;
                 </p>
               </div>
 

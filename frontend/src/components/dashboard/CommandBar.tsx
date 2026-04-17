@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Terminal, Zap, Hash } from "lucide-react";
+import { Terminal, Zap, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CommandBarProps {

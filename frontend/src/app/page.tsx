@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type AgentThought } from "@/types/index";
 import { useAgentStream } from "@/helpers/useAgentStream";
-import { AlertCircle, Zap, ShieldAlert, Cpu } from "lucide-react";
+import { Zap, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Nuevos componentes modulares
@@ -67,7 +66,7 @@ export default function Dashboard() {
                     <div className="space-y-2">
                       <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Plan de Vuelo Listo</h3>
                       <p className="text-sm text-slate-400 font-medium">
-                        El CEO ha finalizado el análisis estratégico. Se requiere validación humana para iniciar el despliegue de los Workers.
+                        El CEO ha finalizado el an&aacute;lisis estrat&eacute;gico. Se requiere validaci&oacute;n humana para iniciar el despliegue de los Workers.
                       </p>
                     </div>
 
