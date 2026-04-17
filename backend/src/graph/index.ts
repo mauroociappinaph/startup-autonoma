@@ -9,6 +9,7 @@ import { git_worker_node } from "@/nodes/workers/git_worker_node.js";
 import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
 import { ai_engine_worker_node } from "@/nodes/workers/ai_engine_worker_node.js";
 import { persistence_node } from "@/nodes/workers/persistence_node.js";
+import { code_researcher_node } from "@/nodes/workers/code_researcher_node.js";
 import { mirror_node } from "@/nodes/mirror.js";
 
 /**
@@ -26,6 +27,7 @@ export const createGraph = () => {
         .addNode("test_runner", test_runner_node)
         .addNode("ai_engine_worker", ai_engine_worker_node)
         .addNode("persistence_worker", persistence_node)
+        .addNode("code_researcher", code_researcher_node)
 
         // El flujo siempre arranca en el Mirror
         .addEdge(START, "mirror")
@@ -69,12 +71,13 @@ export const createGraph = () => {
         if (state.plan.includes("test_operation")) return "test_runner";
         if (state.plan.includes("ai_engine_task")) return "ai_engine_worker";
         if (state.plan.includes("persist_memory")) return "persistence_worker";
+        if (state.plan.includes("code_research")) return "code_researcher";
 
         return "ceo";
     };
 
     // Tipado estricto para los mappings de LangGraph (Ley #3)
-    type NodeName = "software_chief" | "business_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "__start__" | "__end__";
+    type NodeName = "software_chief" | "business_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "__start__" | "__end__";
     
     const chiefMappings: Record<string, NodeName> = {
         researcher: "researcher",
@@ -82,6 +85,7 @@ export const createGraph = () => {
         test_runner: "test_runner",
         ai_engine_worker: "ai_engine_worker",
         persistence_worker: "persistence_worker",
+        code_researcher: "code_researcher",
         ceo: "ceo"
     };
 
@@ -107,13 +111,16 @@ export const createGraph = () => {
     workflow.addConditionalEdges("test_runner", workerReturnRouter, workerReturnMappings);
     workflow.addConditionalEdges("ai_engine_worker", workerReturnRouter, workerReturnMappings);
     workflow.addConditionalEdges("persistence_worker", workerReturnRouter, workerReturnMappings);
+    workflow.addConditionalEdges("code_researcher", workerReturnRouter, workerReturnMappings);
 
     // Inicializamos el checkpointer para control de HITL y persistencia
     const checkpointer = new MemorySaver();
 
-    // Compilamos con interrupción obligatoria después del CEO
+    // Compilamos con interrupción selectiva (HITL v2)
     return workflow.compile({ 
         checkpointer,
+        // Eliminamos interruptAfter estático para manejarlo programáticamente o via nodos intermedios si fuera necesario
+        // Por ahora, lo mantenemos pero mejoramos la lógica del Mirror/CEO
         interruptAfter: ["ceo"] 
     });
 };

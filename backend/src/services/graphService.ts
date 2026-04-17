@@ -119,80 +119,97 @@ export class GraphService {
       configurable: { thread_id: threadId }
     };
 
+    // Antes de reanudar, marcamos que la misión fue aprobada manualmente (HITL)
+    // Esto evita que el CEO vuelva a pedir aprobación si el plan no ha cambiado drásticamente.
+    await graph.updateState(config, { is_mission_approved: true });
+
     // Al pasar null como input, LangGraph reanuda desde el último estado interrumpido
     const eventStream = graph.streamEvents(null, { ...config, version: "v2" });
 
-    // Acumulador para limpiar el stream de JSON del reasoning
+    // Bucle de reanudación automática (Mission-based HITL)
+    let isWaiting = false;
+    let nextNode = "";
     let reasoningBuffer = "";
     let lastYieldedLength = 0;
 
-    for await (const event of eventStream) {
-      const eventType = event.event;
+    do {
+      const eventStream = graph.streamEvents(null, { ...config, version: "v2" });
       
-      if (eventType === "on_chat_model_stream") {
-        const nodeName = event.metadata?.langgraph_node;
-        if (nodeName && ["ceo", "software_chief", "business_chief"].includes(nodeName)) {
-           const chunk = event.data.chunk;
-           
-           let delta = "";
-           if (typeof chunk.content === 'string') {
-             delta = chunk.content;
-           } else if (chunk.tool_call_chunks && chunk.tool_call_chunks.length > 0) {
-             delta = chunk.tool_call_chunks[0].args || "";
-           }
+      // Reiniciamos buffs para cada iteración de reanudación
+      reasoningBuffer = "";
+      lastYieldedLength = 0;
 
-           if (delta) {
-             reasoningBuffer += delta;
-
-             const match = reasoningBuffer.match(/"reasoning":\s*"(.*)/);
-             if (match) {
-               let fullReasoning = match[1];
-               const closingQuoteIndex = fullReasoning.search(/[^\\]"/);
-               if (closingQuoteIndex !== -1) {
-                 fullReasoning = fullReasoning.substring(0, closingQuoteIndex + 1);
-               }
-
-               const cleaned = fullReasoning
-                 .replace(/\\n/g, "\n")
-                 .replace(/\\"/g, '"')
-                 .replace(/\\t/g, "\t");
-
-               const newChunk = cleaned.substring(lastYieldedLength);
-               if (newChunk) {
-                 yield {
-                   agent: nodeName.toUpperCase(),
-                   text: newChunk,
-                   isPartial: true,
-                   threadId
-                 };
-                 lastYieldedLength = cleaned.length;
+      for await (const event of eventStream) {
+        const eventType = event.event;
+        
+        if (eventType === "on_chat_model_stream") {
+          const nodeName = event.metadata?.langgraph_node;
+          if (nodeName && ["ceo", "software_chief", "business_chief"].includes(nodeName)) {
+             const chunk = event.data.chunk;
+             
+             let delta = "";
+             if (typeof chunk.content === 'string') {
+               delta = chunk.content;
+             } else if (chunk.tool_call_chunks && chunk.tool_call_chunks.length > 0) {
+               delta = chunk.tool_call_chunks[0].args || "";
+             }
+  
+             if (delta) {
+               reasoningBuffer += delta;
+               const match = reasoningBuffer.match(/"reasoning":\s*"(.*)/);
+               if (match) {
+                 let fullReasoning = match[1];
+                 const closingQuoteIndex = fullReasoning.search(/[^\\]"/);
+                 if (closingQuoteIndex !== -1) {
+                   fullReasoning = fullReasoning.substring(0, closingQuoteIndex + 1);
+                 }
+                 const cleaned = fullReasoning
+                   .replace(/\\n/g, "\n")
+                   .replace(/\\"/g, '"')
+                   .replace(/\\t/g, "\t");
+                 const newChunk = cleaned.substring(lastYieldedLength);
+                 if (newChunk) {
+                   yield { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
+                   lastYieldedLength = cleaned.length;
+                 }
                }
              }
-           }
+          }
+        }
+  
+        if (eventType === "on_node_start") {
+          reasoningBuffer = "";
+          lastYieldedLength = 0;
+        }
+  
+        if (eventType === "on_node_end") {
+          const updates = event.data.output;
+          if (updates) { yield* this.formatUpdate(updates, threadId); }
         }
       }
 
-      if (eventType === "on_node_start") {
-        reasoningBuffer = "";
-        lastYieldedLength = 0;
-      }
+      // Verificamos si hay una nueva interrupción
+      const state = await graph.getState(config);
+      isWaiting = state.next.length > 0;
+      nextNode = state.next[0] || "";
 
-      if (eventType === "on_node_end") {
-        const updates = event.data.output;
-        if (updates) {
-           yield* this.formatUpdate(updates, threadId);
-        }
+      // Si se detuvo en el CEO Pero la misión está aprobada, reanudamos instantáneamente (SILENT RESUME)
+      const currentState = state.values as AgentStateType;
+      if (isWaiting && nextNode === "ceo" && currentState.is_mission_approved) {
+        console.log("🔄 Reanudación automática detectada (Mission Approved). Continuando...");
+        continue; 
+      } else {
+        // En cualquier otro caso (terminó, error, o requiere nueva aprobación), rompemos el bucle
+        break;
       }
-    }
+    } while (true);
 
-    // Verificamos si hay una nueva interrupción (ej. en otro nodo)
-    const state = await graph.getState(config);
-    if (state.next.length > 0) {
+    if (isWaiting) {
       yield {
         agent: "SYSTEM",
-        text: "Punto de control alcanzado. Esperando aprobación.",
+        text: "Misión pausada. Esperando nueva instrucción o confirmación.",
         time: new Date().toLocaleTimeString(),
-        activeNode: state.next[0],
+        activeNode: nextNode,
         isWaiting: true,
         threadId
       };

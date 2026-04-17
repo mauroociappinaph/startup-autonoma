@@ -13,5 +13,6 @@ export interface AgentStateType {
   plan: string[]; // Tareas pendientes o totales
   completed_steps: string[]; // Tareas finalizadas
   active_chief?: string; // Añadido para el nodo activo del Chief
+  is_mission_approved?: boolean; // Flag para evitar bucles de aprobación
   [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)
 }

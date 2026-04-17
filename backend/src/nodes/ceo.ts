@@ -52,12 +52,18 @@ export async function ceo_node(state: AgentStateType) {
       })])
     };
 
-    // Si el CEO delega, el plan indica a qué jefe ir.
-    // Usamos el campo 'active_chief' como señal para las aristas condicionales del grafo.
+    // Lógica de Continuidad (Mission-based HITL)
+    // Si la misión está aprobada, el CEO debe ser menos intrusivo.
+    if (state.is_mission_approved && response.next_step === "delegate") {
+      console.log("⏩ CEO detectó misión aprobada. Procediendo sin nueva interrupción.");
+    }
+
     if (response.next_step === "delegate" && response.delegated_to) {
       updates.plan = [response.delegated_to];
     } else {
+      // Si el CEO termina o pide clarificación, reiniciamos el flag de aprobación
       updates.plan = [];
+      updates.is_mission_approved = false;
     }
 
     return updates;
