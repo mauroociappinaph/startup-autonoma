@@ -30,21 +30,35 @@ const Metric: React.FC<MetricProps> = ({ label, value, icon, unit }) => (
   </div>
 );
 
-export const SystemHealth: React.FC = () => {
+interface SystemHealthProps {
+  totalTokens?: number;
+  iterations?: number;
+}
+
+export const SystemHealth: React.FC<SystemHealthProps> = ({ 
+  totalTokens = 0, 
+  iterations = 0 
+}) => {
   const [metrics, setMetrics] = useState({
     latency: 24,
-    cpu: 18,
+    cpu: 18, // Simulamos carga de CPU básica
     memory: 42,
-    traffic: 5
   });
+
+  // Límites definidos en el Circuit Breaker (Backend)
+  const MAX_TOKENS = 100000;
+  const MAX_ITERATIONS = 20;
+
+  // Calculamos porcentajes de consumo para las barras de progreso
+  const tokenPercent = Math.min((totalTokens / MAX_TOKENS) * 100, 100);
+  const iterationPercent = Math.min((iterations / MAX_ITERATIONS) * 100, 100);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setMetrics(prev => ({
         latency: Math.floor(20 + Math.random() * 15),
-        cpu: Math.floor(15 + Math.random() * 20),
-        memory: Math.floor(40 + Math.random() * 5),
-        traffic: Math.floor(prev.traffic + Math.random() * 2) % 100
+        cpu: Math.floor(10 + Math.random() * 10),
+        memory: Math.floor(38 + Math.random() * 5),
       }));
     }, 3000);
     return () => clearInterval(interval);
@@ -55,29 +69,61 @@ export const SystemHealth: React.FC = () => {
       <div className="flex items-center justify-between px-2">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
           <Activity size={14} className="text-blue-500" />
-          System Health
+          Mission Telemetry
         </h3>
         <div className="flex items-center gap-1.5 py-1 px-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
           <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[8px] font-black text-emerald-500 uppercase">Live Ops</span>
+          <span className="text-[8px] font-black text-emerald-500 uppercase">Resilience Active</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Metric label="Latency" value={metrics.latency} icon={<Zap size={12} />} unit="ms" />
-        <Metric label="Node Load" value={metrics.cpu} icon={<Cpu size={12} />} unit="%" />
-        <Metric label="Mem Cache" value={metrics.memory} icon={<Database size={12} />} unit="%" />
-        <Metric label="Stream" value={metrics.traffic} icon={<Activity size={12} />} unit="%" />
+        <Metric 
+          label="Budget Use" 
+          value={Number(tokenPercent.toFixed(1))} 
+          icon={<Zap size={12} />} 
+          unit="%" 
+        />
+        <Metric 
+          label="Cycle Load" 
+          value={Number(iterationPercent.toFixed(1))} 
+          icon={<Cpu size={12} />} 
+          unit="%" 
+        />
+        <Metric 
+          label="Latency" 
+          value={metrics.latency} 
+          icon={<Activity size={12} />} 
+          unit="ms" 
+        />
+        <Metric 
+          label="Mem Cache" 
+          value={metrics.memory} 
+          icon={<Database size={12} />} 
+          unit="%" 
+        />
       </div>
 
       <div className="mt-2 p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-          <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider">AI Engine Status</span>
+        <div className="flex items-center justify-between mb-2">
+           <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+              <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider">Metrics Detail</span>
+           </div>
+           <span className="text-[8px] font-mono text-white/40 uppercase tracking-tighter">
+             Limit: {MAX_TOKENS / 1000}k
+           </span>
         </div>
-        <p className="text-[10px] text-slate-400 leading-tight">
-          gRPC tunnel operational. Payload verification active. 
-        </p>
+        <div className="flex flex-col gap-1 text-[10px] font-medium text-slate-400">
+           <div className="flex justify-between border-b border-white/5 pb-1">
+             <span>Tokens:</span>
+             <span className="text-white font-mono">{totalTokens.toLocaleString()}</span>
+           </div>
+           <div className="flex justify-between pt-1">
+             <span>Steps:</span>
+             <span className="text-white font-mono">{iterations} / {MAX_ITERATIONS}</span>
+           </div>
+        </div>
       </div>
     </div>
   );

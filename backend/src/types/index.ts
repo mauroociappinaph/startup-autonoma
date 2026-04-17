@@ -6,6 +6,13 @@ export interface StreamEvent {
   plan?: string[];
   completedSteps?: string[];
   executiveSummary?: string;
+  token_usage?: {
+    total: number;
+    prompt: number;
+    completion: number;
+  };
+  iteration_count?: number;
+  threadId?: string;
 }
 
 export * from "./ceo.types.js";

@@ -13,6 +13,8 @@ export function useAgentStream() {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [executiveSummary, setExecutiveSummary] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<string>("default-thread");
+  const [totalTokens, setTotalTokens] = useState<number>(0);
+  const [iterations, setIterations] = useState<number>(0);
 
   const processEvent = useCallback((data: AgentThought) => {
     if (data.error) {
@@ -31,6 +33,8 @@ export function useAgentStream() {
     if (data.executiveSummary) setExecutiveSummary(data.executiveSummary);
     if (data.isWaiting) setIsWaiting(true);
     if (data.threadId) setCurrentThreadId(data.threadId);
+    if (data.token_usage) setTotalTokens(data.token_usage.total);
+    if (data.iteration_count !== undefined) setIterations(data.iteration_count);
     
     setThoughts(prev => {
       // Si es un token parcial, lo acumulamos en el último pensamiento si coincide el agente
@@ -63,6 +67,8 @@ export function useAgentStream() {
     setCurrentPlan([]);
     setCompletedSteps([]);
     setExecutiveSummary(null);
+    setTotalTokens(0);
+    setIterations(0);
 
     const eventSource = new EventSource(`/api/agents/stream?prompt=${encodeURIComponent(prompt)}&threadId=${currentThreadId}`);
 
@@ -157,6 +163,8 @@ export function useAgentStream() {
     currentPlan, 
     completedSteps, 
     executiveSummary,
+    totalTokens,
+    iterations,
     threadId: currentThreadId
   };
 }

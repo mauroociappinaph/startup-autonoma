@@ -10,6 +10,12 @@ export interface AgentThought {
   isWaiting?: boolean;
   isPartial?: boolean;
   threadId?: string;
+  token_usage?: {
+    total: number;
+    prompt: number;
+    completion: number;
+  };
+  iteration_count?: number;
 }
 
 export * from "./ui.types";

@@ -27,6 +27,8 @@ export default function Dashboard() {
     currentPlan, 
     completedSteps,
     executiveSummary,
+    totalTokens,
+    iterations,
     threadId
   } = useAgentStream();
 
@@ -103,7 +105,10 @@ export default function Dashboard() {
         {/* Panel Derecho: Estrategia y Métricas (1/4) */}
         <div className="hidden lg:flex flex-col gap-6 min-h-0">
           <div className="glass rounded-2xl p-4 border border-white/5">
-            <SystemHealth />
+            <SystemHealth 
+              totalTokens={totalTokens} 
+              iterations={iterations} 
+            />
           </div>
           
           <div className="flex-1 flex flex-col min-h-0 gap-6">

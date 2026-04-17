@@ -238,6 +238,8 @@ export class GraphService {
           plan: nodeData.plan || undefined,
           completedSteps: nodeData.completed_steps || undefined,
           executiveSummary: nodeData.executive_summary || undefined,
+          token_usage: nodeData.token_usage || undefined,
+          iteration_count: nodeData.iteration_count || undefined,
           threadId
         } as StreamEvent;
       }
