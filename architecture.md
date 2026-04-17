@@ -281,7 +281,7 @@
 │   ├── next-env.d.ts
 │   ├── next.config.js
 │   ├── package.json
-│   ├── postcss.config.js
+│   ├── postcss.config.mjs
 │   ├── tailwind.config.js
 │   ├── tsconfig.json
 │   └── tsconfig.tsbuildinfo
