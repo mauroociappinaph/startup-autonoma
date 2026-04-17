@@ -156,6 +156,7 @@ export function useAgentStream() {
     activeNode, 
     currentPlan, 
     completedSteps, 
-    executiveSummary 
+    executiveSummary,
+    threadId: currentThreadId
   };
 }

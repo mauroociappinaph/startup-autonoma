@@ -232,11 +232,26 @@
 │   │   ├── api/
 │   │   │   └── .gitkeep
 │   │   ├── app/
+│   │   │   ├── logs/
+│   │   │   │   └── page.tsx
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx
+│   │   │   ├── terminal/
+│   │   │   │   └── page.tsx
+│   │   │   ├── workspace/
+│   │   │   │   └── page.tsx
 │   │   │   ├── .gitkeep
 │   │   │   ├── globals.css
 │   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
 │   │   ├── components/
+│   │   │   ├── dashboard/
+│   │   │   │   ├── CommandBar.tsx
+│   │   │   │   ├── CustomAgentNode.tsx
+│   │   │   │   ├── OrchestrationGraph.tsx
+│   │   │   │   ├── ReasoningFeed.tsx
+│   │   │   │   ├── StrategyCard.tsx
+│   │   │   │   └── SystemHealth.tsx
 │   │   │   ├── ui/
 │   │   │   │   ├── badge.tsx
 │   │   │   │   ├── button.tsx
