@@ -31,6 +31,6 @@ export type CodeResearcherInput = z.infer<typeof CodeResearcherInputSchema>;
 export interface CodeResearcherResponse {
   success: boolean;
   action: string;
-  data?: any;
+  data?: unknown;
   errorMessage?: string;
 }

@@ -46,12 +46,13 @@ export async function codeResearcher(input: CodeResearcherInput): Promise<CodeRe
       default:
         throw new Error(`Acción no soportada`);
     }
-  } catch (error: any) {
-    console.error(`❌ Error en Code Researcher [${payload.action}]:`, error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+    console.error(`❌ Error en Code Researcher [${payload.action}]:`, errorMessage);
     return {
       success: false,
       action: payload.action,
-      errorMessage: error.message || "Error desconocido"
+      errorMessage: errorMessage
     };
   }
 }

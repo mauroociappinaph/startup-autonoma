@@ -43,10 +43,11 @@ export async function code_researcher_node(state: AgentStateType) {
         })]
       };
     }
-  } catch (error: any) {
-    console.error("❌ Fallo crítico en el Nodo CodeResearcherWorker:", error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+    console.error("❌ Fallo crítico en el Nodo CodeResearcherWorker:", errorMessage);
     return {
-      executive_summary: `Fallo crítico en Code Researcher: ${error.message}`,
+      executive_summary: `Fallo crítico en Code Researcher: ${errorMessage}`,
     };
   }
 }
