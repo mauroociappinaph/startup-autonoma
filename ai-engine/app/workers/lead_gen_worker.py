@@ -4,7 +4,7 @@ import time
 import logging
 from typing import Dict, Any, List
 from google.protobuf import json_format, struct_pb2
-import ai_engine_pb2
+from app.grpc_generated import ai_engine_pb2
 
 # Configuración de logging para el worker
 logger = logging.getLogger(__name__)

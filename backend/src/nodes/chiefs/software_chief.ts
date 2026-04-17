@@ -12,6 +12,7 @@ const SoftwareChiefDecisionSchema = z.object({
   reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
   decision: z.enum([
     "delegate_to_researcher",
+    "delegate_to_code_researcher", // Nuevo worker determinista
     "delegate_to_git_worker",
     "delegate_to_test_runner",
     "delegate_to_ai_engine", // Nueva decisión para el AI Engine
@@ -25,7 +26,8 @@ const SoftwareChiefDecisionSchema = z.object({
     worker_name: z.string().describe("Nombre del worker específico en el AI Engine (ej: 'lead_gen', 'market_analyst')."),
     task_description: z.string().describe("Descripción de la tarea a ejecutar."),
     payload: z.any().optional().describe("Datos de entrada para el worker."),
-  }).nullable().optional().describe("Instrucción para el AI Engine si la decisión es delegar a este servicio.")
+  }).nullable().optional().describe("Instrucción para el AI Engine si la decisión es delegar a este servicio."),
+  code_researcher_payload: z.any().optional().describe("Carga útil estructurada para el Code Researcher.")
 });
 
 /**
@@ -82,7 +84,16 @@ export async function software_chief_node(state: AgentStateType) {
     if (response.decision === "delegate_to_researcher") {
       updates.plan = ["research"];
       updates.messages?.push(new AIMessage({
-        content: `[CHIEF_DELEGATION] Delegando investigación: ${response.worker_instruction || 'Tarea de investigación requerida.'}`,
+        content: `[CHIEF_DELEGATION] Delegando investigación inteligente: ${response.worker_instruction || 'Tarea de investigación requerida.'}`,
+      }));
+    }
+    else if (response.decision === "delegate_to_code_researcher") {
+      updates.plan = ["code_research"];
+      updates.messages?.push(new AIMessage({
+        content: `[CHIEF_DELEGATION] Delegando exploración técnica determinista: ${response.reasoning}`,
+        additional_kwargs: {
+          code_researcher_instruction: response.code_researcher_payload
+        }
       }));
     }
     else if (response.decision === "delegate_to_git_worker") {

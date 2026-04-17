@@ -1,18 +1,16 @@
 import grpc
-import ai_engine_pb2
-import ai_engine_pb2_grpc
+from app.grpc_generated import ai_engine_pb2
+from app.grpc_generated import ai_engine_pb2_grpc
 from concurrent import futures
 from google.protobuf import json_format
 import logging
 import os
 import sys
 
-# Asegurarse de que el path de 'app' y 'grpc' sea accesible
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../grpc')))
+# Los paths ya están configurados por el sistema de paquetes de Python
 
 # Importamos la función del worker
-from workers.lead_gen_worker import process_lead_generation_task 
+from app.workers.lead_gen_worker import process_lead_generation_task 
 
 logging.basicConfig(level=logging.INFO)
 

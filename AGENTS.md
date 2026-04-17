@@ -69,10 +69,11 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── /include
 │   │   ├── /lib
 │   ├── /app
+│   │   ├── /__pycache__
 │   │   ├── /api
 │   │   ├── /contracts
 │   │   ├── /core
-│   │   ├── /grpc
+│   │   ├── /grpc_generated
 │   │   ├── /helpers
 │   │   ├── /tools
 │   │   ├── /workers
@@ -108,6 +109,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── /tests
 │   │   ├── business_chief.test.ts
 │   │   ├── ceo_agent.test.ts
+│   │   ├── code_researcher.test.ts
 │   │   ├── context_manager.test.ts
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts

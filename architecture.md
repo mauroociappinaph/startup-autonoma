@@ -60,23 +60,31 @@
 │   │   └── README.md
 │   ├── app/
 │   │   ├── api/
+│   │   │   ├── __init__.py
 │   │   │   └── .gitkeep
 │   │   ├── contracts/
+│   │   │   ├── __init__.py
 │   │   │   └── .gitkeep
 │   │   ├── core/
+│   │   │   ├── __init__.py
 │   │   │   ├── .gitkeep
 │   │   │   └── grpc_server.py
-│   │   ├── grpc/
+│   │   ├── grpc_generated/
 │   │   │   ├── __init__.py
 │   │   │   ├── ai_engine_pb2_grpc.py
 │   │   │   └── ai_engine_pb2.py
 │   │   ├── helpers/
+│   │   │   ├── __init__.py
 │   │   │   └── .gitkeep
 │   │   ├── tools/
+│   │   │   ├── __init__.py
 │   │   │   └── .gitkeep
-│   │   └── workers/
-│   │       ├── .gitkeep
-│   │       └── lead_gen_worker.py
+│   │   ├── workers/
+│   │   │   ├── __init__.py
+│   │   │   ├── .gitkeep
+│   │   │   └── lead_gen_worker.py
+│   │   ├── __init__.py
+│   │   └── main.py
 │   ├── scripts/
 │   │   └── generate_protos.py
 │   ├── tests/
@@ -117,6 +125,8 @@
 │   │   │   │   └── software_chief.ts
 │   │   │   ├── workers/
 │   │   │   │   ├── ai_engine_worker_node.ts
+│   │   │   │   ├── code_researcher_node.ts
+│   │   │   │   ├── codeResearcher.ts
 │   │   │   │   ├── git_worker_node.ts
 │   │   │   │   ├── gitWorker.ts
 │   │   │   │   ├── index.ts
@@ -151,6 +161,7 @@
 │   │   │   ├── business-chief.types.ts
 │   │   │   ├── ceo.types.ts
 │   │   │   ├── chief.types.ts
+│   │   │   ├── code-researcher.types.ts
 │   │   │   ├── engram.types.ts
 │   │   │   ├── git-worker.types.ts
 │   │   │   ├── index.ts
@@ -172,6 +183,7 @@
 │   │   ├── .gitkeep
 │   │   ├── business_chief.test.ts
 │   │   ├── ceo_agent.test.ts
+│   │   ├── code_researcher.test.ts
 │   │   ├── context_manager.test.ts
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
