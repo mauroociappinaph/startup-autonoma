@@ -55,7 +55,7 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setMetrics(prev => ({
+      setMetrics(_prev => ({
         latency: Math.floor(20 + Math.random() * 15),
         cpu: Math.floor(10 + Math.random() * 10),
         memory: Math.floor(38 + Math.random() * 5),
