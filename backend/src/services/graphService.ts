@@ -1,5 +1,5 @@
 import { graph } from '@/graph/index.js';
-import { HumanMessage } from '@langchain/core/messages';
+import { HumanMessage, type BaseMessage } from '@langchain/core/messages';
 import { AgentStateType } from '@/types/state.types.js';
 import { StreamEvent } from '@/types/index.js';
 
@@ -25,7 +25,7 @@ export class GraphService {
 
     for await (const update of stream) {
       const nodeName = Object.keys(update)[0];
-      const nodeData = (update as Record<string, any>)[nodeName];
+      const nodeData = (update as Record<string, Partial<AgentStateType>>)[nodeName];
 
       if (nodeData && nodeData.messages && nodeData.messages.length > 0) {
         const lastMsg = nodeData.messages[nodeData.messages.length - 1];

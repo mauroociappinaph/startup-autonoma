@@ -79,11 +79,13 @@ function checkSacredLaws(filePath) {
         errors++;
       }
 
-      // LEY #11: Anti-Extensiones (Prohibido .js en archivos .ts/.tsx)
-      const jsImportMatch = line.match(/from\s+['"](.+?\.js)['"]/);
-      if (jsImportMatch) {
-        console.error(`🚨 [LEY #11 ROTA]: ${filePath}:${i + 1} Import con extensión .js detectado: "${jsImportMatch[1]}". Omití la extensión o usá .ts.`);
-        errors++;
+      // LEY #11: Anti-Extensiones (Prohibido .js solo en el frontend, el backend lo requiere para ESM)
+      if (filePath.includes('/frontend/')) {
+        const jsImportMatch = line.match(/from\s+['"](.+?\.js)['"]/);
+        if (jsImportMatch) {
+          console.error(`🚨 [LEY #11 ROTA]: ${filePath}:${i + 1} Import con extensión .js detectado: "${jsImportMatch[1]}". En Next.js omití la extensión.`);
+          errors++;
+        }
       }
     }
   }
