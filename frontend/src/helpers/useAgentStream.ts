@@ -32,7 +32,26 @@ export function useAgentStream() {
     if (data.isWaiting) setIsWaiting(true);
     if (data.threadId) setCurrentThreadId(data.threadId);
     
-    setThoughts(prev => [...prev, data]);
+    setThoughts(prev => {
+      // Si es un token parcial, lo acumulamos en el último pensamiento si coincide el agente
+      if (data.isPartial) {
+        const last = prev[prev.length - 1];
+        if (last && last.isPartial && last.agent === data.agent) {
+          const updated = { ...last, text: last.text + data.text };
+          return [...prev.slice(0, -1), updated];
+        }
+        return [...prev, { ...data, time: new Date().toLocaleTimeString() }];
+      } 
+      
+      // Si es un mensaje completo, verificamos si hay un parcial previo del mismo agente para reemplazarlo
+      const last = prev[prev.length - 1];
+      if (last && last.isPartial && last.agent === data.agent) {
+        return [...prev.slice(0, -1), data];
+      }
+      
+      return [...prev, data];
+    });
+
     return true;
   }, []);
 
@@ -48,9 +67,16 @@ export function useAgentStream() {
     const eventSource = new EventSource(`/api/agents/stream?prompt=${encodeURIComponent(prompt)}&threadId=${currentThreadId}`);
 
     eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data) as AgentThought;
-      if (!processEvent(data)) {
-        eventSource.close();
+      try {
+        const rawData = event.data;
+        if (rawData === "execution_complete") return;
+        
+        const data = JSON.parse(rawData) as AgentThought;
+        if (!processEvent(data)) {
+          eventSource.close();
+        }
+      } catch (e) {
+        console.error("❌ Error parseando stream:", e);
       }
     };
 
@@ -98,8 +124,15 @@ export function useAgentStream() {
           
           for (const line of lines) {
             if (line.startsWith('data: ')) {
-              const data = JSON.parse(line.replace('data: ', '')) as AgentThought;
-              processEvent(data);
+              const rawData = line.replace('data: ', '').trim();
+              if (rawData === '"execution_complete"' || rawData === 'execution_complete') continue;
+              
+              try {
+                const data = JSON.parse(rawData) as AgentThought;
+                processEvent(data);
+              } catch (e) {
+                console.error("❌ Error parseando JSON en approve:", e, rawData);
+              }
             }
             if (line.startsWith('event: end')) {
               setIsStreaming(false);

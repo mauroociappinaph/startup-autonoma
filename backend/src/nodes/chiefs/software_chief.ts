@@ -9,6 +9,7 @@ import { TestRunnerInputSchema } from "@/types/software-tools.types.js";
  * Esquema de decisión interna del Software Chief.
  */
 const SoftwareChiefDecisionSchema = z.object({
+  reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
   decision: z.enum([
     "delegate_to_researcher",
     "delegate_to_git_worker",
@@ -17,7 +18,6 @@ const SoftwareChiefDecisionSchema = z.object({
     "complete",
     "need_clarification"
   ]),
-  reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
   worker_instruction: z.string().nullable().optional().describe("Instrucción en lenguaje natural para el worker (si aplica)."),
   git_payload: GitActionSchema.nullable().optional().describe("Carga útil estructurada si se delega al Git Worker."),
   test_payload: TestRunnerInputSchema.nullable().optional().describe("Carga útil estructurada si se delega al Test Runner."),

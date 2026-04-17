@@ -222,15 +222,27 @@ export default function Dashboard() {
                 </div>
               )}
               {thoughts.map((t, i) => (
-                <div key={i} className="p-4 border-b border-border/20 hover:bg-secondary/5 transition-colors animate-in fade-in slide-in-from-right-2 duration-300">
+                <div key={i} className={`p-4 border-b border-border/20 transition-colors animate-in fade-in slide-in-from-right-2 duration-300 ${
+                  t.isPartial ? "bg-blue-500/5" : "hover:bg-secondary/5"
+                }`}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <Badge variant={t.agent === "ERROR" ? "destructive" : "outline"} className="text-[8px] px-1.5 py-0 h-3.5 font-bold uppercase">
-                      {t.agent}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={t.agent === "ERROR" ? "destructive" : "outline"} className="text-[8px] px-1.5 py-0 h-3.5 font-bold uppercase">
+                        {t.agent}
+                      </Badge>
+                      {t.isPartial && (
+                        <div className="flex gap-0.5">
+                          <div className="w-0.5 h-0.5 bg-blue-400 rounded-full animate-bounce"></div>
+                          <div className="w-0.5 h-0.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                          <div className="w-0.5 h-0.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                        </div>
+                      )}
+                    </div>
                     <span className="text-[8px] text-muted-foreground font-mono">{t.time}</span>
                   </div>
-                  <p className="text-[11px] leading-snug text-slate-400">
+                  <p className={`text-[11px] leading-snug ${t.isPartial ? "text-blue-200/80 font-medium" : "text-slate-400"}`}>
                     {t.text}
+                    {t.isPartial && <span className="inline-block w-1.5 h-3 ml-1 bg-blue-500/50 animate-pulse">|</span>}
                   </p>
                 </div>
               ))}

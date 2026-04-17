@@ -28,7 +28,7 @@ export class AgentController {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
 
-      res.write('event: end\ndata: execution_complete\n\n');
+      res.write('event: end\ndata: "execution_complete"\n\n');
       res.end();
     } catch (error) {
       console.error('❌ Error en AgentController.stream:', error);
@@ -59,7 +59,7 @@ export class AgentController {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
 
-      res.write('event: end\ndata: execution_complete\n\n');
+      res.write('event: end\ndata: "execution_complete"\n\n');
       res.end();
     } catch (error) {
       console.error('❌ Error en AgentController.approve:', error);

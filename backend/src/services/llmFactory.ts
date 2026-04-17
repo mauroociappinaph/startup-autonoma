@@ -24,7 +24,7 @@ export class LLMFactory {
         return new ChatOpenAI({
           modelName,
           temperature: options.temperature ?? 0,
-          streaming: options.streaming ?? false,
+          streaming: options.streaming ?? true,
           openAIApiKey: process.env.OPENAI_API_KEY,
         });
 

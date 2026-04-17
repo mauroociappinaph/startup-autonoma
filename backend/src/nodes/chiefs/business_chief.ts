@@ -7,6 +7,7 @@ import { z } from "zod";
  * Esquema de decisión interna del Business Chief.
  */
 const BusinessChiefDecisionSchema = z.object({
+  reasoning: z.string().describe("Explicación del razonamiento de negocio detrás de la decisión."),
   decision: z.enum([
     "delegate_to_researcher",
     "delegate_to_lead_gen",
@@ -14,7 +15,6 @@ const BusinessChiefDecisionSchema = z.object({
     "complete",
     "need_strategic_clarification"
   ]),
-  reasoning: z.string().describe("Explicación del razonamiento de negocio detrás de la decisión."),
   worker_instruction: z.string().nullable().optional().describe("Instrucción detallada para el worker o el AI Engine."),
   lead_gen_payload: z.object({
     niche: z.string().describe("Nicho de mercado para buscar leads."),

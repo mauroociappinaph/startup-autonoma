@@ -8,6 +8,7 @@ export interface AgentThought {
   executiveSummary?: string;
   error?: string;
   isWaiting?: boolean;
+  isPartial?: boolean;
   threadId?: string;
 }
 
