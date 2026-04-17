@@ -1,5 +1,5 @@
 import { graph } from '@/graph/index.js';
-import { HumanMessage, type BaseMessage } from '@langchain/core/messages';
+import { HumanMessage } from '@langchain/core/messages';
 import { AgentStateType } from '@/types/state.types.js';
 import { StreamEvent } from '@/types/index.js';
 
