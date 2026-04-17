@@ -85,12 +85,21 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Indicador de Workers */}
-              <div className="mt-4 flex gap-4 h-10 items-end">
-                {["researcher", "git_worker", "ai_engine_worker", "persistence_worker"].map(worker => (
-                  <div key={worker} className={`w-3 transition-all duration-300 rounded-full ${
-                    isActive(worker) ? "h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "h-2 bg-border"
-                  }`} title={worker} />
+              {/* Sección de Workers (Cajas Reales) */}
+              <div className="mt-4 flex flex-wrap justify-center gap-4">
+                {[
+                  { id: "research", label: "Researcher", color: "emerald" },
+                  { id: "git_operation", label: "Git Worker", color: "pink" },
+                  { id: "ai_engine_task", label: "AI Engine", color: "indigo" },
+                  { id: "persist_memory", label: "Persistence", color: "amber" }
+                ].map(worker => (
+                  <div key={worker.id} className={`px-3 py-1.5 rounded border text-[10px] font-bold transition-all duration-300 ${
+                    isActive(worker.id) 
+                      ? `border-${worker.color}-500 bg-${worker.color}-500/20 shadow-[0_0:15px_rgba(16,185,129,0.4)] scale-110 text-${worker.color}-400` 
+                      : "border-border bg-card/30 text-muted-foreground opacity-30"
+                  }`}>
+                    {worker.label}
+                  </div>
                 ))}
               </div>
             </div>

@@ -60,6 +60,10 @@ export async function business_chief_node(state: AgentStateType) {
     - Si el objetivo es conseguir clientes, delega al LeadGen.
     
     REGLA DE ORO: No des por terminada una misión de Lead Gen hasta que los prospectos estén seguros en Engram.
+
+    NOTAS SOBRE COORDINACIÓN:
+    - Tú solo eres responsable de la parte COMERCIAL (investigación, leads, estrategia).
+    - Si ya terminaste tu parte pero el pedido original incluía tareas técnicas (como crear una rama, escribir código, etc.), responde con 'complete' y aclara en tu razonamiento que la parte de negocio está lista pero la parte técnica sigue pendiente.
   `);
 
   try {

@@ -53,6 +53,10 @@ export async function software_chief_node(state: AgentStateType) {
     LEYES SAGRADAS:
     - KISS & SOLID, SRP, DRY, Barrel Files.
     - Código generado debe ser predecible y testable.
+
+    NOTAS SOBRE COORDINACIÓN:
+    - Tú solo eres responsable de la parte TÉCNICA (código, git, tests).
+    - Si ya terminaste tu parte técnica pero el pedido original incluía tareas de negocio (investigación de mercado, leads, etc.), responde con 'complete' y aclara en tu razonamiento que la parte técnica está lista pero la parte comercial sigue pendiente.
   `);
 
   try {

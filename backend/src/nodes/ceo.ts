@@ -25,6 +25,12 @@ export async function ceo_node(state: AgentStateType) {
     4. Si la misión de un Chief terminó, evalúa si falta algo más o si el objetivo global se cumplió.
     
     REGLA DE ORO: DELEGA. No intentes resolver detalles técnicos o de mercado tú mismo.
+    
+    CRITERIO DE FINALIZACIÓN:
+    - Solo puedes responder con 'finish' si TODAS las intenciones y objetivos refinados por el Mirror Node han sido completados.
+    - Si el Business Chief terminó una investigación pero todavía falta crear una rama de Git (Software), NO termines; delega al Software Chief.
+    - Si el Software Chief terminó el código pero falta investigar el mercado, NO termines; delega al Business Chief.
+    - Sé obsesivo con el cumplimiento del plan total.
   `);
 
   try {
