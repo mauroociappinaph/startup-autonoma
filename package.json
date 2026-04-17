@@ -20,6 +20,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "check": "turbo run check",
+    "check-laws": "node scripts/verify-sacred-laws.js",
     "verify-srp": "node scripts/verify-srp.js",
     "sync-arch": "node scripts/generate-architecture.js",
     "sync-docs": "node scripts/sync-project-structure.js"

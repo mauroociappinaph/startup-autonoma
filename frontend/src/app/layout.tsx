@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/helpers/utils.js";
+import { cn } from "@/helpers/utils";
 import { LayoutDashboard, Share2, Database, Settings, Rocket } from "lucide-react";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
-      <body className={cn(inter.className, "bg-background text-foreground h-screen overflow-hidden")}>
+    <html lang="es" className="dark" suppressHydrationWarning>
+      <body className={cn(inter.className, "bg-background text-foreground h-screen overflow-hidden")} suppressHydrationWarning>
         <div className="flex h-full">
           {/* Sidebar */}
           <aside className="w-64 bg-card border-r border-border p-6 flex flex-col gap-8">
@@ -28,7 +28,7 @@ export default function RootLayout({
               </div>
               <span className="font-extrabold text-xl tracking-tighter">Startup.ai</span>
             </div>
-            
+
             <nav className="flex flex-col gap-2">
               <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-md bg-secondary text-primary font-medium transition-colors">
                 <LayoutDashboard size={18} />
@@ -58,7 +58,7 @@ export default function RootLayout({
                 Sistemas Online
               </div>
             </header>
-            
+
             <section className="flex-1 p-8 overflow-y-auto">
               {children}
             </section>

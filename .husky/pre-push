@@ -5,9 +5,9 @@ echo "=========================================================="
 echo "🚀 ANTIGRAVITY: Verificación Final antes del PUSH"
 echo "=========================================================="
 
-# Correr lint y types en todo el proyecto antes de subir
-echo "🔍 Validando lint y tipos en todo el monorepo..."
-npm run lint && npm run check
+# Correr lint, tipos y leyes sagradas antes de subir
+echo "🔍 Validando lint, tipos y leyes sagradas..."
+npm run lint && npm run check && npm run check-laws
 if [ $? -ne 0 ]; then
   echo "❌ Error de consistencia detectado. No podés subir código que rompa el CI."
   exit 1

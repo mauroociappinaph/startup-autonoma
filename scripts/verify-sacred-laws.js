@@ -78,6 +78,13 @@ function checkSacredLaws(filePath) {
         console.error(`🚨 [LEY #5 ROTA]: ${filePath}:${i + 1} utiliza 'any'. El tipado debe ser estricto.`);
         errors++;
       }
+
+      // LEY #11: Anti-Extensiones (Prohibido .js en archivos .ts/.tsx)
+      const jsImportMatch = line.match(/from\s+['"](.+?\.js)['"]/);
+      if (jsImportMatch) {
+        console.error(`🚨 [LEY #11 ROTA]: ${filePath}:${i + 1} Import con extensión .js detectado: "${jsImportMatch[1]}". Omití la extensión o usá .ts.`);
+        errors++;
+      }
     }
   }
 }
@@ -96,13 +103,19 @@ if (process.env.CI) {
     }
   });
 } else {
-  console.log('🔍 Auditando cumplimiento de Leyes Sagradas en archivos Staged...\n');
+  console.log('🔍 Auditando cumplimiento de Leyes Sagradas en archivos Staged o Directos...\n');
   try {
-    const diffOutput = execSync('git diff --cached --name-only --diff-filter=ACMR', { 
-      encoding: 'utf-8',
-      env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin' }
-    });
-    filesToAudit = diffOutput.split('\n').filter(Boolean).map(f => path.resolve(process.cwd(), f));
+    // Si se pasa un argumento, auditar ese archivo específico, sino usar git diff
+    const targetFile = process.argv[2];
+    if (targetFile) {
+       filesToAudit = [path.resolve(process.cwd(), targetFile)];
+    } else {
+      const diffOutput = execSync('git diff --cached --name-only --diff-filter=ACMR', { 
+        encoding: 'utf-8',
+        env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin' }
+      });
+      filesToAudit = diffOutput.split('\n').filter(Boolean).map(f => path.resolve(process.cwd(), f));
+    }
   } catch (error) {
     console.error("No se pudo obtener la lista de archivos modificados desde Git:", error.message);
     process.exit(1);
@@ -124,5 +137,5 @@ if (errors > 0) {
   console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura en los archivos a subir.`);
   process.exit(1);
 } else {
-  console.log('✅ Todas las Leyes Sagradas (incluyendo Reasoning-First) se cumplen a rajatabla.');
+  console.log('✅ Todas las Leyes Sagradas (incluyendo la nueva LEY #11) se cumplen a rajatabla.');
 }

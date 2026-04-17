@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card.js";
-import { Badge } from "@/components/ui/badge.js";
-import { Button } from "@/components/ui/button.js";
-import { useAgentStream } from "@/helpers/useAgentStream.js";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAgentStream } from "@/helpers/useAgentStream";
 import { Send, Terminal, Share2, Check } from "lucide-react";
 
 /**

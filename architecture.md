@@ -250,6 +250,7 @@
 │   ├── .prettierrc
 │   ├── components.json
 │   ├── next-env.d.ts
+│   ├── next.config.js
 │   ├── package.json
 │   ├── postcss.config.js
 │   ├── tailwind.config.js

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { type AgentThought } from "@/types/index.js";
+import { type AgentThought } from "@/types/index";
 
 /**
  * Hook para manejar el streaming de pensamientos desde el backend.
@@ -20,7 +20,7 @@ export function useAgentStream() {
     setCompletedSteps([]);
     setExecutiveSummary(null);
 
-    const eventSource = new EventSource(`http://localhost:3001/api/agents/stream?prompt=${encodeURIComponent(prompt)}`);
+    const eventSource = new EventSource(`/api/agents/stream?prompt=${encodeURIComponent(prompt)}`);
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data) as AgentThought;
