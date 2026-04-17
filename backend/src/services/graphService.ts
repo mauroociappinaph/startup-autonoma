@@ -123,9 +123,6 @@ export class GraphService {
     // Esto evita que el CEO vuelva a pedir aprobación si el plan no ha cambiado drásticamente.
     await graph.updateState(config, { is_mission_approved: true });
 
-    // Al pasar null como input, LangGraph reanuda desde el último estado interrumpido
-    const eventStream = graph.streamEvents(null, { ...config, version: "v2" });
-
     // Bucle de reanudación automática (Mission-based HITL)
     let isWaiting = false;
     let nextNode = "";
