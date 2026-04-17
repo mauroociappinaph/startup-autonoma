@@ -73,7 +73,8 @@ export class AgentWorker {
       // para que el SSE endpoint los entregue al cliente en tiempo real.
       const stream = GraphService.runAgentStream(prompt, sessionId);
 
-      for await (const _ of stream) {
+      const iterator = stream[Symbol.asyncIterator]();
+      while (!(await iterator.next()).done) {
         // En este nodo, los eventos se emiten por el bus interno de GraphService.
         // Aquí solo consumimos el generador para asegurar la ejecución completa.
         await job.updateProgress(1);
