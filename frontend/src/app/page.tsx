@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAgentStream } from "@/helpers/useAgentStream";
-import { Send, Terminal, Share2, Check } from "lucide-react";
+import { Send, Terminal, Share2, Check, Zap, AlertCircle } from "lucide-react";
 
 /**
  * Dashboard de Mission Control con conexión real al backend.
@@ -15,7 +15,9 @@ export default function Dashboard() {
   const { 
     thoughts, 
     isStreaming, 
+    isWaiting,
     startStream, 
+    approvePlan,
     activeNode, 
     currentPlan, 
     completedSteps,
@@ -23,7 +25,7 @@ export default function Dashboard() {
   } = useAgentStream();
 
   const handleSend = () => {
-    if (!input.trim() || isStreaming) return;
+    if (!input.trim() || isStreaming || isWaiting) return;
     startStream(input);
     setInput("");
   };
@@ -36,6 +38,29 @@ export default function Dashboard() {
       {/* Panel del Grafo e Input (3 columnas) */}
       <div className="lg:col-span-3 flex flex-col gap-6">
         <Card className="flex-1 border-border/50 bg-card/30 flex flex-col relative overflow-hidden">
+          {/* Overlay de Espera (HITL) */}
+          {isWaiting && (
+            <div className="absolute inset-0 z-50 bg-background/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-500">
+              <div className="max-w-md w-full mx-4 p-8 rounded-2xl border border-blue-500/50 bg-card shadow-[0_0_50px_rgba(59,130,246,0.2)] flex flex-col items-center text-center gap-6">
+                <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
+                  <AlertCircle size={32} className="text-blue-400" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight">Estrategia Lista</h3>
+                  <p className="text-sm text-slate-400">El CEO ha definido el plan de acción. Revisalo a la derecha y aprobá para que los Chief inicien la ejecución.</p>
+                </div>
+                <Button 
+                  onClick={approvePlan} 
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-6 rounded-xl gap-3 shadow-lg shadow-blue-900/40 transition-all hover:scale-[1.02]"
+                >
+                  <Zap size={20} fill="currentColor" />
+                  APROBAR Y EJECUTAR
+                </Button>
+                <button className="text-[10px] text-muted-foreground uppercase tracking-widest hover:text-white transition-colors">Modificar Intención</button>
+              </div>
+            </div>
+          )}
+
           <CardHeader className="flex flex-row items-center justify-between z-10">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <Share2 size={16} className="text-blue-500" />
@@ -88,14 +113,15 @@ export default function Dashboard() {
               {/* Sección de Workers (Cajas Reales) */}
               <div className="mt-4 flex flex-wrap justify-center gap-4">
                 {[
-                  { id: "research", label: "Researcher", color: "emerald" },
-                  { id: "git_operation", label: "Git Worker", color: "pink" },
-                  { id: "ai_engine_task", label: "AI Engine", color: "indigo" },
-                  { id: "persist_memory", label: "Persistence", color: "amber" }
+                  { id: "researcher", label: "Researcher", color: "emerald" },
+                  { id: "git_worker", label: "Git Worker", color: "pink" },
+                  { id: "test_runner", label: "Test Runner", color: "amber" },
+                  { id: "ai_engine_worker", label: "AI Engine", color: "indigo" },
+                  { id: "persistence_worker", label: "Persistence", color: "amber" }
                 ].map(worker => (
                   <div key={worker.id} className={`px-3 py-1.5 rounded border text-[10px] font-bold transition-all duration-300 ${
                     isActive(worker.id) 
-                      ? `border-${worker.color}-500 bg-${worker.color}-500/20 shadow-[0_0:15px_rgba(16,185,129,0.4)] scale-110 text-${worker.color}-400` 
+                      ? "border-primary bg-primary/20 shadow-[0_0:15px_rgba(16,185,129,0.4)] scale-110 text-primary-foreground" 
                       : "border-border bg-card/30 text-muted-foreground opacity-30"
                   }`}>
                     {worker.label}
@@ -116,12 +142,13 @@ export default function Dashboard() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Lanza un comando a la Startup..."
-                className="w-full bg-background border border-border rounded-md py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className="w-full bg-background border border-border rounded-md py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all disabled:opacity-50"
+                disabled={isWaiting}
               />
             </div>
             <Button 
               onClick={handleSend} 
-              disabled={isStreaming || !input.trim()}
+              disabled={isStreaming || !input.trim() || isWaiting}
               className="px-6 gap-2"
             >
               {isStreaming ? "Ejecutando..." : "Lanzar Misión"}

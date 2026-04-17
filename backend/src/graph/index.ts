@@ -1,4 +1,4 @@
-import { StateGraph, START, END } from "@langchain/langgraph";
+import { StateGraph, START, END, MemorySaver } from "@langchain/langgraph";
 import { AgentAnnotation } from "@/graph/state.js";
 import { AgentStateType } from "@/types/state.types.js";
 import { ceo_node } from "@/nodes/ceo.js";
@@ -73,8 +73,10 @@ export const createGraph = () => {
         return "ceo";
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chiefMappings: any = {
+    // Tipado estricto para los mappings de LangGraph (Ley #3)
+    type NodeName = "software_chief" | "business_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "__start__" | "__end__";
+    
+    const chiefMappings: Record<string, NodeName> = {
         researcher: "researcher",
         git_worker: "git_worker",
         test_runner: "test_runner",
@@ -91,11 +93,10 @@ export const createGraph = () => {
      * Retorno de los Workers al Chief que los invocó
      */
     const workerReturnRouter = (state: AgentStateType) => {
-        return state.active_chief || "ceo";
+        return (state.active_chief || "ceo") as NodeName;
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const workerReturnMappings: any = {
+    const workerReturnMappings: Record<string, NodeName> = {
         software_chief: "software_chief",
         business_chief: "business_chief",
         ceo: "ceo"
@@ -107,7 +108,14 @@ export const createGraph = () => {
     workflow.addConditionalEdges("ai_engine_worker", workerReturnRouter, workerReturnMappings);
     workflow.addConditionalEdges("persistence_worker", workerReturnRouter, workerReturnMappings);
 
-    return workflow.compile();
+    // Inicializamos el checkpointer para control de HITL y persistencia
+    const checkpointer = new MemorySaver();
+
+    // Compilamos con interrupción obligatoria después del CEO
+    return workflow.compile({ 
+        checkpointer,
+        interruptAfter: ["ceo"] 
+    });
 };
 
 export const graph = createGraph();

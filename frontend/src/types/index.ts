@@ -7,6 +7,8 @@ export interface AgentThought {
   completedSteps?: string[];
   executiveSummary?: string;
   error?: string;
+  isWaiting?: boolean;
+  threadId?: string;
 }
 
-export * from "./ui.types.js";
+export * from "./ui.types";

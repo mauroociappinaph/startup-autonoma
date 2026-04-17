@@ -43,18 +43,116 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 ---
 
-## --- Estructura del Proyecto (Versión 2026) ---
+## --- Estructura del Proyecto (Versión 2026 - Optimizada) ---
 
 ```text
 /
-├── AGENTS.md             # Leyes y misión (Source of Truth)
-├── architecture.md       # Mapa vivo (Auto-generado)
-├── /ai-engine            # Python (Cerebro IA)
-├── /backend              # Node.js (Orquestador)
-├── /frontend             # UI Control Panel (Next.js 15)
-├── /docs                 # Documentación y Memoria PARA
-├── /protos               # Contratos gRPC
-├── /scripts              # Automatización (Sync Arch, Docs)
+├── /.github
+│   ├── /ISSUE_TEMPLATE
+│   ├── /workflows
+├── .gitignore
+├── .opencodeignore.save
+├── /.qwen
+│   ├── settings.json
+├── /.vscode
+│   ├── extensions.json
+├── /.windsurf
+│   ├── /workflows
+├── AGENTS.md
+├── GEMINI.md
+├── README.md
+├── /ai-engine
+│   ├── /.pytest_cache
+│   │   ├── /v
+│   ├── /.venv
+│   │   ├── /bin
+│   │   ├── /include
+│   │   ├── /lib
+│   ├── /app
+│   │   ├── /api
+│   │   ├── /contracts
+│   │   ├── /core
+│   │   ├── /grpc
+│   │   ├── /helpers
+│   │   ├── /tools
+│   │   ├── /workers
+│   ├── package.json
+│   ├── /scripts
+│   ├── /tests
+├── architecture.md
+├── /backend
+│   ├── package.json
+│   ├── /src
+│   │   ├── /agents
+│   │   ├── /contracts
+│   │   ├── /controllers
+│   │   ├── /db
+│   │   ├── /graph
+│   │   ├── /helpers
+│   │   ├── index.ts
+│   │   ├── /jobs
+│   │   ├── /mcp_ports
+│   │   ├── /middleware
+│   │   ├── /nodes
+│   │   ├── /routes
+│   │   ├── /services
+│   │   ├── /skills
+│   │   ├── /state
+│   │   ├── test-business-workflow.ts
+│   │   ├── test-persistence.ts
+│   │   ├── test-run.ts
+│   │   ├── test-workflow.ts
+│   │   ├── /tools
+│   │   ├── /types
+│   │   ├── /workers
+│   ├── /tests
+│   │   ├── business_chief.test.ts
+│   │   ├── ceo_agent.test.ts
+│   │   ├── context_manager.test.ts
+│   │   ├── git_worker.test.ts
+│   │   ├── llm_factory.test.ts
+│   │   ├── mirror_node.test.ts
+│   │   ├── software_chief.test.ts
+│   │   ├── test_runner_node.test.ts
+│   ├── tsconfig.json
+├── commitlint.config.js
+├── /docs
+│   ├── /agents
+│   │   ├── /chiefs
+│   │   ├── /workers
+│   ├── /architecture
+│   ├── /memory
+│   │   ├── /PARA
+│   │   │   ├── /projects
+│   │   │   │   ├── /startup-autonoma
+│   ├── /ux
+├── /frontend
+│   ├── .eslintrc.json
+│   ├── components.json
+│   ├── next-env.d.ts
+│   ├── package.json
+│   ├── /public
+│   ├── /src
+│   │   ├── /api
+│   │   ├── /app
+│   │   ├── /components
+│   │   ├── /helpers
+│   │   ├── /hooks
+│   │   ├── index.ts
+│   │   ├── /store
+│   │   ├── /styles
+│   │   ├── /types
+│   ├── tsconfig.json
+├── /infra
+├── package-lock.json
+├── package.json
+├── /protos
+├── /scripts
+├── /skills
+├── tsconfig.json
+├── turbo.json
+├── /types
+│   ├── index.ts
 ```
 
 ---

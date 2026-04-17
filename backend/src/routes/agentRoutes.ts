@@ -9,4 +9,10 @@ const router = Router();
  */
 router.get('/stream', AgentController.stream);
 
+/**
+ * @route POST /api/agents/approve
+ * @desc Reanuda la ejecución del grafo pausado por una interrupción HITL.
+ */
+router.post('/approve', AgentController.approve);
+
 export default router;
