@@ -28,6 +28,8 @@ export async function code_researcher_node(state: AgentStateType) {
       console.log(`✅ Investigación [${result.action}] completada.`);
       return {
         executive_summary: `Code Researcher ejecutó con éxito: ${result.action}.`,
+        iteration_count: 1,
+        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[RESEARCH_REPORT] Resultado de ${result.action}:\n${result.data}`,
           additional_kwargs: { research_result: result }
@@ -37,6 +39,8 @@ export async function code_researcher_node(state: AgentStateType) {
       console.error(`❌ Investigación [${result.action}] fallida: ${result.errorMessage}`);
       return {
         executive_summary: `Error en Code Researcher: ${result.errorMessage}`,
+        iteration_count: 1,
+        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[RESEARCH_ERROR] Falló ${result.action}: ${result.errorMessage}`,
           additional_kwargs: { research_result: result }

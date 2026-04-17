@@ -20,7 +20,10 @@ describe('Business Chief Node', () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
+    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
+      data: mockResponse,
+      usage: { total: 100, prompt: 50, completion: 50 }
+    });
 
     const initialState: AgentStateType = {
       messages: [new HumanMessage('¿Quiénes son nuestros competidores?')],
@@ -33,6 +36,8 @@ describe('Business Chief Node', () => {
       executive_summary: '',
       status: 'planning',
       retry_count: 0,
+      iteration_count: 0,
+      token_usage: { total: 0, prompt: 0, completion: 0 },
       metadata: {},
       results: [],
       feedback: []
@@ -57,7 +62,10 @@ describe('Business Chief Node', () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue(mockResponse);
+    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
+      data: mockResponse,
+      usage: { total: 150, prompt: 75, completion: 75 }
+    });
 
     const initialState: AgentStateType = {
       messages: [new HumanMessage('Necesito 5 clientes potenciales en Madrid.')],
@@ -70,6 +78,8 @@ describe('Business Chief Node', () => {
       executive_summary: '',
       status: 'planning',
       retry_count: 0,
+      iteration_count: 0,
+      token_usage: { total: 0, prompt: 0, completion: 0 },
       metadata: {},
       results: [],
       feedback: []

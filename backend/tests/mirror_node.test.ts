@@ -21,6 +21,8 @@ describe('MirrorAgent Node', () => {
       completed_steps: [],
       executive_summary: '',
       retry_count: 0,
+      iteration_count: 0,
+      token_usage: { total: 0, prompt: 0, completion: 0 }
     };
     jest.clearAllMocks();
   });
@@ -30,11 +32,14 @@ describe('MirrorAgent Node', () => {
     const mockIntentions = ["crear branch", "realizar commit"];
 
     (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
-      refined_prompt: mockRefined,
-      intentions: mockIntentions,
-      missing_info: ["nombre de la branch"],
-      suggested_next_steps: ["llamar al GitWorker"],
-      requires_human_approval: true
+      data: {
+        refined_prompt: mockRefined,
+        intentions: mockIntentions,
+        missing_info: ["nombre de la branch"],
+        suggested_next_steps: ["llamar al GitWorker"],
+        requires_human_approval: true
+      },
+      usage: { total: 100, prompt: 50, completion: 50 }
     });
 
     const result = await mirror_node(initialState);

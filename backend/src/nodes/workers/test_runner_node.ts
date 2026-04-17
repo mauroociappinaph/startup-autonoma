@@ -30,6 +30,8 @@ export async function test_runner_node(state: AgentStateType) {
       return {
         executive_summary: `Validación exitosa en ${testInstruction.package}: ${result.summary}`,
         completed_steps: ["test_operation"],
+        iteration_count: 1,
+        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[TEST_REPORT] ÉXITO: ${result.summary}`,
           additional_kwargs: { test_result: result }
@@ -39,6 +41,8 @@ export async function test_runner_node(state: AgentStateType) {
       console.error(`❌ Tests en [${testInstruction.package}] fallaron: ${result.summary}`);
       return {
         executive_summary: `Validación fallida en ${testInstruction.package}: ${result.summary}`,
+        iteration_count: 1,
+        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[TEST_REPORT] FALLO: ${result.summary}`,
           additional_kwargs: { test_result: result }

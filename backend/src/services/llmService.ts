@@ -12,13 +12,13 @@ import { StructuredOutputParser } from "@langchain/core/output_parsers";
  */
 export class LLMService {
   /**
-   * Obtiene datos estructurados garantizados.
+   * Obtiene datos estructurados garantizados junto con el uso de tokens.
    */
   static async getStructuredData<T extends z.ZodTypeAny>(
     config: LLMFactoryOptions,
     messages: BaseMessage[],
     schema: T
-  ): Promise<z.infer<T>> {
+  ): Promise<{ data: z.infer<T>; usage: { total: number; prompt: number; completion: number } }> {
     const rawModel = LLMFactory.createModel(config) as BaseChatModel;
     const trimmedMessages = await ContextManager.trim(messages, rawModel);
 
@@ -31,8 +31,24 @@ export class LLMService {
     }
 
     try {
-      const modelWithStructuredOutput = rawModel.withStructuredOutput(schema);
-      return await modelWithStructuredOutput.invoke(trimmedMessages) as z.infer<T>;
+      // Usamos includeRaw para capturar usage_metadata
+      const modelWithStructuredOutput = rawModel.withStructuredOutput(schema, { includeRaw: true });
+      const response = await modelWithStructuredOutput.invoke(trimmedMessages);
+      
+      const usage = (response.raw as any).usage_metadata || {
+        input_tokens: 0,
+        output_tokens: 0,
+        total_tokens: 0
+      };
+
+      return {
+        data: response.parsed as z.infer<T>,
+        usage: {
+          total: usage.total_tokens || 0,
+          prompt: usage.input_tokens || 0,
+          completion: usage.output_tokens || 0
+        }
+      };
     } catch (error) {
        console.warn("⚠️ Falló formato nativo, intentando fallback manual...");
        return this._getManualStructuredData(rawModel, trimmedMessages, schema);
@@ -46,7 +62,7 @@ export class LLMService {
     model: BaseChatModel, 
     messages: BaseMessage[], 
     schema: T
-  ): Promise<z.infer<T>> {
+  ): Promise<{ data: z.infer<T>; usage: { total: number; prompt: number; completion: number } }> {
     const parser = StructuredOutputParser.fromZodSchema(schema);
     const formatInstructions = parser.getFormatInstructions();
     
@@ -67,8 +83,22 @@ export class LLMService {
     const response = await model.invoke(formattedMessages);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
+    const usage = (response as any).usage_metadata || {
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0
+    };
+
     try {
-      return await parser.parse(content);
+      const parsedData = await parser.parse(content);
+      return {
+        data: parsedData,
+        usage: {
+          total: usage.total_tokens || 0,
+          prompt: usage.input_tokens || 0,
+          completion: usage.output_tokens || 0
+        }
+      };
     } catch (e) {
       console.error("❌ Error crítico: El modelo no cumplió con el formato JSON solicitado.");
       throw e;

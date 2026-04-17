@@ -77,7 +77,7 @@ export async function researcher_node(state: AgentStateType) {
   // SÍNTESIS FINAL
   console.log("📊 Sintetizando hallazgos de investigación...");
 
-  const synthesisResponse = await LLMService.getStructuredData(
+  const { data: synthesisResponse, usage } = await LLMService.getStructuredData(
     { type: "smart", temperature: 0 },
     [
       new SystemMessage("Sintetiza los hallazgos de la investigación técnica en un reporte estructurado."),
@@ -89,6 +89,12 @@ export async function researcher_node(state: AgentStateType) {
   return {
     executive_summary: synthesisResponse.findings,
     completed_steps: ["research"],
-    messages: [new AIMessage(`[RESEARCH_REPORT] ${synthesisResponse.conclusion}`)]
+    iteration_count: 1,
+    token_usage: usage,
+    next_node: state.active_chief || "ceo",
+    messages: [new AIMessage({
+      content: `[RESEARCH_REPORT] ${synthesisResponse.conclusion}`,
+      additional_kwargs: { research_data: synthesisResponse }
+    })]
   };
 }

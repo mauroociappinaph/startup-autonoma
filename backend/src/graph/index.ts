@@ -11,15 +11,17 @@ import { ai_engine_worker_node } from "@/nodes/workers/ai_engine_worker_node.js"
 import { persistence_node } from "@/nodes/workers/persistence_node.js";
 import { code_researcher_node } from "@/nodes/workers/code_researcher_node.js";
 import { mirror_node } from "@/nodes/mirror.js";
+import { circuit_breaker_node } from "@/nodes/circuit_breaker.js";
 
 /**
  * Orquestador Principal de la Startup Autónoma. 
- * Jerarquía: Mirror (Aduana) -> CEO (Estrategia) -> Chiefs (Áreas) -> Workers (Ejecución).
+ * Jerarquía: Mirror (Aduana) -> Circuit Breaker (Seguridad) -> CEO (Estrategia) -> Chiefs (Áreas) -> Workers (Ejecución).
  */
 export const createGraph = () => {
     const workflow = new StateGraph(AgentAnnotation)
         .addNode("mirror", mirror_node)
         .addNode("ceo", ceo_node)
+        .addNode("circuit_breaker", circuit_breaker_node)
         .addNode("software_chief", software_chief_node)
         .addNode("business_chief", business_chief_node)
         .addNode("researcher", researcher_node)
@@ -31,7 +33,30 @@ export const createGraph = () => {
 
         // El flujo siempre arranca en el Mirror
         .addEdge(START, "mirror")
-        .addEdge("mirror", "ceo");
+        .addEdge("mirror", "circuit_breaker")
+        .addEdge("circuit_breaker", "ceo");
+
+    // Aristas condicionales para el Circuit Breaker (El Guardián)
+    workflow.addConditionalEdges(
+        "circuit_breaker",
+        (state: AgentStateType) => {
+            if (state.max_budget_reached) return "end";
+            // Si no hay next_node definido, vamos al CEO por defecto si hay plan
+            return (state.next_node as NodeName) || "ceo";
+        },
+        {
+            ceo: "ceo",
+            software_chief: "software_chief",
+            business_chief: "business_chief",
+            researcher: "researcher",
+            git_worker: "git_worker",
+            test_runner: "test_runner",
+            ai_engine_worker: "ai_engine_worker",
+            persistence_worker: "persistence_worker",
+            code_researcher: "code_researcher",
+            end: END
+        }
+    );
 
     // Arista condicional del CEO: Decide a qué área (Chief) delegar
     workflow.addConditionalEdges(
@@ -42,18 +67,17 @@ export const createGraph = () => {
             }
             
             if (state.plan.includes("software_chief")) {
-                return "software_chief";
+                return "circuit_breaker"; // Vamos al guardian antes del jefe
             }
             
             if (state.plan.includes("business_chief")) {
-                return "business_chief";
+                return "circuit_breaker";
             }
 
             return "end";
         },
         {
-            software_chief: "software_chief",
-            business_chief: "business_chief",
+            circuit_breaker: "circuit_breaker",
             end: END
         }
     );
@@ -63,47 +87,43 @@ export const createGraph = () => {
      */
     const chiefRouter = (state: AgentStateType) => {
         if (!state.plan || state.plan.length === 0) {
-            return "ceo";
+            return "circuit_breaker"; // Volvemos al CEO vía guardian
         }
         
-        if (state.plan.includes("research")) return "researcher";
-        if (state.plan.includes("git_operation")) return "git_worker";
-        if (state.plan.includes("test_operation")) return "test_runner";
-        if (state.plan.includes("ai_engine_task")) return "ai_engine_worker";
-        if (state.plan.includes("persist_memory")) return "persistence_worker";
-        if (state.plan.includes("code_research")) return "code_researcher";
-
-        return "ceo";
+        return "circuit_breaker"; // Siempre pasamos por el guardian
     };
 
     // Tipado estricto para los mappings de LangGraph (Ley #3)
-    type NodeName = "software_chief" | "business_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "__start__" | "__end__";
+    type NodeName = "software_chief" | "business_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "circuit_breaker" | "__start__" | "__end__";
     
-    const chiefMappings: Record<string, NodeName> = {
-        researcher: "researcher",
-        git_worker: "git_worker",
-        test_runner: "test_runner",
-        ai_engine_worker: "ai_engine_worker",
-        persistence_worker: "persistence_worker",
-        code_researcher: "code_researcher",
-        ceo: "ceo"
-    };
-
     // Aristas condicionales para ambos Chiefs
-    workflow.addConditionalEdges("software_chief", chiefRouter, chiefMappings);
-    workflow.addConditionalEdges("business_chief", chiefRouter, chiefMappings);
+    workflow.addConditionalEdges("software_chief", (state) => {
+        // Antes de ir al worker, seteamos el next_node en base al plan
+        let next: NodeName = "ceo";
+        if (state.plan?.includes("research")) next = "researcher";
+        if (state.plan?.includes("git_operation")) next = "git_worker";
+        if (state.plan?.includes("test_operation")) next = "test_runner";
+        if (state.plan?.includes("ai_engine_task")) next = "ai_engine_worker";
+        if (state.plan?.includes("persist_memory")) next = "persistence_worker";
+        if (state.plan?.includes("code_research")) next = "code_researcher";
+
+        // Devolvemos circuit_breaker, pero la arista requiere un mapeo a ese nombre
+        return "circuit_breaker";
+    }, { circuit_breaker: "circuit_breaker" });
+
+    workflow.addConditionalEdges("business_chief", (state) => {
+        return "circuit_breaker";
+    }, { circuit_breaker: "circuit_breaker" });
 
     /**
      * Retorno de los Workers al Chief que los invocó
      */
     const workerReturnRouter = (state: AgentStateType) => {
-        return (state.active_chief || "ceo") as NodeName;
+        return "circuit_breaker";
     };
 
     const workerReturnMappings: Record<string, NodeName> = {
-        software_chief: "software_chief",
-        business_chief: "business_chief",
-        ceo: "ceo"
+        circuit_breaker: "circuit_breaker"
     };
 
     workflow.addConditionalEdges("researcher", workerReturnRouter, workerReturnMappings);

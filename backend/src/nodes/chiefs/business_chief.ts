@@ -67,16 +67,19 @@ export async function business_chief_node(state: AgentStateType) {
   `);
 
   try {
-    const response = await LLMService.getStructuredData(
+    const { data: response, usage } = await LLMService.getStructuredData(
       { type: "smart", temperature: 0 },
       [system_prompt, ...state.messages],
       BusinessChiefDecisionSchema
     );
 
     console.log(`🧠 Business Chief Reasoning: ${response.reasoning}`);
+    console.log(`📊 Tokens usandos en este paso: ${usage.total}`);
 
     const updates: Partial<AgentStateType> = {
       active_chief: "business_chief",
+      iteration_count: 1, // El reducer sumará +1
+      token_usage: usage, // El reducer sumará los tokens
       messages: state.messages.concat([new AIMessage({
         content: `[BUSINESS_CHIEF_THOUGHT] ${response.reasoning}
 [BUSINESS_CHIEF_DECISION] ${response.decision}`,
@@ -85,9 +88,11 @@ export async function business_chief_node(state: AgentStateType) {
 
     if (response.decision === "delegate_to_researcher") {
       updates.plan = ["research"];
+      updates.next_node = "researcher";
     }
     else if (response.decision === "delegate_to_lead_gen") {
       updates.plan = ["ai_engine_task"];
+      updates.next_node = "ai_engine_worker";
       updates.messages?.push(new AIMessage({
         content: `[BUSINESS_DELEGATION] Iniciando Lead Generation: ${response.reasoning}`,
         additional_kwargs: {
@@ -103,6 +108,7 @@ export async function business_chief_node(state: AgentStateType) {
     else if (response.decision === "persist_results_to_engram") {
       // Inyectamos la acción de llamar a la tool en el plan
       updates.plan = ["persist_memory"]; 
+      updates.next_node = "persistence_worker";
       updates.messages?.push(new AIMessage({
         content: `[BUSINESS_PERSISTENCE] Guardando hallazgos en Engram: ${response.reasoning}`,
         additional_kwargs: {
@@ -121,8 +127,14 @@ export async function business_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "complete") {
       updates.plan = [];
+      updates.next_node = "ceo";
       updates.completed_steps = ["business_chief"];
       updates.executive_summary = response.reasoning;
+    }
+    else if (response.decision === "need_strategic_clarification") {
+      updates.plan = [];
+      updates.next_node = "ceo";
+      updates.executive_summary = `Business Chief requiere aclaración estratégica: ${response.reasoning}`;
     }
 
     return updates;

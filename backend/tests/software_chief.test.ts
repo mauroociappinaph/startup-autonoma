@@ -21,15 +21,20 @@ describe('SoftwareChief Node Delegation', () => {
       completed_steps: [],
       executive_summary: '',
       retry_count: 0,
+      iteration_count: 0,
+      token_usage: { total: 0, prompt: 0, completion: 0 }
     };
     jest.clearAllMocks();
   });
 
   it('debe delegar al ResearchWorker cuando el razonamiento sugiere investigación', async () => {
     (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
-      decision: 'delegate_to_researcher',
-      reasoning: 'Necesitamos entender cómo está estructurado el código antes de cambiar nada.',
-      worker_instruction: 'Explora la carpeta src/nodes'
+      data: {
+        decision: 'delegate_to_researcher',
+        reasoning: 'Necesitamos entender cómo está estructurado el código antes de cambiar nada.',
+        worker_instruction: 'Explora la carpeta src/nodes'
+      },
+      usage: { total: 100, prompt: 50, completion: 50 }
     });
 
     const result = await software_chief_node(initialState);
@@ -51,9 +56,12 @@ describe('SoftwareChief Node Delegation', () => {
     };
 
     (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
-      decision: 'delegate_to_git_worker',
-      reasoning: 'Creando branch para iniciar el desarrollo.',
-      git_payload: gitPayload
+      data: {
+        decision: 'delegate_to_git_worker',
+        reasoning: 'Creando branch para iniciar el desarrollo.',
+        git_payload: gitPayload
+      },
+      usage: { total: 150, prompt: 75, completion: 75 }
     });
 
     const result = await software_chief_node(initialState);
@@ -76,9 +84,12 @@ describe('SoftwareChief Node Delegation', () => {
     };
 
     (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
-      decision: 'delegate_to_test_runner',
-      reasoning: 'Validando que los cambios no rompan la suite de tests.',
-      test_payload: testPayload
+      data: {
+        decision: 'delegate_to_test_runner',
+        reasoning: 'Validando que los cambios no rompan la suite de tests.',
+        test_payload: testPayload
+      },
+      usage: { total: 120, prompt: 60, completion: 60 }
     });
 
     const result = await software_chief_node(initialState);
@@ -96,8 +107,11 @@ describe('SoftwareChief Node Delegation', () => {
 
   it('debe finalizar la misión cuando la decisión es "complete"', async () => {
     (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
-      decision: 'complete',
-      reasoning: 'Todas las tareas técnicas han sido completadas con éxito.'
+      data: {
+        decision: 'complete',
+        reasoning: 'Todas las tareas técnicas han sido completadas con éxito.'
+      },
+      usage: { total: 80, prompt: 40, completion: 40 }
     });
 
     const result = await software_chief_node(initialState);

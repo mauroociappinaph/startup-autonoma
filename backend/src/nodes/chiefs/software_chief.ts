@@ -62,7 +62,7 @@ export async function software_chief_node(state: AgentStateType) {
   `);
 
   try {
-    const response = await LLMService.getStructuredData(
+    const { data: response, usage } = await LLMService.getStructuredData(
       { type: "smart", temperature: 0 },
       [system_prompt, ...state.messages],
       SoftwareChiefDecisionSchema
@@ -70,9 +70,12 @@ export async function software_chief_node(state: AgentStateType) {
 
     console.log(`🧠 Chief Reasoning: ${response.reasoning}`);
     console.log(`🎯 Decision: ${response.decision}`);
+    console.log(`📊 Tokens usandos en este paso: ${usage.total}`);
 
     const updates: Partial<AgentStateType> = {
       active_chief: "software_chief",
+      iteration_count: 1, // El reducer sumará +1
+      token_usage: usage, // El reducer sumará los tokens
       messages: state.messages.concat([new AIMessage({
         content: `[CHIEF_THOUGHT] ${response.reasoning}
 [CHIEF_DECISION] ${response.decision}`,
@@ -83,12 +86,14 @@ export async function software_chief_node(state: AgentStateType) {
 
     if (response.decision === "delegate_to_researcher") {
       updates.plan = ["research"];
+      updates.next_node = "researcher";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando investigación inteligente: ${response.worker_instruction || 'Tarea de investigación requerida.'}`,
       }));
     }
     else if (response.decision === "delegate_to_code_researcher") {
       updates.plan = ["code_research"];
+      updates.next_node = "code_researcher";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando exploración técnica determinista: ${response.reasoning}`,
         additional_kwargs: {
@@ -98,6 +103,7 @@ export async function software_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "delegate_to_git_worker") {
       updates.plan = ["git_operation"];
+      updates.next_node = "git_worker";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando operación Git: ${response.reasoning}`,
         additional_kwargs: {
@@ -110,6 +116,7 @@ export async function software_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "delegate_to_test_runner") {
       updates.plan = ["test_operation"];
+      updates.next_node = "test_runner";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando validación de tests: ${response.reasoning}`,
         additional_kwargs: {
@@ -119,6 +126,7 @@ export async function software_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "delegate_to_ai_engine") {
       updates.plan = ["ai_engine_task"];
+      updates.next_node = "ai_engine_worker";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando tarea al AI Engine: ${response.reasoning}`,
         additional_kwargs: {
@@ -133,6 +141,7 @@ export async function software_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "need_clarification") {
       updates.plan = []; // Detenemos el plan hasta tener más info
+      updates.next_node = "ceo"; // Volvemos al CEO vía guardian
       updates.executive_summary = `El Software Chief necesita aclaración: ${response.reasoning}`;
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_CLARIFICATION] ${response.reasoning}`,
@@ -140,6 +149,7 @@ export async function software_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "complete") {
       updates.plan = [];
+      updates.next_node = "ceo"; 
       updates.completed_steps = ["software_chief"];
       updates.executive_summary = response.reasoning;
     }

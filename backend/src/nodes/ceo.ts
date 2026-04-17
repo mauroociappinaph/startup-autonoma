@@ -34,7 +34,7 @@ export async function ceo_node(state: AgentStateType) {
   `);
 
   try {
-    const response = await LLMService.getStructuredData(
+    const { data: response, usage } = await LLMService.getStructuredData(
       { type: "smart", temperature: 0 },
       [system_prompt, ...state.messages],
       CEOResponseSchema
@@ -42,10 +42,13 @@ export async function ceo_node(state: AgentStateType) {
 
     console.log(`✅ CEO Decision: ${response.next_step} -> ${response.reasoning}`);
     console.log(`🎯 Delegado: ${response.delegated_to || "Ninguno"}`);
+    console.log(`📊 Tokens usandos en este paso: ${usage.total}`);
 
     const updates: Partial<AgentStateType> = {
       executive_summary: response.analysis,
       active_chief: (response.delegated_to as "software_chief" | "business_chief" | undefined),
+      iteration_count: 1, // El reducer sumará +1
+      token_usage: usage, // El reducer sumará los tokens
       messages: state.messages.concat([new AIMessage({
         content: `[CEO_THOUGHT] ${response.reasoning}
 [CEO_DECISION] ${response.next_step} ${response.delegated_to ? `a ${response.delegated_to}` : ""}`,
@@ -53,17 +56,17 @@ export async function ceo_node(state: AgentStateType) {
     };
 
     // Lógica de Continuidad (Mission-based HITL)
-    // Si la misión está aprobada, el CEO debe ser menos intrusivo.
     if (state.is_mission_approved && response.next_step === "delegate") {
       console.log("⏩ CEO detectó misión aprobada. Procediendo sin nueva interrupción.");
     }
 
     if (response.next_step === "delegate" && response.delegated_to) {
       updates.plan = [response.delegated_to];
+      updates.next_node = response.delegated_to; // Seteamos destino para el Guardian
     } else {
-      // Si el CEO termina o pide clarificación, reiniciamos el flag de aprobación
       updates.plan = [];
       updates.is_mission_approved = false;
+      updates.next_node = undefined;
     }
 
     return updates;

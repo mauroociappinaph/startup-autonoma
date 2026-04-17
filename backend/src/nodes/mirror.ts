@@ -34,7 +34,7 @@ export async function mirror_node(state: AgentStateType) {
   `);
 
   try {
-    const response = await LLMService.getStructuredData(
+    const { data: response, usage } = await LLMService.getStructuredData(
       { type: "smart", temperature: 0 },
       [system_prompt, new HumanMessage(`Optimiza esta petición: "${originalPrompt}"`)],
       MirrorResponseSchema
@@ -42,10 +42,13 @@ export async function mirror_node(state: AgentStateType) {
 
     console.log(`🧠 Intenciones detectadas: ${response.intentions.join(', ')}`);
     console.log(`✨ Prompt refinado: ${response.refined_prompt}`);
+    console.log(`📊 Tokens usandos en este paso: ${usage.total}`);
 
     // Preparamos la respuesta para el grafo
     return {
       refined_prompt: response.refined_prompt, // Guardamos el prompt limpio en el estado
+      iteration_count: 1, // El reducer sumará +1
+      token_usage: usage, // El reducer sumará los tokens
       executive_summary: `Mirror optimizó la petición. Intenciones: ${response.intentions.length}.`,
       messages: [new AIMessage({
         content: `[MIRROR_REPORT] He analizado tu petición. \n\n**Propuesta Refinada:** ${response.refined_prompt}\n\n**Intenciones:** ${response.intentions.join(', ')}\n\n**Información Faltante:** ${response.missing_info.length > 0 ? response.missing_info.join(', ') : 'Ninguna.'}`,

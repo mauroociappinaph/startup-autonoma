@@ -31,6 +31,8 @@ export async function git_worker_node(state: AgentStateType) {
       return {
         executive_summary: `Git Worker ejecutó con éxito: ${result.action}. Stdout: ${result.stdout || 'N/A'}`,
         completed_steps: ["git_operation"],
+        iteration_count: 1,
+        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[GIT_REPORT] Operación ${result.action} completada.`,
           additional_kwargs: { git_result: result }
@@ -40,6 +42,8 @@ export async function git_worker_node(state: AgentStateType) {
       console.error(`❌ Operación Git [${result.action}] fallida: ${result.errorMessage}`);
       return {
         executive_summary: `Error en Git Worker: ${result.errorMessage}`,
+        iteration_count: 1,
+        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[GIT_ERROR] Falló ${result.action}: ${result.errorMessage}`,
           additional_kwargs: { git_result: result }

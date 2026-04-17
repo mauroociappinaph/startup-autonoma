@@ -42,7 +42,9 @@ export async function persistence_node(state: AgentStateType) {
         additional_kwargs: { engram_result: result }
       })]),
       completed_steps: ["persist_memory"],
-      plan: [] // Vuelve al Chief para consolidar
+      iteration_count: 1,
+      next_node: state.active_chief || "ceo",
+      plan: [] // Vuelve al Chief para consolidar via guardian
     };
   } catch (error) {
     console.error("❌ Fallo en la persistencia:", error);
@@ -50,6 +52,8 @@ export async function persistence_node(state: AgentStateType) {
       messages: state.messages.concat([new AIMessage({
         content: `[WORKER_ERROR] Falla al guardar en Engram: ${error instanceof Error ? error.message : String(error)}`
       })]),
+      iteration_count: 1,
+      next_node: state.active_chief || "ceo",
       plan: []
     };
   }

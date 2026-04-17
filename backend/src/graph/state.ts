@@ -63,10 +63,46 @@ export const AgentAnnotation = Annotation.Root({
   }),
 
   /**
+   * Contador de iteraciones globales del grafo.
+   */
+  iteration_count: Annotation<number>({
+    reducer: (prev, next) => prev + next,
+    default: () => 0,
+  }),
+
+  /**
+   * Uso acumulado de tokens.
+   */
+  token_usage: Annotation<{ total: number; prompt: number; completion: number }>({
+    reducer: (prev, next) => ({
+      total: prev.total + next.total,
+      prompt: prev.prompt + next.prompt,
+      completion: prev.completion + next.completion,
+    }),
+    default: () => ({ total: 0, prompt: 0, completion: 0 }),
+  }),
+
+  /**
+   * Flag de emergencia del Circuit Breaker.
+   */
+  max_budget_reached: Annotation<boolean>({
+    reducer: (prev, next) => next || prev,
+    default: () => false,
+  }),
+
+  /**
    * Indica el nodo activo del Chief.
    */
   active_chief: Annotation<string | undefined>({
-    reducer: (prev, next) => next ?? prev, // Mantiene el valor anterior si el nuevo es undefined
+    reducer: (prev, next) => next ?? prev,
+    default: () => undefined,
+  }),
+
+  /**
+   * Nodo de destino tras pasar el Circuit Breaker.
+   */
+  next_node: Annotation<string | undefined>({
+    reducer: (prev, next) => next ?? prev,
     default: () => undefined,
   }),
 });

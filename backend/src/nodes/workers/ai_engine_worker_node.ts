@@ -51,7 +51,9 @@ export async function ai_engine_worker_node(state: AgentStateType) {
           additional_kwargs: { ai_engine_result: response.result }
         })]),
         completed_steps: ["ai_engine_task"],
-        plan: [] // Tarea terminada, vuelve al Chief
+        iteration_count: 1,
+        next_node: state.active_chief || "ceo",
+        plan: [] // Tarea terminada, vuelve al Chief via guardian
       };
     } else {
       throw new Error(response.error_code || response.message);
@@ -62,6 +64,8 @@ export async function ai_engine_worker_node(state: AgentStateType) {
       messages: state.messages.concat([new AIMessage({
         content: `[WORKER_ERROR] Falla en AI Engine (${aiTask.worker_name}): ${error instanceof Error ? error.message : String(error)}`
       })]),
+      iteration_count: 1,
+      next_node: state.active_chief || "ceo",
       plan: []
     };
   }

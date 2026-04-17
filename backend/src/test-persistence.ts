@@ -34,7 +34,9 @@ async function testPersistence() {
     ],
     plan: ["persist_memory"],
     active_chief: "business_chief",
-    completed_steps: []
+    completed_steps: [],
+    iteration_count: 0,
+    token_usage: { total: 0, prompt: 0, completion: 0 }
   };
 
   try {
