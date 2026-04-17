@@ -110,6 +110,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── business_chief.test.ts
 │   │   ├── ceo_agent.test.ts
 │   │   ├── code_researcher.test.ts
+│   │   ├── concurrency_manual.ts
 │   │   ├── context_manager.test.ts
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts

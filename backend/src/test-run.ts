@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { graph } from "./graph/index.js";
+import { getGraph } from "./graph/index.js";
 import { HumanMessage } from "@langchain/core/messages";
 
 /**
@@ -8,6 +8,7 @@ import { HumanMessage } from "@langchain/core/messages";
  */
 async function runTest() {
   const userPrompt = process.argv[2] || "Investigá el repositorio y creame una branch para documentar los tipos";
+  const graph = await getGraph();
   
   console.log("==========================================================");
   console.log("🏢 STARTUP AUTÓNOMA: Iniciando Ejecución");

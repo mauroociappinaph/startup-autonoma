@@ -104,8 +104,11 @@
 │   │   │   ├── agentController.ts
 │   │   │   └── systemController.ts
 │   │   ├── db/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   └── redis.ts
 │   │   ├── graph/
+│   │   │   ├── checkpoints/
+│   │   │   │   └── SimpleRedisSaver.ts
 │   │   │   ├── .gitkeep
 │   │   │   ├── index.ts
 │   │   │   └── state.ts
@@ -113,7 +116,10 @@
 │   │   │   ├── .gitkeep
 │   │   │   └── contextManager.ts
 │   │   ├── jobs/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   ├── agentQueue.ts
+│   │   │   ├── agentWorker.ts
+│   │   │   └── index.ts
 │   │   ├── mcp_ports/
 │   │   │   └── .gitkeep
 │   │   ├── middleware/
@@ -159,6 +165,7 @@
 │   │   │   ├── fs.ts
 │   │   │   └── index.ts
 │   │   ├── types/
+│   │   │   ├── agent-job.types.ts
 │   │   │   ├── business-chief.types.ts
 │   │   │   ├── ceo.types.ts
 │   │   │   ├── chief.types.ts
@@ -185,6 +192,7 @@
 │   │   ├── business_chief.test.ts
 │   │   ├── ceo_agent.test.ts
 │   │   ├── code_researcher.test.ts
+│   │   ├── concurrency_manual.ts
 │   │   ├── context_manager.test.ts
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts

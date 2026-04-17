@@ -1,54 +1,46 @@
 import "dotenv/config";
-import { graph } from "./graph/index.js";
+import { getGraph } from "./graph/index.js";
 import { HumanMessage } from "@langchain/core/messages";
 
 /**
- * Test de Workflow de Negocio: CEO -> BusinessChief -> AI Engine (Lead Gen).
+ * Script de prueba para validar el flujo completo del Business Chief.
  */
-async function runBusinessWorkflowTest() {
-  console.log("💼 Iniciando Test de Workflow de Negocio (Startup Autónoma)...");
+async function testBusinessWorkflow() {
+  console.log("🚀 Iniciando Test de Flujo Comercial...");
 
-  // Prompt hiper-específico para que el Business Chief no pida aclaraciones
   const initialInput = {
-    messages: [new HumanMessage("Busca 5 leads de empresas Fintech en México, específicamente en el sector de 'Préstamos Personales', que estén en etapa 'Serie A'. Necesito nombre, email de contacto y su ubicación.")],
+    messages: [new HumanMessage("Hola, quiero lanzar una startup de panaderías artesanales en Buenos Aires. ¿Podés investigar el mercado y decirme qué necesito?")],
     plan: [],
     executive_summary: "",
-    retry_count: 0,
-    trace_id: `test-biz-${Date.now()}`
+    retry_count: 0
   };
 
-  try {
-    const stream = await graph.stream(initialInput, { 
-        streamMode: "values",
-        configurable: { thread_id: "test-thread-1" }
-    });
+  const config = { configurable: { thread_id: "test-business-1" } };
 
-    console.log("🚀 El flujo ha comenzado. Observando razonamiento de los Agentes...");
+  const graph = await getGraph();
+  const eventStream = graph.streamEvents(initialInput, { ...config, version: "v2" });
 
-    for await (const step of stream) {
-      const lastMsg = step.messages[step.messages.length - 1];
-      const content = typeof lastMsg.content === 'string' ? lastMsg.content : JSON.stringify(lastMsg.content);
-      
-      // Filtramos para mostrar solo los pensamientos de los jefes y resultados
-      if (content.includes("[CEO_THOUGHT]") || 
-          content.includes("[BUSINESS_CHIEF_THOUGHT]") ||
-          content.includes("[BUSINESS_DELEGATION]") ||
-          content.includes("[WORKER_RESULT]")) {
-        
-        console.log("\n--------------------------------------------------");
-        console.log(`🤖 AGENTE DICE:`);
-        console.log(content);
-        
-        if (lastMsg.additional_kwargs?.ai_engine_task) {
-            console.log(`📦 PAYLOAD gRPC: ${JSON.stringify(lastMsg.additional_kwargs.ai_engine_task, null, 2)}`);
+  for await (const event of eventStream) {
+    const eventType = event.event;
+    const nodeName = event.metadata?.langgraph_node;
+
+    if (eventType === "on_node_start" && nodeName) {
+      console.log(`\n--- [INICIO]: Nodo ${nodeName} ---`);
+    }
+
+    if (eventType === "on_node_end" && nodeName) {
+      console.log(`--- [FIN]: Nodo ${nodeName} ---\n`);
+      const output = event.data.output;
+      if (output && Object.keys(output)[0] === nodeName) {
+        const nodeOutput = output[nodeName];
+        if (nodeOutput.executive_summary) {
+          console.log(`📝 Resumen: ${nodeOutput.executive_summary}`);
         }
       }
     }
-
-    console.log("\n✅ Test de integración de negocio finalizado.");
-  } catch (error) {
-    console.error("❌ Error en la ejecución del grafo comercial:", error);
   }
+
+  console.log("\n✅ Test de Flujo Comercial completado.");
 }
 
-runBusinessWorkflowTest();
+testBusinessWorkflow().catch(console.error);

@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { graph } from "./graph/index.js";
+import { getGraph } from "./graph/index.js";
 import { HumanMessage } from "@langchain/core/messages";
 
 /**
@@ -8,6 +8,7 @@ import { HumanMessage } from "@langchain/core/messages";
  */
 async function runWorkflowTest() {
   console.log("🧪 Iniciando Test de Workflow Jerárquico...");
+  const graph = await getGraph();
 
   const initialInput = {
     messages: [new HumanMessage("Perform a technical research of the Zod contracts in the backend folder.")],
@@ -31,4 +32,3 @@ async function runWorkflowTest() {
 }
 
 runWorkflowTest();
-
