@@ -58,7 +58,8 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
 
     const updates: Partial<AgentStateType> = {
       executive_summary: response.analysis,
-      active_chief: (response.delegated_to as "software_chief" | "business_chief" | undefined),
+      reasoning: response.reasoning,
+      active_chief: (response.delegated_to as "software_chief" | "business_chief" | "operations_chief" | undefined),
       iteration_count: 1,
       token_usage: usage,
       total_cost_usd: cost, // Se sumará vía reducer

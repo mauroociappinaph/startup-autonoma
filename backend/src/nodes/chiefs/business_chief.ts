@@ -101,6 +101,7 @@ export async function business_chief_node(state: AgentStateType) {
 
     const updates: Partial<AgentStateType> = {
       executive_summary: response.reasoning,
+      reasoning: response.reasoning,
       active_chief: "business_chief",
       iteration_count: 1,
       token_usage: usage,

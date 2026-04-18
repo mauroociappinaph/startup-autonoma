@@ -93,6 +93,7 @@ export async function software_chief_node(state: AgentStateType) {
 
     const updates: Partial<AgentStateType> = {
       executive_summary: response.reasoning,
+      reasoning: response.reasoning,
       active_chief: "software_chief",
       iteration_count: 1,
       token_usage: usage,

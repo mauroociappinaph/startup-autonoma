@@ -117,6 +117,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── llm_factory.test.ts
 │   │   ├── mirror_node.test.ts
 │   │   ├── software_chief.test.ts
+│   │   ├── telemetry.test.ts
 │   │   ├── test_runner_node.test.ts
 │   ├── tsconfig.json
 ├── commitlint.config.js

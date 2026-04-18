@@ -99,6 +99,15 @@ export const ReasoningFeed: React.FC<ReasoningFeedProps> = ({ thoughts, isStream
                     />
                   )}
                 </p>
+
+                {thought.reasoning && !thought.isPartial && thought.reasoning !== thought.text && (
+                  <div className="mt-2 pt-2 border-t border-white/5">
+                    <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+                      <span className="text-blue-400/50 not-italic font-black mr-1">REASONING:</span> 
+                      {thought.reasoning}
+                    </p>
+                  </div>
+                )}
               </motion.div>
             ))
           )}
