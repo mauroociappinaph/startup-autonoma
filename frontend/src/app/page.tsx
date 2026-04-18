@@ -118,6 +118,16 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      {/* Overlay de Interrupción (HITL) */}
+      <HITLPanel 
+        isOpen={isWaiting} 
+        threadId={threadId} 
+        activeNode={activeNode}
+        onApprove={approvePlan}
+        onReject={rejectPlan}
+        onRewind={rewind}
+      />
     </div>
   );
 }
