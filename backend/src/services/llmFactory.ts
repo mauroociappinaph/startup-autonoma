@@ -83,7 +83,7 @@ export class LLMFactory {
         nvidia: process.env.NVIDIA_SMART_MODEL || "nvidia/nemotron-4-340b-instruct",
       },
       fast: {
-        groq: "llama-3.1-70b-versatile",
+        groq: "llama-3.3-70b-versatile",
         openai: "gpt-4o-mini",
         google: "gemini-1.5-flash",
         nvidia: "nvidia/llama-3.1-8b-instruct",

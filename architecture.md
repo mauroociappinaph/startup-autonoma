@@ -230,7 +230,8 @@
 │   ├── eslint.config.js
 │   ├── jest.config.js
 │   ├── package.json
-│   └── tsconfig.json
+│   ├── tsconfig.json
+│   └── verify-groq.ts
 ├── docs/
 │   ├── agents/
 │   │   ├── chiefs/

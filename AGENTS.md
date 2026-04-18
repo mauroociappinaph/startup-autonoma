@@ -145,6 +145,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── telemetry.test.ts
 │   │   ├── test_runner_node.test.ts
 │   ├── tsconfig.json
+│   ├── verify-groq.ts
 ├── commitlint.config.js
 ├── docker-compose.yml
 ├── /docs
