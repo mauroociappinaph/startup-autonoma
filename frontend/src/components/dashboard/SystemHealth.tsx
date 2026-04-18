@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Activity, Cpu, Database, Zap } from "lucide-react";
+import { Activity, Cpu, Zap } from "lucide-react";
 
 interface MetricProps {
   label: string;

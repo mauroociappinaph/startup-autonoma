@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { DollarSign, TrendingUp, Clock, Globe } from "lucide-react";
 
 interface FinancialTickerProps {
