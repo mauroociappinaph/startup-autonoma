@@ -22,10 +22,18 @@ describe('Git Worker Node', () => {
   });
 
   it('debería traducir la acción commit-all correctamente', async () => {
-    mockedExec.mockImplementation((_cmd: string, _opts: any, callback: any) => {
+    mockedExec.mockImplementation((cmd: string, _opts: any, callback: any) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
-      // Simulamos la salida clásica de git commit: [branch abc1234] mensaje
-      if (cb) cb(null, '[main abc1234] feat: test commit', '');
+      
+      if (cmd.includes('status')) {
+        // Simulamos que hay cambios (stdout no vacío)
+        if (cb) cb(null, 'M  file.ts\n', '');
+      } else if (cmd.includes('commit')) {
+        // Simulamos la salida clásica de git commit
+        if (cb) cb(null, '[main abc1234] feat: test commit', '');
+      } else {
+        if (cb) cb(null, '', '');
+      }
       return {} as any;
     });
 
@@ -59,9 +67,14 @@ describe('Git Worker Node', () => {
   });
 
   it('debería crear una branch correctamente', async () => {
-    mockedExec.mockImplementation((_cmd: string, _opts: any, callback: any) => {
+    mockedExec.mockImplementation((cmd: string, _opts: any, callback: any) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
-      if (cb) cb(null, "Switched to a new branch 'feat/nueva-feature'", '');
+      if (cmd.includes('--list')) {
+        // Simulamos que la rama NO existe (stdout vacío)
+        if (cb) cb(null, '', '');
+      } else if (cb) {
+        cb(null, "Switched to a new branch 'feat/nueva-feature'", '');
+      }
       return {} as any;
     });
 

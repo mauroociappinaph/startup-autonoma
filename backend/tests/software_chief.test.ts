@@ -48,7 +48,7 @@ describe('SoftwareChief Node Delegation', () => {
       usage: { total: 100, prompt: 50, completion: 50 },
       cost: 0.001,
       latency: 500,
-      model: "gpt-4o"
+      model: "nemotron-340b"
     });
 
     const result = await software_chief_node(initialState);
@@ -68,7 +68,7 @@ describe('SoftwareChief Node Delegation', () => {
       usage: { total: 150, prompt: 75, completion: 75 },
       cost: 0.0015,
       latency: 450,
-      model: "gpt-4o"
+      model: "nemotron-340b"
     });
 
     const result = await software_chief_node(initialState);
@@ -88,7 +88,7 @@ describe('SoftwareChief Node Delegation', () => {
       usage: { total: 120, prompt: 60, completion: 60 },
       cost: 0.0012,
       latency: 400,
-      model: "gpt-4o"
+      model: "nemotron-340b"
     });
 
     const result = await software_chief_node(initialState);
@@ -106,7 +106,7 @@ describe('SoftwareChief Node Delegation', () => {
       usage: { total: 80, prompt: 40, completion: 40 },
       cost: 0.0008,
       latency: 300,
-      model: "gpt-4o"
+      model: "nemotron-340b"
     });
 
     const result = await software_chief_node(initialState);

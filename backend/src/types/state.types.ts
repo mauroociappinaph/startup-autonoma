@@ -11,6 +11,7 @@ export interface AgentStateType {
   original_prompt: string; // El input crudo del humano
   refined_prompt: string;  // El input optimizado por el Mirror
   messages: BaseMessage[];
+  trace_id?: string | number; // Identificador de traza para observabilidad
   reasoning?: string; // Justificación del paso actual
   executive_summary: string;
   iteration_count: number; // Contador de pasos en el grafo
@@ -25,6 +26,12 @@ export interface AgentStateType {
   plan: string[]; // Tareas pendientes o totales
   completed_steps: string[]; // Tareas finalizadas
   active_chief?: string; // Añadido para el nodo activo del Chief
+  lead_gen_payload?: {
+    niche: string;
+    location?: string;
+    limit: number;
+  };
+  qualified_leads?: string;
   /**
    * Registro de la última sincronización con el BudgetService.
    */

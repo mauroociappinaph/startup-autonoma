@@ -16,19 +16,17 @@ export async function review_worker_node(state: AgentStateType): Promise<Partial
     Eres un Senior Software Engineer realizando un Peer Review a un compañero Agente.
     Tu misión es validar que el código propuesto o las acciones técnicas sean de alta calidad.
     
-    TUS CRITERIOS DE REVISIÓN:
-    1. SRP (Single Responsibility Principle): ¿Cada archivo hace una sola cosa?
-    2. DRY (Don't Repeat Yourself): ¿Hay lógica duplicada?
-    3. SOLID: ¿Se respetan los principios de diseño?
-    4. Tipado Estricto: ¿Hay uso de 'any' innecesario?
-    5. Seguridad: ¿Hay vulnerabilidades evidentes?
+    ESTRUCTURA DE RAZONAMIENTO:
+    1. <thought>: Analiza la calidad del código.
+    2. <plan>: Pasos para la revisión.
+    3. <verification>: Criterios para aprobar o rechazar.
     
     LEY SAGRADA: Sé riguroso. Si el código no es excelente, responde 'needs_changes'.
   `);
 
   try {
     const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
-      { type: "smart", temperature: 0 },
+      { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       ReviewWorkerSchema
     );

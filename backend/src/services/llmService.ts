@@ -79,6 +79,54 @@ export class LLMService {
        return { ...result, cost, latency, model: modelName };
     }
   }
+  
+  /**
+   * Obtiene una respuesta de texto plana junto con telemetría.
+   */
+  static async getText(
+    config: LLMFactoryOptions,
+    messages: BaseMessage[]
+  ): Promise<{ 
+    content: string; 
+    usage: { total: number; prompt: number; completion: number };
+    cost: number;
+    latency: number;
+    model: string;
+  }> {
+    const startTime = performance.now();
+    const rawModel = LLMFactory.createModel(config) as BaseChatModel;
+    const trimmedMessages = await ContextManager.trim(messages, rawModel);
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const modelName = (rawModel as any).modelName || (rawModel as any).model || "unknown";
+
+    const response = await rawModel.invoke(trimmedMessages);
+    const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
+    
+    const responseWithMetadata = response as { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } };
+    const usage = responseWithMetadata.usage_metadata || {
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0
+    };
+
+    const usageData = {
+      total: usage.total_tokens || 0,
+      prompt: usage.input_tokens || 0,
+      completion: usage.output_tokens || 0
+    };
+
+    const latency = performance.now() - startTime;
+    const cost = TelemetryService.calculateCost(usageData, modelName);
+
+    return {
+      content,
+      usage: usageData,
+      cost,
+      latency,
+      model: modelName
+    };
+  }
 
   /**
    * Método de respaldo: Pide JSON explícito y lo parsea.

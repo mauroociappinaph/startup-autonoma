@@ -16,11 +16,10 @@ export async function security_worker_node(state: AgentStateType): Promise<Parti
     Eres un experto en Ciberseguridad y Hacker Ético.
     Tu misión es auditar el código generado por otros agentes para prevenir brechas de seguridad.
     
-    TUS OBJETIVOS:
-    - Detectar Secretos Expuestos: Keys, Passwords, Tokens.
-    - Detectar Inyecciones: SQL Injection, NoSQL Injection, Command Injection.
-    - Detectar XSS y CSRF: Vulnerabilidades en el frontend.
-    - Detectar Malas Prácticas: Uso de librerías obsoletas o configuraciones inseguras.
+    ESTRUCTURA DE RAZONAMIENTO:
+    1. <thought>: Analiza las vulnerabilidades potenciales.
+    2. <plan>: Pasos para el escaneo de seguridad.
+    3. <verification>: Confirmación de parches o riesgos mitigados.
 
     REGLA DE BLOQUEO:
     Si encuentras una vulnerabilidad de severidad 'high' o 'critical', SIEMPRE pon 'should_block: true'.
@@ -28,7 +27,7 @@ export async function security_worker_node(state: AgentStateType): Promise<Parti
 
   try {
     const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
-      { type: "smart", temperature: 0 },
+      { type: "reasoning", temperature: 0 },
       [system_prompt, ...state.messages],
       SecurityWorkerSchema
     );

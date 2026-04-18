@@ -20,7 +20,12 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
     1. CEO (Tú): Tomas decisiones estratégicas y delegas.
     2. Chiefs: Coordinan sus áreas (Software vs Business).
 
-    TUS REGLAS:
+    ESTRUCTURA DE RAZONAMIENTO:
+    1. <thought>: Analiza el progreso del historial y los objetivos pendientes.
+    2. <plan>: Pasos estratégicos para completar la misión.
+    3. <verification>: Confirmación de que se han cumplido todas las intenciones del usuario.
+
+    REGLS DE ORO:
     - Analiza el progreso actual en el historial de mensajes.
     - Elige el próximo paso racional: 'delegate' o 'finish'.
     - Solo puedes responder con 'finish' si TODAS las intenciones y objetivos refinados por el Mirror Node han sido completados.
@@ -31,7 +36,7 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
 
   try {
     const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
-      { type: "smart", temperature: 0 },
+      { type: "reasoning", temperature: 0 },
       [system_prompt, ...state.messages],
       CEOResponseSchema
     );

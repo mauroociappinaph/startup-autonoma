@@ -66,7 +66,7 @@ export async function software_chief_node(state: AgentStateType) {
 
   try {
     const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
-      { type: "smart", temperature: 0 },
+      { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       SoftwareChiefDecisionSchema
     );

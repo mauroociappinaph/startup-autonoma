@@ -68,14 +68,32 @@ export class LLMFactory {
    * Lógica de ruteo inteligente (Smart vs Fast)
    */
   public static getProviderForType(type: string): LLMProvider {
-    if (type === "smart") {
-       return (process.env.PRIMARY_SMART_PROVIDER as LLMProvider) || "nvidia";
-    }
-    return (process.env.PRIMARY_FAST_PROVIDER as LLMProvider) || "nvidia";
+    const providers: Record<string, LLMProvider> = {
+      reasoning: (process.env.PRIMARY_REASONING_PROVIDER as LLMProvider) || "nvidia",
+      ultra: (process.env.PRIMARY_ULTRA_PROVIDER as LLMProvider) || "nvidia",
+      flow: (process.env.PRIMARY_FLOW_PROVIDER as LLMProvider) || "nvidia",
+      smart: (process.env.PRIMARY_SMART_PROVIDER as LLMProvider) || "nvidia",
+      fast: (process.env.PRIMARY_FAST_PROVIDER as LLMProvider) || "nvidia",
+    };
+    return providers[type] || "nvidia";
   }
 
   private static _getModelName(type: string, provider: LLMProvider): string {
     const selection: Record<string, Record<string, string>> = {
+      reasoning: {
+        openai: "gpt-4o",
+        anthropic: "claude-3-5-sonnet-20240620",
+        nvidia: process.env.NVIDIA_REASONING_MODEL || "z-ai/glm-5.1",
+      },
+      ultra: {
+        openai: "gpt-4o",
+        nvidia: "nvidia/nemotron-4-340b-instruct",
+      },
+      flow: {
+        openai: "gpt-4o-mini",
+        groq: "llama-3.3-70b-versatile",
+        nvidia: "nvidia/llama-3.1-8b-instruct",
+      },
       smart: {
         openai: "gpt-4o",
         anthropic: "claude-3-5-sonnet-20240620",

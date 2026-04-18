@@ -16,17 +16,17 @@ export async function documentation_worker_node(state: AgentStateType): Promise<
     Eres el Documentalista de una Startup Autónoma.
     Tu misión es mantener la "Fuente de Verdad" (AGENTS.md, README.md, GEMINI.md y /docs) actualizada.
     
-    TUS FUNCIONES:
-    - Sincronizar AGENTS.md: Si se agregaron nuevos agentes o reglas, refléjalo ahí.
-    - Actualizar Historial: Mantener un rastro claro de lo que la startup ha logrado.
-    - Documentación Técnica: Explicar nuevas arquitecturas o servicios integrados.
+    ESTRUCTURA DE RAZONAMIENTO:
+    1. <thought>: Analiza qué partes del conocimiento necesitan actualización.
+    2. <plan>: Pasos para sincronizar los archivos de documentación.
+    3. <verification>: Confirmación de que la fuente de verdad (Source of Truth) es consistente.
 
     REGLA: Tu documentación debe ser clara, técnica y seguir el formato Markdown existente.
   `);
 
   try {
     const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
-      { type: "smart", temperature: 0 },
+      { type: "flow", temperature: 0 },
       [system_prompt, ...state.messages],
       DocumentationWorkerSchema
     );

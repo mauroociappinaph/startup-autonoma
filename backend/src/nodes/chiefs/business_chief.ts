@@ -13,6 +13,7 @@ const BusinessChiefDecisionSchema = z.object({
   decision: z.enum([
     "delegate_to_researcher",
     "delegate_to_lead_gen",
+    "qualify_leads",
     "persist_results_to_engram",
     "complete",
     "need_strategic_clarification"
@@ -60,11 +61,12 @@ export async function business_chief_node(state: AgentStateType) {
     TUS RECURSOS:
     1. Researcher: Worker para investigación de competidores.
     2. LeadGen (AI Engine): Worker gRPC para extracción de leads reales.
-    3. Tool: save_to_engram: Para persistencia estratégica.
+    3. QualifyLeads: Paso intermedio para filtrar leads basura usando el modelo GLM de NVIDIA NIM.
+    4. Tool: save_to_engram: Para persistencia estratégica.
     
     ESTADO ACTUAL:
-    ${hasWorkerResult ? "Acabas de recibir resultados de un worker. Evalúa si deben ser persistidos en Engram antes de terminar." : "Esperando nueva misión o procesando delegación."}
-    ${aiEngineResult ? `RESULTADOS RECIBIDOS: ${JSON.stringify(aiEngineResult)}` : ""}
+    ${hasWorkerResult ? "Acabas de recibir resultados de un worker. SI hay leads nuevos, DEBES pasar por el estado 'qualify_leads' antes de persistir." : "Esperando nueva misión o procesando delegación."}
+    ${aiEngineResult ? `RESULTADOS RECIBIDOS (SIN CALIFICAR): ${JSON.stringify(aiEngineResult)}` : ""}
 
     LEYES SAGRADAS:
     - Reasoning-First: El campo 'reasoning' del JSON DEBE contener tus tags <thought>, <plan> y <verification>.
@@ -76,7 +78,7 @@ export async function business_chief_node(state: AgentStateType) {
 
   try {
     const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
-      { type: "smart", temperature: 0 },
+      { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       BusinessChiefDecisionSchema
     );
@@ -133,6 +135,34 @@ export async function business_chief_node(state: AgentStateType) {
           }
         }
       }));
+    }
+    else if (response.decision === "qualify_leads") {
+      updates.plan = ["qualify_leads"];
+      // Usaremos el modelo GLM específicamente para este paso
+      console.log("🎯 Calificando leads usando GLM-4 (NVIDIA NIM)...");
+      
+      const qualification_prompt = `
+        Analiza la siguiente lista de leads para el nicho: ${state.lead_gen_payload?.niche || 'desconocido'}.
+        Asigna a cada uno un score de 1 a 10 basado en su relevancia comercial.
+        Solo devuelve los leads con score > 7.
+        
+        DATA: ${JSON.stringify(aiEngineResult)}
+      `;
+
+      // Llamada directa al LLM configurado como 'smart' en NVIDIA (que ahora es GLM-4)
+      const { content: qualifiedContent } = await LLMService.getText(
+        { type: "reasoning" }, 
+        [new SystemMessage("Eres un experto en Growth Hacking y prospección B2B."), new AIMessage(qualification_prompt)]
+      );
+
+      updates.messages?.push(new AIMessage({
+        content: `[LEAD_QUALIFICATION_SUCCESS] Leads filtrados por GLM-4: ${qualifiedContent}`,
+        additional_kwargs: {
+          qualified_leads: qualifiedContent
+        }
+      }));
+      
+      updates.next_node = "business_chief"; // Vuelve a sí mismo para decidir persistir
     }
     else if (response.decision === "persist_results_to_engram") {
       // Inyectamos la acción de llamar a la tool en el plan

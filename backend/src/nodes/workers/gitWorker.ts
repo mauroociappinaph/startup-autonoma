@@ -1,13 +1,19 @@
 import { exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs/promises';
+import path from 'path';
 import {
   GitCommandSchema,
   GitCommandInput,
   GitWorkerResponse
 } from '@/types/git-worker.types.js';
 
+const execAsync = promisify(exec);
+
 /**
  * Git Worker: Brazo ejecutor de operaciones de control de versiones.
  * Traduce intenciones de alto nivel (acciones) en comandos Git reales.
+ * Implementa la Ley #7: Idempotencia Obligatoria.
  */
 export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorkerResponse> {
   const { payload, repoPath } = GitCommandSchema.parse(commandInput);
@@ -24,13 +30,32 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
         gitCommand = `git ${payload.command} ${payload.args.join(' ')}`;
         break;
 
-      case 'create-branch':
-        gitCommand = `git checkout ${payload.baseBranch} && git pull origin ${payload.baseBranch} && git checkout -b ${payload.branchName}`;
+      case 'create-branch': {
+        // IDEMPOTENCIA: Verificar si la rama ya existe
+        try {
+          const { stdout: branchList } = await execAsync(`git branch --list ${payload.branchName}`, { cwd: targetRepoPath });
+          if (branchList.trim()) {
+            console.log(`ℹ️ [GIT] La rama '${payload.branchName}' ya existe. Cambiando a ella...`);
+            gitCommand = `git checkout ${payload.branchName}`;
+          } else {
+            gitCommand = `git checkout ${payload.baseBranch} && git pull origin ${payload.baseBranch} && git checkout -b ${payload.branchName}`;
+          }
+        } catch (e) {
+          gitCommand = `git checkout -b ${payload.branchName}`;
+        }
         break;
+      }
 
-      case 'commit-all':
+      case 'commit-all': {
+        // IDEMPOTENCIA: Verificar si hay cambios antes de commitear
+        const { stdout: status } = await execAsync('git status --porcelain', { cwd: targetRepoPath });
+        if (!status || !status.trim()) {
+          console.log('ℹ️ [GIT] Nada para commitear, el árbol de trabajo está limpio.');
+          return { success: true, action: actionName, stdout: 'Nothing to commit, working tree clean' };
+        }
         gitCommand = `git add . && git commit -m "${payload.message}"`;
         break;
+      }
 
       case 'sync-develop':
         gitCommand = `git checkout develop && git pull origin develop`;
@@ -47,15 +72,24 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       }
 
       case 'clone': {
+        // IDEMPOTENCIA: Verificar si el repo ya está clonado
+        try {
+          const stats = await fs.stat(path.join(targetRepoPath, '.git'));
+          if (stats.isDirectory()) {
+            console.log('ℹ️ [GIT] El repositorio ya está clonado en este directorio.');
+            return { success: true, action: actionName, stdout: 'Already cloned' };
+          }
+        } catch (e) {
+          // No existe .git, podemos clonar
+        }
+
         const token = process.env.GITHUB_TOKEN;
         let authenticatedUrl = payload.repoUrl;
         
-        // Inyectar token si es GitHub para permitir clonado de repos privados/dedicados
         if (token && payload.repoUrl.includes('github.com')) {
           authenticatedUrl = payload.repoUrl.replace('https://', `https://${token}@`);
         }
         
-        // Clonamos directamente en el directorio actual (que será el workDir del proyecto)
         gitCommand = `git clone ${authenticatedUrl} .`;
         break;
       }
@@ -96,7 +130,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       ];
 
       for (const pattern of patterns) {
-        const match = stdout.match(pattern);
+        const match = pattern.exec(stdout);
         if (match) {
           response.commitId = match[1] || match[0];
           break;

@@ -46,7 +46,7 @@ export async function aduana_sentinel_node(state: AgentStateType) {
 
   try {
     const { data: result } = await LLMService.getStructuredData(
-      { type: "fast", temperature: 0 },
+      { type: "reasoning", temperature: 0 },
       [system_prompt, humanMessage],
       AduanaSentinelSchema
     );

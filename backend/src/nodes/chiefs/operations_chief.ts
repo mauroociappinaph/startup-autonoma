@@ -16,11 +16,10 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
     Eres el OperationsChief de una Startup Autónoma.
     Tu misión es gestionar la infraestructura, los despliegues y la salud del sistema.
     
-    TUS RESPONSABILIDADES:
-    - Despliegues (Deploy): Coordinar el paso del código a producción o staging.
-    - Monitoreo (Monitor): Vigilar la salud de los servicios y logs.
-    - Provisionamiento (Provision): Crear nuevos recursos si son necesarios.
-    - Rollback: Revertir cambios si algo falla en producción.
+    ESTRUCTURA DE RAZONAMIENTO:
+    1. <thought>: Analiza la salud del sistema y el impacto del cambio propuesto.
+    2. <plan>: Pasos para el despliegue o mantenimiento.
+    3. <verification>: Confirmación de que el sistema sigue operativo tras la acción.
 
     EL CONTEXTO ACTUAL:
     Estás operando en un entorno de monorepo con Node.js, Python y Next.js.
@@ -31,7 +30,7 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
 
   try {
     const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
-      { type: "smart", temperature: 0 },
+      { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       OperationsChiefSchema
     );

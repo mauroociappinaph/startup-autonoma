@@ -17,7 +17,7 @@ export async function researcher_node(state: AgentStateType) {
   console.log("--- EJECUTANDO NODO RESEARCHER ---");
 
   // Casteamos a ChatOpenAI porque NVIDIA usa el bridge OpenAI-compatible
-  const model = LLMFactory.createModel({ type: "smart", temperature: 0 }) as ChatOpenAI;
+  const model = LLMFactory.createModel({ type: "flow", temperature: 0 }) as ChatOpenAI;
   const modelWithTools = model.bindTools(toolList);
 
   const system_prompt = new SystemMessage(`
@@ -28,10 +28,10 @@ export async function researcher_node(state: AgentStateType) {
     - list_dir: Para ver qué hay en las carpetas.
     - read_file: Para leer el código de archivos específicos.
 
-    ESTRATEGIA:
-    1. Comienza explorando la raíz para entender la estructura.
-    2. Lee archivos clave (package.json, src/index.ts, etc.) si es necesario.
-    3. Cuando tengas la información completa, genera un reporte final.
+    ESTRUCTURA DE RAZONAMIENTO:
+    1. <thought>: Analiza la misión y los archivos clave a investigar.
+    2. <plan>: Pasos para la exploración del repositorio.
+    3. <verification>: Confirmación de que la información recolectada es suficiente.
 
     IMPORTANTE: Sé preciso y técnico. No inventes archivos que no existen.
   `);
@@ -78,7 +78,7 @@ export async function researcher_node(state: AgentStateType) {
   console.log("📊 Sintetizando hallazgos de investigación...");
 
   const { data: synthesisResponse, usage } = await LLMService.getStructuredData(
-    { type: "smart", temperature: 0 },
+    { type: "flow", temperature: 0 },
     [
       new SystemMessage("Sintetiza los hallazgos de la investigación técnica en un reporte estructurado."),
       ...currentMessages

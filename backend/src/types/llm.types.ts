@@ -10,7 +10,7 @@ export type LLMProvider = "openai" | "anthropic" | "groq" | "google" | "mistral"
  * - SMART: Para razonamiento complejo, CEO, planificación.
  * - FAST: Para tareas atómicas, GitWorker, validaciones simples.
  */
-export type LLMModelType = "smart" | "fast";
+export type LLMModelType = "smart" | "fast" | "reasoning" | "ultra" | "flow";
 
 /**
  * Configuración de un modelo específico.

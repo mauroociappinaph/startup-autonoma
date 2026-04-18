@@ -30,6 +30,22 @@ export async function ai_engine_worker_node(state: AgentStateType) {
     };
   }
 
+  // IDEMPOTENCIA: Verificar si ya obtuvimos el resultado para esta tarea específica
+  const existingResult = state.messages.find(m => 
+    m instanceof AIMessage && 
+    typeof m.content === "string" && 
+    m.content.includes(`[WORKER_RESULT] Resultado de ${aiTask.worker_name}`) &&
+    m.content.includes(aiTask.task_description.substring(0, 50)) // Check partial match
+  );
+
+  if (existingResult) {
+    console.log(`ℹ️ [AI_ENGINE] Idempotencia disparada: Resultado ya existe para ${aiTask.worker_name}. Saltando gRPC...`);
+    return {
+      next_node: state.active_chief || "ceo",
+      plan: [] 
+    };
+  }
+
   try {
     console.log(`🚀 Llamando a Worker Python: ${aiTask.worker_name}...`);
     
