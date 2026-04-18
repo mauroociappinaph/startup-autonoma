@@ -1,43 +1,36 @@
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-
-// 1. Mockeamos el módulo ANTES de cualquier import del código fuente
-jest.mock('child_process', () => ({
-  exec: jest.fn()
-}));
-
-// Importamos exec para poder configurar el mock
-import { exec } from 'child_process';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// Usamos any para evitar peleas con las sobrecargas y la propiedad __promisify__ de exec
-const mockedExec = exec as any;
+import { jest, describe, it, expect, afterEach } from '@jest/globals';
+import child_process from 'child_process';
+import { gitWorker } from '@/nodes/workers/gitWorker.js';
 
+/**
+ * Tests del Git Worker Node.
+ *
+ * ESTRATEGIA DE MOCK: Se usa jest.spyOn sobre `child_process.exec` (default
+ * import) en lugar de `jest.mock('child_process')`. Esto funciona porque
+ * gitWorker.ts importa el módulo como objeto (`import child_process from ...`)
+ * y llama a `child_process.exec` en tiempo de ejecución, lo que permite
+ * que spyOn intercepte la referencia correctamente.
+ */
 describe('Git Worker Node', () => {
-  let gitWorkerNode: any;
-
-  beforeEach(async () => {
-    mockedExec.mockClear();
-    // 2. Importamos dinámicamente para asegurarnos de que tome el mock fresco
-    const module: any = await import('@/nodes/workers/gitWorker.js');
-    gitWorkerNode = module.gitWorker;
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('debería traducir la acción commit-all correctamente', async () => {
-    mockedExec.mockImplementation((cmd: string, _opts: any, callback: any) => {
+    jest.spyOn(child_process, 'exec').mockImplementation((cmd: string, _opts: any, callback: any) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
-      
       if (cmd.includes('status')) {
-        // Simulamos que hay cambios (stdout no vacío)
-        if (cb) cb(null, 'M  file.ts\n', '');
+        cb(null, 'M  file.ts\n', '');
       } else if (cmd.includes('commit')) {
-        // Simulamos la salida clásica de git commit
-        if (cb) cb(null, '[main abc1234] feat: test commit', '');
+        cb(null, '[main abc1234] feat: test commit\n 1 file changed, 1 insertion(+)\n', '');
       } else {
-        if (cb) cb(null, '', '');
+        cb(null, '', '');
       }
       return {} as any;
     });
 
-    const result = await gitWorkerNode({
+    const result = await gitWorker({
       payload: {
         action: 'commit-all',
         message: 'feat: test commit'
@@ -50,15 +43,14 @@ describe('Git Worker Node', () => {
   });
 
   it('debería manejar errores de Git correctamente', async () => {
-    mockedExec.mockImplementation((_cmd: string, _opts: any, callback: any) => {
+    jest.spyOn(child_process, 'exec').mockImplementation((_cmd: string, _opts: any, callback: any) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
       const error = new Error('Command failed');
-      (error as any).stderr = 'fatal: not a git repository';
-      if (cb) cb(error, '', 'fatal: not a git repository');
+      cb(error, '', 'fatal: not a git repository');
       return {} as any;
     });
 
-    const result = await gitWorkerNode({
+    const result = await gitWorker({
       payload: { action: 'pull' }
     });
 
@@ -67,18 +59,18 @@ describe('Git Worker Node', () => {
   });
 
   it('debería crear una branch correctamente', async () => {
-    mockedExec.mockImplementation((cmd: string, _opts: any, callback: any) => {
+    jest.spyOn(child_process, 'exec').mockImplementation((cmd: string, _opts: any, callback: any) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
       if (cmd.includes('--list')) {
-        // Simulamos que la rama NO existe (stdout vacío)
-        if (cb) cb(null, '', '');
-      } else if (cb) {
+        // Rama NO existe → stdout vacío
+        cb(null, '', '');
+      } else {
         cb(null, "Switched to a new branch 'feat/nueva-feature'", '');
       }
       return {} as any;
     });
 
-    const result = await gitWorkerNode({
+    const result = await gitWorker({
       payload: {
         action: 'create-branch',
         branchName: 'feat/nueva-feature',

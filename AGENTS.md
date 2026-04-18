@@ -104,6 +104,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── architecture.md
 ├── /backend
 │   ├── package.json
+│   ├── /scratch
 │   ├── /scripts
 │   │   ├── check-grpc-sync.ts
 │   ├── /src

@@ -1,0 +1,2 @@
+ACTION: create-branch
+STDOUT: Switched to a new branch 'feat/nueva-feature'

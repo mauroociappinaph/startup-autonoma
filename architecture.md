@@ -94,6 +94,9 @@
 │   ├── package.json
 │   └── pyproject.toml
 ├── backend/
+│   ├── scratch/
+│   │   ├── debug_regex.js
+│   │   └── git_debug_stdout.txt
 │   ├── scripts/
 │   │   └── check-grpc-sync.ts
 │   ├── src/
@@ -226,12 +229,12 @@
 │   │   └── test_runner_node.test.ts
 │   ├── .env
 │   ├── .prettierrc
+│   ├── debug_tests.log
 │   ├── Dockerfile
 │   ├── eslint.config.js
 │   ├── jest.config.js
 │   ├── package.json
-│   ├── tsconfig.json
-│   └── verify-groq.ts
+│   └── tsconfig.json
 ├── docs/
 │   ├── agents/
 │   │   ├── chiefs/
