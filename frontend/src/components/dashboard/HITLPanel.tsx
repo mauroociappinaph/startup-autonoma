@@ -15,6 +15,13 @@ interface HITLPanelProps {
   onRewind: (checkpointId: string) => void;
 }
 
+interface HistoryItem {
+  id: string;
+  next: string[];
+  values: { executive_summary?: string };
+  createdAt?: string;
+}
+
 export const HITLPanel: React.FC<HITLPanelProps> = ({ 
   isOpen, 
   threadId, 
@@ -24,8 +31,7 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
   onRewind 
 }) => {
   const [feedback, setFeedback] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [mode, setMode] = useState<'decision' | 'history'>('decision');
 
