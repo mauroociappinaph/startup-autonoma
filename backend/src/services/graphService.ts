@@ -1,6 +1,5 @@
 import { getGraph } from '@/graph/index.js';
 import { AgentStateType } from '@/types/state.types.js';
-import { StreamEvent } from '@/types/index.js';
 import { ProjectContext } from '@/types/project.types.js';
 import { EventBus } from './eventBus.js';
 import { GraphFormatter } from '@/helpers/graphFormatter.js';
@@ -199,6 +198,7 @@ export class GraphService {
         id: state.config.configurable?.checkpoint_id,
         next: state.next,
         values: state.values,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         createdAt: (state.metadata as any)?.step // Opcional, dependiendo de la metadata del checkpointer
       });
     }

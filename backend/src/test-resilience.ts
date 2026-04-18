@@ -1,5 +1,4 @@
 import { GraphService } from './services/graphService.js';
-import { EventBus } from './services/eventBus.js';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
