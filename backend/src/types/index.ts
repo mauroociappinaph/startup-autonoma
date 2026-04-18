@@ -12,6 +12,8 @@ export interface StreamEvent {
     completion: number;
   };
   iteration_count?: number;
+  total_cost_usd?: number;
+  reasoning?: string;
   threadId?: string;
 }
 

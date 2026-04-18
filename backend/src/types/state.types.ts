@@ -11,6 +11,7 @@ export interface AgentStateType {
   original_prompt: string; // El input crudo del humano
   refined_prompt: string;  // El input optimizado por el Mirror
   messages: BaseMessage[];
+  reasoning?: string; // Justificación del paso actual
   executive_summary: string;
   iteration_count: number; // Contador de pasos en el grafo
   token_usage: {
