@@ -14,6 +14,10 @@ import { persistence_node } from "@/nodes/workers/persistence_node.js";
 import { code_researcher_node } from "@/nodes/workers/code_researcher_node.js";
 import { mirror_node } from "@/nodes/mirror.js";
 import { circuit_breaker_node } from "@/nodes/circuit_breaker.js";
+import { operations_chief_node } from "@/nodes/chiefs/operations_chief.js";
+import { review_worker_node } from "@/nodes/workers/review_worker.js";
+import { security_worker_node } from "@/nodes/workers/security_worker.js";
+import { documentation_worker_node } from "@/nodes/workers/documentation_worker.js";
 
 /**
  * Orquestador Principal de la Startup Autónoma.
@@ -31,6 +35,10 @@ const workflow = new StateGraph(AgentAnnotation)
     .addNode("ai_engine_worker", ai_engine_worker_node)
     .addNode("persistence_worker", persistence_node)
     .addNode("code_researcher", code_researcher_node)
+    .addNode("operations_chief", operations_chief_node)
+    .addNode("review_worker", review_worker_node)
+    .addNode("security_worker", security_worker_node)
+    .addNode("documentation_worker", documentation_worker_node)
 
     .addEdge(START, "mirror")
     .addEdge("mirror", "circuit_breaker")
@@ -40,8 +48,7 @@ workflow.addConditionalEdges(
     "circuit_breaker",
     (state: AgentStateType) => {
         if (state.max_budget_reached) return "end";
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (state.next_node as any) || "ceo";
+        return (state.next_node as NodeName) || "ceo";
     },
     {
         ceo: "ceo",
@@ -53,8 +60,13 @@ workflow.addConditionalEdges(
         ai_engine_worker: "ai_engine_worker",
         persistence_worker: "persistence_worker",
         code_researcher: "code_researcher",
+        operations_chief: "operations_chief",
+        review_worker: "review_worker",
+        security_worker: "security_worker",
+        documentation_worker: "documentation_worker",
         end: END
-    }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
 );
 
 workflow.addConditionalEdges(
@@ -71,10 +83,11 @@ workflow.addConditionalEdges(
     }
 );
 
-type NodeName = "software_chief" | "business_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "circuit_breaker" | "__start__" | "__end__";
+type NodeName = "software_chief" | "business_chief" | "operations_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "review_worker" | "security_worker" | "documentation_worker" | "circuit_breaker" | "__start__" | "__end__";
 
 workflow.addConditionalEdges("software_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
 workflow.addConditionalEdges("business_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
+workflow.addConditionalEdges("operations_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
 
 const workerReturnRouter = () => "circuit_breaker" as const;
 const workerReturnMappings: Record<string, NodeName> = { circuit_breaker: "circuit_breaker" };
@@ -85,6 +98,9 @@ workflow.addConditionalEdges("test_runner", workerReturnRouter, workerReturnMapp
 workflow.addConditionalEdges("ai_engine_worker", workerReturnRouter, workerReturnMappings);
 workflow.addConditionalEdges("persistence_worker", workerReturnRouter, workerReturnMappings);
 workflow.addConditionalEdges("code_researcher", workerReturnRouter, workerReturnMappings);
+workflow.addConditionalEdges("review_worker", workerReturnRouter, workerReturnMappings);
+workflow.addConditionalEdges("security_worker", workerReturnRouter, workerReturnMappings);
+workflow.addConditionalEdges("documentation_worker", workerReturnRouter, workerReturnMappings);
 
 // Checkpointer compatible con Redis estándar
 const checkpointer = new SimpleRedisSaver(getRedisConnection());
@@ -95,7 +111,8 @@ const checkpointer = new SimpleRedisSaver(getRedisConnection());
  */
 export const graph = workflow.compile({ 
     checkpointer,
-    interruptAfter: ["ceo"] 
+    interruptAfter: ["ceo", "operations_chief"],
+    interruptBefore: ["git_worker"]
 });
 
 /**

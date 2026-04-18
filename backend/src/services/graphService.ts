@@ -248,6 +248,7 @@ export class GraphService {
           token_usage: nodeData.token_usage || undefined,
           iteration_count: nodeData.iteration_count || undefined,
           total_cost_usd: nodeData.total_cost_usd || undefined,
+          reasoning: nodeData.reasoning || undefined,
           threadId
         } as StreamEvent;
       }
