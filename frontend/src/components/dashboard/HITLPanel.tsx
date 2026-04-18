@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldAlert, Zap, RotateCcw, MessageSquare, ListRestart, CheckCircle2, XCircle } from "lucide-react";
+import { ShieldAlert, Zap, RotateCcw, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -24,18 +24,12 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
   onRewind 
 }) => {
   const [feedback, setFeedback] = useState("");
-  const [showHistory, setShowHistory] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [mode, setMode] = useState<'decision' | 'history'>('decision');
 
-  useEffect(() => {
-    if (isOpen && mode === 'history') {
-      fetchHistory();
-    }
-  }, [isOpen, mode]);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
       const res = await fetch(`/api/agents/history/${threadId}`);
@@ -48,7 +42,13 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, [threadId]);
+
+  useEffect(() => {
+    if (isOpen && mode === 'history') {
+      fetchHistory();
+    }
+  }, [isOpen, mode, fetchHistory]);
 
   if (!isOpen) return null;
 
