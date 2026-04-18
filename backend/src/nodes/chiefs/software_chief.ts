@@ -69,7 +69,7 @@ export async function software_chief_node(state: AgentStateType) {
       { type: "smart", temperature: 0 },
       [system_prompt, ...state.messages],
       SoftwareChiefDecisionSchema
-    ) as any; // Cast temporal para acceder a 'model' si LLMService lo expone (o lo extraemos)
+    );
 
     const projectId = state.project_context?.projectId || "unknown";
     const actualModel = model || "gpt-4o";

@@ -42,7 +42,8 @@ describe('MirrorAgent Node', () => {
       },
       usage: { total: 100, prompt: 50, completion: 50 },
       cost: 0.001,
-      latency: 500
+      latency: 500,
+      model: "gpt-4o"
     });
 
     const result = await mirror_node(initialState);

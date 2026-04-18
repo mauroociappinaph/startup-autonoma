@@ -79,7 +79,7 @@ export async function business_chief_node(state: AgentStateType) {
       { type: "smart", temperature: 0 },
       [system_prompt, ...state.messages],
       BusinessChiefDecisionSchema
-    ) as any;
+    );
 
     const projectId = state.project_context?.projectId || "unknown";
     const actualModel = model || "gpt-4o";

@@ -25,6 +25,7 @@ export class LLMService {
     usage: { total: number; prompt: number; completion: number };
     cost: number;
     latency: number;
+    model: string;
   }> {
     const startTime = performance.now();
     const rawModel = LLMFactory.createModel(config) as BaseChatModel;
@@ -38,7 +39,7 @@ export class LLMService {
       const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
       const latency = performance.now() - startTime;
       const cost = TelemetryService.calculateCost(result.usage, modelName);
-      return { ...result, cost, latency };
+      return { ...result, cost, latency, model: modelName };
     }
 
     try {
@@ -67,14 +68,15 @@ export class LLMService {
         data: response.parsed as z.infer<T>,
         usage: usageData,
         cost,
-        latency
+        latency,
+        model: modelName
       };
     } catch (error) {
        console.warn("⚠️ Falló formato nativo, intentando fallback manual...");
        const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
        const latency = performance.now() - startTime;
        const cost = TelemetryService.calculateCost(result.usage, modelName);
-       return { ...result, cost, latency };
+       return { ...result, cost, latency, model: modelName };
     }
   }
 
