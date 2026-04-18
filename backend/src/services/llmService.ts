@@ -6,34 +6,47 @@ import { LLMFactoryOptions } from "@/types/llm.types.js";
 import { ContextManager } from "../helpers/contextManager.js";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
+import { TelemetryService } from "./telemetryService.js";
+
 /**
  * Servicio de alto nivel para interactuar con LLMs.
  * Garantiza cumplimiento de Ley #13 (Trimming) y Ley #14 (Structured Data).
  */
 export class LLMService {
   /**
-   * Obtiene datos estructurados garantizados junto con el uso de tokens.
+   * Obtiene datos estructurados garantizados junto con telemetría completa.
    */
   static async getStructuredData<T extends z.ZodTypeAny>(
     config: LLMFactoryOptions,
     messages: BaseMessage[],
     schema: T
-  ): Promise<{ data: z.infer<T>; usage: { total: number; prompt: number; completion: number } }> {
+  ): Promise<{ 
+    data: z.infer<T>; 
+    usage: { total: number; prompt: number; completion: number };
+    cost: number;
+    latency: number;
+  }> {
+    const startTime = performance.now();
     const rawModel = LLMFactory.createModel(config) as BaseChatModel;
     const trimmedMessages = await ContextManager.trim(messages, rawModel);
 
     const provider = LLMFactory.getProviderForType(config.type);
-
-    console.log(`DEBUG: Proveedor detectado -> ${provider}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const modelName = (rawModel as any).modelName || (rawModel as any).model || "unknown";
 
     if (provider === "nvidia") {
-      return this._getManualStructuredData(rawModel, trimmedMessages, schema);
+      const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
+      const latency = performance.now() - startTime;
+      const cost = TelemetryService.calculateCost(result.usage, modelName);
+      return { ...result, cost, latency };
     }
 
     try {
-      // Usamos includeRaw para capturar usage_metadata
       const modelWithStructuredOutput = rawModel.withStructuredOutput(schema, { includeRaw: true });
-      const response = (await modelWithStructuredOutput.invoke(trimmedMessages)) as { parsed: z.infer<T>, raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } };
+      const response = (await modelWithStructuredOutput.invoke(trimmedMessages)) as { 
+        parsed: z.infer<T>, 
+        raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } 
+      };
       
       const usage = response.raw.usage_metadata || {
         input_tokens: 0,
@@ -41,17 +54,27 @@ export class LLMService {
         total_tokens: 0
       };
 
+      const latency = performance.now() - startTime;
+      const usageData = {
+        total: usage.total_tokens || 0,
+        prompt: usage.input_tokens || 0,
+        completion: usage.output_tokens || 0
+      };
+
+      const cost = TelemetryService.calculateCost(usageData, modelName);
+
       return {
         data: response.parsed as z.infer<T>,
-        usage: {
-          total: usage.total_tokens || 0,
-          prompt: usage.input_tokens || 0,
-          completion: usage.output_tokens || 0
-        }
+        usage: usageData,
+        cost,
+        latency
       };
     } catch (error) {
        console.warn("⚠️ Falló formato nativo, intentando fallback manual...");
-       return this._getManualStructuredData(rawModel, trimmedMessages, schema);
+       const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
+       const latency = performance.now() - startTime;
+       const cost = TelemetryService.calculateCost(result.usage, modelName);
+       return { ...result, cost, latency };
     }
   }
 

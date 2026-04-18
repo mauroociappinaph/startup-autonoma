@@ -34,13 +34,15 @@ describe('MirrorAgent Node', () => {
 
     (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
       data: {
-        refined_prompt: mockRefined,
-        intentions: mockIntentions,
-        missing_info: ["nombre de la branch"],
-        suggested_next_steps: ["llamar al GitWorker"],
-        requires_human_approval: true
+        refined_prompt: "Crear una nueva rama de desarrollo y realizar un commit con los cambios actuales.",
+        intentions: ["crear branch", "realizar commit"],
+        missing_info: [],
+        suggested_next_steps: ["delegar al Software Chief"],
+        requires_human_approval: false,
       },
-      usage: { total: 100, prompt: 50, completion: 50 }
+      usage: { total: 100, prompt: 50, completion: 50 },
+      cost: 0.001,
+      latency: 500
     });
 
     const result = await mirror_node(initialState);

@@ -91,6 +91,14 @@ export const AgentAnnotation = Annotation.Root({
   }),
 
   /**
+   * Costo acumulado en USD (Gap 6).
+   */
+  total_cost_usd: Annotation<number>({
+    reducer: (prev, next) => prev + next,
+    default: () => 0,
+  }),
+
+  /**
    * Flag de emergencia del Circuit Breaker.
    */
   max_budget_reached: Annotation<boolean>({

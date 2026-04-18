@@ -96,6 +96,8 @@
 │   ├── src/
 │   │   ├── agents/
 │   │   │   └── .gitkeep
+│   │   ├── config/
+│   │   │   └── pricing.ts
 │   │   ├── contracts/
 │   │   │   ├── ceo.ts
 │   │   │   └── researcher.ts
@@ -148,12 +150,14 @@
 │   │   │   └── agentRoutes.ts
 │   │   ├── services/
 │   │   │   ├── aiEngineClient.ts
+│   │   │   ├── auditService.ts
 │   │   │   ├── budgetService.ts
 │   │   │   ├── eventBus.ts
 │   │   │   ├── graphService.ts
 │   │   │   ├── llmFactory.ts
 │   │   │   ├── llmService.ts
-│   │   │   └── projectService.ts
+│   │   │   ├── projectService.ts
+│   │   │   └── telemetryService.ts
 │   │   ├── skills/
 │   │   │   └── .gitkeep
 │   │   ├── state/
@@ -201,6 +205,7 @@
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
 │   │   ├── mirror_node.test.ts
+│   │   ├── observability_gap6_test.ts
 │   │   ├── software_chief.test.ts
 │   │   └── test_runner_node.test.ts
 │   ├── .env

@@ -18,6 +18,7 @@ export interface AgentStateType {
     prompt: number;
     completion: number;
   };
+  total_cost_usd?: number; // Nuevo campo para telemetría (Gap 6)
   max_budget_reached?: boolean; // Flag de emergencia del Circuit Breaker
   retry_count: number;
   plan: string[]; // Tareas pendientes o totales
@@ -26,7 +27,7 @@ export interface AgentStateType {
   /**
    * Registro de la última sincronización con el BudgetService.
    */
-  last_recorded_tokens: number;
+  last_recorded_tokens?: number;
   next_node?: string; // Nodo al que el Circuit Breaker debería redirigir si todo está OK
   is_mission_approved?: boolean; // Flag para evitar bucles de aprobación
   [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)

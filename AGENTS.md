@@ -85,6 +85,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   ├── package.json
 │   ├── /src
 │   │   ├── /agents
+│   │   ├── /config
 │   │   ├── /contracts
 │   │   ├── /controllers
 │   │   ├── /db
@@ -115,6 +116,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
 │   │   ├── mirror_node.test.ts
+│   │   ├── observability_gap6_test.ts
 │   │   ├── software_chief.test.ts
 │   │   ├── test_runner_node.test.ts
 │   ├── tsconfig.json

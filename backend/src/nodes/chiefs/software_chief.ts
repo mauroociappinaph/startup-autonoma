@@ -3,6 +3,8 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { GitActionSchema } from "@/types/git-worker.types.js";
+import { TelemetryService } from "@/services/telemetryService.js";
+import { AuditService } from "@/services/auditService.js";
 import { TestRunnerInputSchema } from "@/types/software-tools.types.js";
 
 /**
@@ -62,25 +64,42 @@ export async function software_chief_node(state: AgentStateType) {
   `);
 
   try {
-    const { data: response, usage } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
       { type: "smart", temperature: 0 },
       [system_prompt, ...state.messages],
       SoftwareChiefDecisionSchema
     );
 
+    const projectId = state.project_context?.projectId || "unknown";
+
+    // 1. Telemetría
+    await TelemetryService.recordMetric(projectId, {
+      node: "Software Chief",
+      model: "gpt-4o",
+      latency,
+      usage
+    });
+
+    // 2. Auditoría
+    await AuditService.logDecision(projectId, {
+      agent: "Software Chief",
+      decision: response.decision,
+      reasoning: response.reasoning
+    });
+
     console.log(`🧠 Chief Reasoning: ${response.reasoning}`);
     console.log(`🎯 Decision: ${response.decision}`);
-    console.log(`📊 Tokens usandos en este paso: ${usage.total}`);
+    console.log(`📊 Costo: $${cost.toFixed(6)}`);
 
     const updates: Partial<AgentStateType> = {
+      executive_summary: response.reasoning,
       active_chief: "software_chief",
-      iteration_count: 1, // El reducer sumará +1
-      token_usage: usage, // El reducer sumará los tokens
+      iteration_count: 1,
+      token_usage: usage,
+      total_cost_usd: cost,
       messages: state.messages.concat([new AIMessage({
-        content: `[CHIEF_THOUGHT] ${response.reasoning}
-[CHIEF_DECISION] ${response.decision}`,
-        // Aquí podríamos añadir el trace_id del estado si existe
-        // additional_kwargs: { trace_id: state.trace_id }
+        content: `[SOFTWARE_CHIEF_THOUGHT] ${response.reasoning}
+[DECISION] ${response.decision}`,
       })])
     };
 
