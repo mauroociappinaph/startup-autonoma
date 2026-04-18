@@ -18,7 +18,7 @@ function checkStructuralIntegrity() {
 }
 
 // Directorios a ignorar
-const IGNORE_DIRS = ['node_modules', 'dist', '.git', '.next', '.husky', '.github'];
+const IGNORE_DIRS = ['node_modules', 'dist', '.git', '.next', '.husky', '.github', '.venv', 'venv'];
 
 function walkDir(dir, callback) {
   if (!fs.existsSync(dir)) return;

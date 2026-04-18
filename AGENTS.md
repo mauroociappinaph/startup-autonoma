@@ -47,6 +47,8 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 7.  **Idempotencia Obligatoria:** Todo Worker debe ser diseñado para que, si se ejecuta dos veces con el mismo input, el resultado sea el mismo sin duplicar archivos o estados (Ej: chequear si una branch existe antes de crearla).
 8.  **Reasoning-First:** Prohibido ejecutar una acción técnica (Command/Tool) sin haber guardado antes en el estado un campo `reasoning` que explique el "por qué" de la decisión.
 9.  **Autocorrección Inmediata:** Después de cada cambio (escritura de archivo o comando), el agente debe verificar el resultado al instante. Si hay un error, debe intentar arreglarlo antes de devolver el control al Chief.
+10. **Path Aliases Obligatorios:** Prohibido el uso de imports relativos profundos (p.ej. `../../`). Se deben usar los alias configurados (`@/...`) para mantener la legibilidad y ayudar al razonamiento de las IAs.
+11. **Anti-Extensiones (Frontend):** Prohibido el uso de extensiones `.js` o `.ts` en los imports del frontend. Next.js las resuelve automáticamente y agregarlas ensucia el grafo de dependencias.
 
 ---
 

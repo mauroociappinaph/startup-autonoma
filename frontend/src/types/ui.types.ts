@@ -1,7 +1,7 @@
 import * as React from "react"
 import { type VariantProps } from "class-variance-authority"
-import { badgeVariants } from "@/components/ui/badge.js"
-import { buttonVariants } from "@/components/ui/button.js"
+import { badgeVariants } from "@/components/ui/badge"
+import { buttonVariants } from "@/components/ui/button"
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
