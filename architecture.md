@@ -94,6 +94,8 @@
 │   ├── package.json
 │   └── pyproject.toml
 ├── backend/
+│   ├── scripts/
+│   │   └── check-grpc-sync.ts
 │   ├── src/
 │   │   ├── agents/
 │   │   │   └── .gitkeep
@@ -138,6 +140,8 @@
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── operations_chief.ts
 │   │   │   │   └── software_chief.ts
+│   │   │   ├── mirror/
+│   │   │   │   └── aduana_sentinel_node.ts
 │   │   │   ├── workers/
 │   │   │   │   ├── ai_engine_worker_node.ts
 │   │   │   │   ├── code_researcher_node.ts

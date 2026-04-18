@@ -31,5 +31,6 @@ export interface AgentStateType {
   last_recorded_tokens?: number;
   next_node?: string; // Nodo al que el Circuit Breaker debería redirigir si todo está OK
   is_mission_approved?: boolean; // Flag para evitar bucles de aprobación
+  is_malicious?: boolean; // Detectado por AduanaSentinel
   [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)
 }

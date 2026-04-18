@@ -58,6 +58,17 @@ function checkSacredLaws(filePath) {
       }
     }
 
+    // LEY #13: Strict-XML-Formatting (Prompts estrucutrados)
+    if (isNodeFile && content.includes('SystemMessage(`')) {
+      const requiredTags = ['<thought>', '<plan>', '<verification>'];
+      requiredTags.forEach(tag => {
+        if (!content.includes(tag)) {
+          console.error(`🚨 [LEY #13 ROTA]: El nodo ${filePath} no incluye el tag obligatorio '${tag}' en su prompt del sistema.`);
+          errors++;
+        }
+      });
+    }
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 

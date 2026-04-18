@@ -18,6 +18,9 @@ export interface AgentThought {
   iteration_count?: number;
   total_cost_usd?: number;
   reasoning?: string;
+  thought?: string;
+  plan_steps?: string;
+  verification?: string;
 }
 
 export * from "./ui.types";

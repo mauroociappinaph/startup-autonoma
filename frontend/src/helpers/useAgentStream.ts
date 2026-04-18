@@ -26,6 +26,19 @@ export function useAgentStream() {
       return false;
     }
     
+    // Parser ultra-ligero para tags XML (útil para mostrar razonamiento separado)
+    const extractTag = (text: string, tag: string) => {
+      const regex = new RegExp(`<${tag}>([\\s\\S]*?)(?:</${tag}>|$)`, "i");
+      const match = text.match(regex);
+      return match ? match[1].trim() : undefined;
+    };
+
+    if (data.text) {
+      data.thought = extractTag(data.text, "thought");
+      data.plan_steps = extractTag(data.text, "plan");
+      data.verification = extractTag(data.text, "verification");
+    }
+
     if (data.activeNode) setActiveNode(data.activeNode);
     if (data.plan && data.plan.length > 0) setCurrentPlan(data.plan);
     if (data.completedSteps && data.completedSteps.length > 0) {

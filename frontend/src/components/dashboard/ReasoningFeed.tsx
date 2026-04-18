@@ -100,7 +100,31 @@ export const ReasoningFeed: React.FC<ReasoningFeedProps> = ({ thoughts, isStream
                   )}
                 </p>
 
-                {thought.reasoning && !thought.isPartial && thought.reasoning !== thought.text && (
+                {/* Renderizado de Bloques Estructurados v2.1 (Pattern from Elite Leaks) */}
+                {(!thought.isPartial && (thought.thought || thought.plan_steps || thought.verification)) && (
+                  <div className="mt-3 space-y-2 pt-3 border-t border-white/10">
+                    {thought.thought && (
+                      <div className="bg-blue-500/5 p-3 rounded-lg border border-blue-500/10">
+                        <span className="text-[9px] font-black text-blue-400 uppercase tracking-tighter block mb-1">Theoretical Analysis</span>
+                        <p className="text-[11px] text-blue-100/80 italic leading-snug">{thought.thought}</p>
+                      </div>
+                    )}
+                    {thought.plan_steps && (
+                      <div className="bg-purple-500/5 p-3 rounded-lg border border-purple-500/10">
+                        <span className="text-[9px] font-black text-purple-400 uppercase tracking-tighter block mb-1">Execution Plan</span>
+                        <p className="text-[11px] text-purple-100/80 leading-snug whitespace-pre-line">{thought.plan_steps}</p>
+                      </div>
+                    )}
+                    {thought.verification && (
+                      <div className="bg-green-500/5 p-3 rounded-lg border border-green-500/10">
+                        <span className="text-[9px] font-black text-green-400 uppercase tracking-tighter block mb-1">Verification Bias</span>
+                        <p className="text-[11px] text-green-100/80 leading-snug">{thought.verification}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {thought.reasoning && !thought.isPartial && !thought.thought && thought.reasoning !== thought.text && (
                   <div className="mt-2 pt-2 border-t border-white/5">
                     <p className="text-[10px] text-muted-foreground italic leading-relaxed">
                       <span className="text-blue-400/50 not-italic font-black mr-1">REASONING:</span> 

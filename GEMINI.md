@@ -30,5 +30,5 @@ El proyecto utiliza **Turborepo** para la gestión del monorepo. Desde la raíz,
 - **Tipado Estricto:** TypeScript (Zod) en Backend/Frontend; Python (Pydantic/Type Hints) en AI Engine.
 - **Documentación:** Obligatoria mediante JSDoc/Docstrings en toda lógica pública.
 - **Calidad Local:** Pipeline basado en **Husky** (hooks `pre-commit` y `pre-push`) que bloquea envíos si no pasan tests o linters.
-- **Jerarquía:** Operación basada en agentes CEO -> Chiefs -> Workers.
+- **Jerarquía:** Operación basada en agentes Mirror (Aduana) -> CEO -> Chiefs -> Workers. Se incluye el `AduanaSentinelNode` para pre-filtración de seguridad.
 - **Persistencia:** Todo aprendizaje o decisión crítica debe persistirse en Engram utilizando topic keys consistentes.
