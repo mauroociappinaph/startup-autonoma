@@ -23,6 +23,7 @@ async function demoResilience() {
 
   console.log("⏳ Generando estrategia inicial...");
   for await (const event of stream) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const streamEvent = event as any;
     if (streamEvent.isWaiting) {
       console.log(`✅ Grafo pausado en: ${streamEvent.activeNode}`);

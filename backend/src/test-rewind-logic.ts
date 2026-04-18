@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
  */
 
 // 1. Definimos un Grafo Ultra-Simple
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const demoWorkflow = new StateGraph<any>({
   channels: {
     count: {
@@ -16,9 +17,9 @@ const demoWorkflow = new StateGraph<any>({
     }
   }
 })
-  .addNode("step_1", (state) => ({ count: 1 }))
-  .addNode("step_2", (state) => ({ count: 2 }))
-  .addNode("step_3", (state) => ({ count: 3 }))
+  .addNode("step_1", (_state) => ({ count: 1 }))
+  .addNode("step_2", (_state) => ({ count: 2 }))
+  .addNode("step_3", (_state) => ({ count: 3 }))
   .addEdge(START, "step_1")
   .addEdge("step_1", "step_2")
   .addEdge("step_2", "step_3")
