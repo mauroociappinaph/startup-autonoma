@@ -1,80 +1,168 @@
 version: '3.8'
 
+##########################################################
+# STARTUP AUTÓNOMA — Orquestación de Contenedores v2.0
+# Principio: No sube a producción si un servicio falla.
+##########################################################
+
 services:
+
+  # -------------------------------------------------------
+  # INFRAESTRUCTURA DE DATOS
+  # -------------------------------------------------------
+
   postgres:
     image: postgres:15-alpine
     container_name: startup-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: startup_db
+      POSTGRES_USER: ${POSTGRES_USER:-startup_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-startup_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-startup_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d startup_db"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-startup_user} -d ${POSTGRES_DB:-startup_db}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
     container_name: startup-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+
+  # -------------------------------------------------------
+  # MOTOR DE IA (Python — gRPC)
+  # -------------------------------------------------------
+
+  ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile
+    container_name: startup-ai-engine
+    restart: unless-stopped
+    env_file:
+      - ./ai-engine/.env.example
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - GRPC_PORT=50051
+    ports:
+      - "50051:50051"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import grpc; channel = grpc.insecure_channel('localhost:50051'); stub = channel.channel_ready_future(); stub.result(timeout=5)\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # -------------------------------------------------------
+  # ORQUESTADOR BACKEND (Node.js — LangGraph REST/SSE)
+  # -------------------------------------------------------
 
   backend:
-    build: 
+    build:
       context: ./backend
+      dockerfile: Dockerfile
     container_name: startup-backend
-    ports:
-      - "4000:4000"
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
       - PORT=4000
-      - DATABASE_URL=postgres://user:pass@postgres:5432/startup_db
+      - DATABASE_URL=postgres://${POSTGRES_USER:-startup_user}:${POSTGRES_PASSWORD:-startup_pass}@postgres:5432/${POSTGRES_DB:-startup_db}
       - REDIS_URL=redis://redis:6379
       - AI_ENGINE_URL=ai-engine:50051
+      - NODE_ENV=production
+    ports:
+      - "4000:4000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    env_file:
-      - ./backend/.env
-
-  ai-engine:
-    build:
-      context: ./ai-engine
-    container_name: startup-ai-engine
-    ports:
-      - "50051:50051"
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      redis:
+      ai-engine:
         condition: service_healthy
+    networks:
+      - internal
+      - public
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+
+  # -------------------------------------------------------
+  # MISSION CONTROL UI (Next.js)
+  # -------------------------------------------------------
 
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
     container_name: startup-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:4000/api
+      - NODE_ENV=production
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:4000/api
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    networks:
+      - internal
+      - public
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
 
+# -------------------------------------------------------
+# REDES: separación interna/pública para seguridad
+# -------------------------------------------------------
 networks:
-  default:
-    name: startup-network
+  internal:
+    name: startup-internal
+    driver: bridge
+    internal: true
+  public:
+    name: startup-public
+    driver: bridge
 
+# -------------------------------------------------------
+# VOLÚMENES PERSISTENTES
+# -------------------------------------------------------
 volumes:
   postgres_data:
+    name: startup-postgres-data
+  redis_data:
+    name: startup-redis-data
+

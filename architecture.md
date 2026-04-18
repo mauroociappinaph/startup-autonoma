@@ -345,6 +345,7 @@
 ├── types/
 │   ├── .gitkeep
 │   └── index.ts
+├── .env.example
 ├── .gitignore
 ├── .opencodeignore.save
 ├── AGENTS.md
