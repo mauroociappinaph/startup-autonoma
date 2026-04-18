@@ -69,3 +69,6 @@ yarn-error.log*
 # AI Agents (project-local, never commit)
 .qwen/
 .windsurf/workflows/
+
+# Workspaces de proyectos (Aislamiento Gap 2)
+backend/workspaces/

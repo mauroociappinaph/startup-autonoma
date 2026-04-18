@@ -3,6 +3,7 @@ import { getRedisConnection } from "@/db/redis.js";
 import { AgentJobData, AgentJobResult } from "@/types/agent-job.types.js";
 import { GraphService } from "@/services/graphService.js";
 import { AGENT_QUEUE_NAME } from "@/jobs/agentQueue.js";
+import { projectService } from "@/services/projectService.js";
 
 /**
  * Worker de BullMQ que consume la cola de agentes.
@@ -64,14 +65,18 @@ export class AgentWorker {
    * Consume el stream del grafo y emite eventos al EventBus para el SSE.
    */
   private async processJob(job: Job<AgentJobData, AgentJobResult>): Promise<AgentJobResult> {
-    const { prompt, sessionId } = job.data;
+    const { prompt, sessionId, projectId } = job.data;
 
     console.log(`🧠 Procesando job ${job.id} | prompt: "${prompt.substring(0, 60)}..."`);
 
     try {
-      // Consumimos el stream del grafo. Los eventos son emitidos al EventBus
-      // para que el SSE endpoint los entregue al cliente en tiempo real.
-      const stream = GraphService.runAgentStream(prompt, sessionId);
+      // Resolvemos el contexto de proyecto (Gap 2)
+      // Si no hay projectId, usamos uno genérico para mantener retrocompatibilidad
+      const projectName = projectId || "default-startup";
+      const projectContext = await projectService.getOrCreateProject(projectName);
+
+      // Consumimos el stream del grafo inyectando el contexto de aislamiento
+      const stream = GraphService.runAgentStream(prompt, sessionId, projectContext);
 
       const iterator = stream[Symbol.asyncIterator]();
       while (!(await iterator.next()).done) {

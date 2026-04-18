@@ -150,7 +150,8 @@
 │   │   │   ├── aiEngineClient.ts
 │   │   │   ├── graphService.ts
 │   │   │   ├── llmFactory.ts
-│   │   │   └── llmService.ts
+│   │   │   ├── llmService.ts
+│   │   │   └── projectService.ts
 │   │   ├── skills/
 │   │   │   └── .gitkeep
 │   │   ├── state/

@@ -24,7 +24,9 @@ export async function git_worker_node(state: AgentStateType) {
   const gitInstruction = lastMessage.additional_kwargs.git_instruction as GitCommandInput;
 
   try {
-    const result = await gitWorker(gitInstruction);
+    // Gap 2: Forzamos el uso del workspace del proyecto
+    const repoPath = state.project_context?.workDir;
+    const result = await gitWorker({ ...gitInstruction, repoPath });
 
     if (result.success) {
       console.log(`✅ Operación Git [${result.action}] exitosa.`);

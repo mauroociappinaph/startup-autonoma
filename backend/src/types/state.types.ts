@@ -1,10 +1,13 @@
 import { BaseMessage } from "@langchain/core/messages";
+import { ProjectContext } from "./project.types.js";
 
 /**
  * Interfaz pura del estado de los agentes.
  * Cumple con la Ley #7 (Centralización de Tipos).
  */
 export interface AgentStateType {
+  project_context?: ProjectContext; // Aislamiento de startup (Gap 2) - Opcional para compatibilidad con tests
+
   original_prompt: string; // El input crudo del humano
   refined_prompt: string;  // El input optimizado por el Mirror
   messages: BaseMessage[];

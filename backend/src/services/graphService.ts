@@ -2,6 +2,7 @@ import { getGraph } from '@/graph/index.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { AgentStateType } from '@/types/state.types.js';
 import { StreamEvent } from '@/types/index.js';
+import { ProjectContext } from '@/types/project.types.js';
 
 /**
  * Servicio encargado de la orquestación y streaming del grafo.
@@ -10,9 +11,14 @@ export class GraphService {
   /**
    * Ejecuta el grafo y devuelve un generador de eventos formateados, incluyendo tokens en tiempo real.
    */
-  static async *runAgentStream(prompt: string, threadId: string = "default-thread") {
+  static async *runAgentStream(
+    prompt: string, 
+    threadId: string = "default-thread",
+    projectContext?: ProjectContext
+  ) {
     const graph = await getGraph();
     const initialInput: Partial<AgentStateType> = {
+      project_context: projectContext, // Gap 2: Inyección de aislamiento
       messages: [new HumanMessage(prompt)],
       plan: [],
       executive_summary: "",

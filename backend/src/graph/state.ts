@@ -1,11 +1,19 @@
 import { Annotation, messagesStateReducer } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
+import { ProjectContext } from "@/types/project.types.js";
 
 /**
  * AgentAnnotation: Implementación del canal de estado para LangGraph.
  * Define cómo se transforman y acumulan los datos a través del grafo.
  */
 export const AgentAnnotation = Annotation.Root({
+  /**
+   * Contexto del proyecto/startup para aislamiento (Gap 2)
+   */
+  project_context: Annotation<ProjectContext>({
+    reducer: (prev, next) => next || prev,
+  }),
+
   /**
    * Prompt original del usuario.
    */
