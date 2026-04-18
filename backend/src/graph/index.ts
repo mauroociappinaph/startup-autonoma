@@ -19,6 +19,7 @@ import { operations_chief_node } from "@/nodes/chiefs/operations_chief.js";
 import { review_worker_node } from "@/nodes/workers/review_worker.js";
 import { security_worker_node } from "@/nodes/workers/security_worker.js";
 import { documentation_worker_node } from "@/nodes/workers/documentation_worker.js";
+import { code_writer_node } from "@/nodes/workers/code_writer_node.js";
 
 /**
  * Orquestador Principal de la Startup Autónoma.
@@ -41,6 +42,7 @@ const workflow = new StateGraph(AgentAnnotation)
     .addNode("review_worker", review_worker_node)
     .addNode("security_worker", security_worker_node)
     .addNode("documentation_worker", documentation_worker_node)
+    .addNode("code_writer", code_writer_node)
 
     .addEdge(START, "aduana_sentinel")
     .addConditionalEdges(
@@ -71,6 +73,7 @@ workflow.addConditionalEdges(
         review_worker: "review_worker",
         security_worker: "security_worker",
         documentation_worker: "documentation_worker",
+        code_writer: "code_writer",
         end: END
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
@@ -90,7 +93,7 @@ workflow.addConditionalEdges(
     }
 );
 
-type NodeName = "aduana_sentinel" | "software_chief" | "business_chief" | "operations_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "review_worker" | "security_worker" | "documentation_worker" | "circuit_breaker" | "__start__" | "__end__";
+type NodeName = "aduana_sentinel" | "software_chief" | "business_chief" | "operations_chief" | "test_runner" | "mirror" | "ceo" | "researcher" | "git_worker" | "ai_engine_worker" | "persistence_worker" | "code_researcher" | "review_worker" | "security_worker" | "documentation_worker" | "code_writer" | "circuit_breaker" | "__start__" | "__end__";
 
 workflow.addConditionalEdges("software_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
 workflow.addConditionalEdges("business_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
@@ -108,6 +111,7 @@ workflow.addConditionalEdges("code_researcher", workerReturnRouter, workerReturn
 workflow.addConditionalEdges("review_worker", workerReturnRouter, workerReturnMappings);
 workflow.addConditionalEdges("security_worker", workerReturnRouter, workerReturnMappings);
 workflow.addConditionalEdges("documentation_worker", workerReturnRouter, workerReturnMappings);
+workflow.addConditionalEdges("code_writer", workerReturnRouter, workerReturnMappings);
 
 // Checkpointer compatible con Redis estándar
 const checkpointer = new SimpleRedisSaver(getRedisConnection());

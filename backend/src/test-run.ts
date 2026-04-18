@@ -28,8 +28,7 @@ async function runTest() {
 
   try {
     const stream = await graph.stream(initialInput, {
-      // Configuramos el punto de interrupción si quisiéramos HITL real aquí
-      // checkpoint: { thread_id: "1" } 
+      configurable: { thread_id: `cli-test-${Date.now()}` }
     });
     
     for await (const step of stream) {
@@ -37,30 +36,42 @@ async function runTest() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const output = (step as any)[nodeName];
 
-      console.log(`\n--- 🔄 PASO: [${nodeName.toUpperCase()}] ---`);
+      console.log(`\n==========================================================`);
+      console.log(`🚀 [EXECUTION TIER] -> NODO ACTIVO: ${nodeName.toUpperCase()}`);
       
+      // Intentamos extraer el tier basado en la convención
+      let tier = "UNKNOWN";
+      if (['aduana_sentinel', 'mirror', 'ceo', 'security_worker'].includes(nodeName)) tier = "🧠 REASONING (GLM-5.1)";
+      else if (['software_chief', 'business_chief', 'operations_chief', 'review_worker'].includes(nodeName)) tier = "👑 ULTRA (Nemotron-340B)";
+      else if (['researcher', 'documentation_worker', 'git_worker'].includes(nodeName)) tier = "⚡ FLOW (Llama-3.1-8B)";
+      
+      console.log(`📡 TIER DE IA APLICADO: ${tier}`);
+      console.log(`==========================================================`);
+
+      // Mostrar el razonamiento crudo si existe (estructuras XML)
+      const lastMessage = output.messages?.[output.messages.length - 1];
+      if (lastMessage && lastMessage.content) {
+        console.log(`\n[📥 RESPUESTA CRUDA DE LA IA]`);
+        console.log(lastMessage.content);
+      } else if (output.reasoning) {
+        console.log(`\n[📥 RAZONAMIENTO ESTRUCTURADO]`);
+        console.log(output.reasoning);
+      }
+
+      console.log(`\n[🛠️  ESTADO RESULTANTE]`);
       if (output.executive_summary) {
-        console.log(`📝 Resumen: ${output.executive_summary}`);
+        console.log(`📝 Executive Summary: ${output.executive_summary}`);
       }
-
-      if (output.refined_prompt) {
-        console.log(`✨ Prompt Refinado por Mirror: "${output.refined_prompt}"`);
+      if (output.plan && output.plan.length > 0) {
+        console.log(`📋 Plan actual: ${output.plan.join(' -> ')}`);
       }
-
-      // Si el nodo es el Mirror, mostramos el desglose técnico
-      if (nodeName === 'mirror' && output.messages?.[0]?.additional_kwargs?.mirror_data) {
-        const data = output.messages[0].additional_kwargs.mirror_data;
-        console.log("🎯 Intenciones detectadas:", data.intentions.join(", "));
-        console.log("⚠️ Info faltante:", data.missing_info.join(", ") || "Ninguna");
-      }
-
-      if (nodeName === 'ceo') {
-        console.log(`🧠 Razón de la decisión: ${output.messages?.[0]?.content || 'N/A'}`);
+      if (output.active_chief) {
+        console.log(`👤 Delegación a: ${output.active_chief}`);
       }
     }
 
     console.log("\n==========================================================");
-    console.log("✅ FLUJO FINALIZADO CON ÉXITO");
+    console.log("✅ FLUJO COMPLETO FINALIZADO CON ÉXITO");
     console.log("==========================================================");
   } catch (error: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

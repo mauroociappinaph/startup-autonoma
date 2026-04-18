@@ -4,3 +4,6 @@ export * from './code_researcher_node.js';
 export * from './review_worker.js';
 export * from './security_worker.js';
 export * from './documentation_worker.js';
+export * from './git_worker_node.js';
+export * from './test_runner_node.js';
+export * from './code_writer_node.js';

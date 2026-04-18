@@ -139,6 +139,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── code_researcher.test.ts
 │   │   ├── concurrency_manual.ts
 │   │   ├── context_manager.test.ts
+│   │   ├── fs_tools.test.ts
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
 │   │   ├── mirror_node.test.ts

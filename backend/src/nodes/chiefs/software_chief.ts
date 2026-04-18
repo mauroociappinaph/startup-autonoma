@@ -14,10 +14,11 @@ const SoftwareChiefDecisionSchema = z.object({
   reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
   decision: z.enum([
     "delegate_to_researcher",
-    "delegate_to_code_researcher", // Nuevo worker determinista
+    "delegate_to_code_researcher", // Worker de lectura estática
+    "delegate_to_code_writer",     // NUEVO: Worker de modificación de código
     "delegate_to_git_worker",
     "delegate_to_test_runner",
-    "delegate_to_ai_engine", // Nueva decisión para el AI Engine
+    "delegate_to_ai_engine",
     "complete",
     "need_clarification"
   ]),
@@ -29,7 +30,8 @@ const SoftwareChiefDecisionSchema = z.object({
     task_description: z.string().describe("Descripción de la tarea a ejecutar."),
     payload: z.any().optional().describe("Datos de entrada para el worker."),
   }).nullable().optional().describe("Instrucción para el AI Engine si la decisión es delegar a este servicio."),
-  code_researcher_payload: z.any().optional().describe("Carga útil estructurada para el Code Researcher.")
+  code_researcher_payload: z.any().optional().describe("Carga útil estructurada para el Code Researcher."),
+  code_writer_instruction: z.any().optional().describe("Carga útil estructurada del tipo CodeWriterPayload si se delega al Code Writer.")
 });
 
 /**
@@ -120,6 +122,18 @@ export async function software_chief_node(state: AgentStateType) {
         content: `[CHIEF_DELEGATION] Delegando exploración técnica determinista: ${response.reasoning}`,
         additional_kwargs: {
           code_researcher_instruction: response.code_researcher_payload
+        }
+      }));
+    }
+    else if (response.decision === "delegate_to_code_writer") {
+      updates.plan = ["code_write"];
+      updates.next_node = "code_writer";
+      updates.messages?.push(new AIMessage({
+        content: `[CHIEF_DELEGATION] Delegando capacidad de escritura: ${response.reasoning}`,
+        additional_kwargs: {
+          code_writer_instruction: {
+            payload: response.code_writer_instruction!
+          }
         }
       }));
     }
