@@ -22,6 +22,7 @@ describe('SoftwareChief Node Delegation', () => {
       executive_summary: '',
       retry_count: 0,
       iteration_count: 0,
+      last_recorded_tokens: 0,
       token_usage: { total: 0, prompt: 0, completion: 0 }
     };
     jest.clearAllMocks();

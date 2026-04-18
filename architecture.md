@@ -148,6 +148,7 @@
 │   │   │   └── agentRoutes.ts
 │   │   ├── services/
 │   │   │   ├── aiEngineClient.ts
+│   │   │   ├── budgetService.ts
 │   │   │   ├── eventBus.ts
 │   │   │   ├── graphService.ts
 │   │   │   ├── llmFactory.ts

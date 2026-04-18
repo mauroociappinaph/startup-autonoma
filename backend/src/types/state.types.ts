@@ -23,6 +23,10 @@ export interface AgentStateType {
   plan: string[]; // Tareas pendientes o totales
   completed_steps: string[]; // Tareas finalizadas
   active_chief?: string; // Añadido para el nodo activo del Chief
+  /**
+   * Registro de la última sincronización con el BudgetService.
+   */
+  last_recorded_tokens: number;
   next_node?: string; // Nodo al que el Circuit Breaker debería redirigir si todo está OK
   is_mission_approved?: boolean; // Flag para evitar bucles de aprobación
   [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)

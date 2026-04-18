@@ -107,6 +107,14 @@ export const AgentAnnotation = Annotation.Root({
   }),
 
   /**
+   * Registro de la última sincronización con el BudgetService.
+   */
+  last_recorded_tokens: Annotation<number>({
+    reducer: (prev, next) => next || prev,
+    default: () => 0,
+  }),
+
+  /**
    * Nodo de destino tras pasar el Circuit Breaker.
    */
   next_node: Annotation<string | undefined>({

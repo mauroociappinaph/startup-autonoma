@@ -36,6 +36,7 @@ async function testPersistence() {
     active_chief: "business_chief",
     completed_steps: [],
     iteration_count: 0,
+    last_recorded_tokens: 0,
     token_usage: { total: 0, prompt: 0, completion: 0 }
   };
 

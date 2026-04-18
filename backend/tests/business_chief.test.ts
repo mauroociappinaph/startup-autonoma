@@ -38,6 +38,7 @@ describe('Business Chief Node', () => {
       retry_count: 0,
       iteration_count: 0,
       token_usage: { total: 0, prompt: 0, completion: 0 },
+      last_recorded_tokens: 0,
       metadata: {},
       results: [],
       feedback: []
@@ -80,6 +81,7 @@ describe('Business Chief Node', () => {
       retry_count: 0,
       iteration_count: 0,
       token_usage: { total: 0, prompt: 0, completion: 0 },
+      last_recorded_tokens: 0,
       metadata: {},
       results: [],
       feedback: []

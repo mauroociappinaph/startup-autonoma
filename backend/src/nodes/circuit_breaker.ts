@@ -1,51 +1,70 @@
 import { AgentStateType } from "@/types/state.types.js";
 import { AIMessage } from "@langchain/core/messages";
+import { BudgetService } from "@/services/budgetService.js";
 
 /**
- * Límites de seguridad para la Startup Autónoma.
- * Estos valores actúan como el último recurso antes de un fallo catastrófico o gasto excesivo.
+ * Límites de seguridad por defecto (Fallbacks si no hay contexto).
  */
-const MAX_ITERATIONS = 20;
-const MAX_TOKENS = 100000; // 100k tokens por sesión
+const FALLBACK_MAX_ITERATIONS = 20;
+const FALLBACK_MAX_TOKENS = 100000;
 
 /**
  * Nodo Circuit Breaker: El Guardián del Grafo.
- * Evalúa en cada paso si el sistema sigue dentro de los márgenes de seguridad.
+ * Evalúa en cada paso si el sistema sigue dentro de los márgenes de seguridad dinámicos (Gap 5).
  */
 export async function circuit_breaker_node(state: AgentStateType) {
-  console.log("--- EVALUANDO CIRCUIT BREAKER ---");
-  console.log(`📊 Progreso: Paso ${state.iteration_count} | Tokens acumulados: ${state.token_usage.total}`);
+  console.log("--- EVALUANDO CIRCUIT BREAKER (SEGURIDAD DINÁMICA) ---");
+  
+  const project = state.project_context;
+  const currentSessionTokens = state.token_usage.total;
+  const currentIterations = state.iteration_count;
+  const lastRecorded = state.last_recorded_tokens || 0;
 
-  // 1. Verificación de Bucle Infinito (Iteraciones)
-  if (state.iteration_count >= MAX_ITERATIONS) {
-    console.error("🚨 [CIRCUIT BREAKER] Límite de iteraciones alcanzado.");
-    return {
-      max_budget_reached: true,
-      executive_summary: "🚨 Emergercia: Límite de iteraciones alcanzado. Se sospecha de un bucle infinito entre agentes.",
-      messages: [new AIMessage({
-        content: `🚨 **CIRCUIT BREAKER ACTIVADO**\n\nEl sistema ha realizado ${state.iteration_count} iteraciones, lo cual supera el límite de seguridad de ${MAX_ITERATIONS}. He detenido todos los procesos para evitar un consumo indefinido de recursos.`,
-      })],
-      plan: [] // Limpiamos el plan para forzar el fin
-    };
+  // Sincronizar gasto con Redis si hubo consumo nuevo (Gap 5)
+  if (project && currentSessionTokens > lastRecorded) {
+    const diff = currentSessionTokens - lastRecorded;
+    console.log(`🤑 Sincronizando consumo nuevo: ${diff} tokens...`);
+    await BudgetService.recordUsage(project.projectId, diff);
   }
 
-  // 2. Verificación de Presupuesto (Tokens)
-  if (state.token_usage.total >= MAX_TOKENS) {
-    console.error("🚨 [CIRCUIT BREAKER] Presupuesto de tokens excedido.");
+  // 1. Verificación de Bucle Infinito (Iteraciones)
+  const maxIterations = FALLBACK_MAX_ITERATIONS;
+  if (currentIterations >= maxIterations) {
+    console.error(`🚨 [CIRCUIT BREAKER] Límite de iteraciones alcanzado (${currentIterations}).`);
     return {
       max_budget_reached: true,
-      executive_summary: "🚨 Emergencia: Presupuesto de tokens agotado.",
-      messages: [new AIMessage({
-        content: `🚨 **CIRCUIT BREAKER ACTIVADO**\n\nEl consumo total de tokens (${state.token_usage.total}) ha superado el límite establecido de ${MAX_TOKENS}. Por favor, revisa el plan y la complejidad de la tarea.`,
-      })],
+      last_recorded_tokens: currentSessionTokens, // Aseguramos registro final
+      executive_summary: "🚨 Emergencia: Límite de iteraciones alcanzado. Se ha detenido el proceso para evitar bucles.",
+      messages: state.messages.concat([new AIMessage({
+        content: `🚨 **CIRCUIT BREAKER**\nSe alcanzó el límite de ${maxIterations} iteraciones. Operación abortada por seguridad.`,
+      })]),
       plan: []
     };
   }
 
-  // Si todo está bien, permitimos que el grafo continúe hacia el next_node
+  // 2. Verificación de Presupuesto Dinámico (Tokens)
+  if (project) {
+    // checkSecurityStatus ya contempla el acumulado total en Redis
+    const status = await BudgetService.checkSecurityStatus(project, 0); 
+    
+    console.log(`📊 Presupuesto del Proyecto: ${status.totalUsage} / ${status.limit} tokens (${status.percentage.toFixed(2)}%)`);
+
+    if (status.isLimitReached) {
+      console.error("🚨 [CIRCUIT BREAKER] Presupuesto TOTAL del proyecto excedido.");
+      return {
+        max_budget_reached: true,
+        last_recorded_tokens: currentSessionTokens,
+        executive_summary: "🚨 Emergencia: Presupuesto total de la startup agotado.",
+        messages: state.messages.concat([new AIMessage({
+          content: `🚨 **LÍMITE DE PROYECTO ALCANZADO**\n\nTu startup ha consumido ${status.totalUsage} tokens de un límite de ${status.limit}. No es posible continuar sin ampliar el presupuesto.`,
+        })]),
+        plan: []
+      };
+    }
+  }
+
   return {
     max_budget_reached: false,
-    // Limpiamos el next_node tras cruzar la frontera de seguridad para evitar loops accidentales
-    // El ruteo condicional en el grafo usará el valor de next_node ANTES de limpiarlo
+    last_recorded_tokens: currentSessionTokens,
   };
 }
