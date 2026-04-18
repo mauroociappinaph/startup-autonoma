@@ -32,11 +32,13 @@ describe('CEO Agent Node', () => {
         maxTokenBudget: 100000,
         contextWindow: 128000
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
     jest.clearAllMocks();
   });
 
   it('debe actualizar el estado correctamente cuando el CEO decide delegar', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
       data: {
         analysis: 'Análisis de prueba',
@@ -59,6 +61,7 @@ describe('CEO Agent Node', () => {
   });
 
   it('debe devolver finish cuando no hay más tareas', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
       data: {
         analysis: 'Todo listo',

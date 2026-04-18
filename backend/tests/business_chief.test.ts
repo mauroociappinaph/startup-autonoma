@@ -33,11 +33,13 @@ describe('Business Chief Node', () => {
         maxTokenBudget: 100000,
         contextWindow: 128000
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
     jest.clearAllMocks();
   });
 
   it('debe delegar a researcher cuando falta información', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
       data: {
         decision: 'delegate_to_researcher',
@@ -56,6 +58,7 @@ describe('Business Chief Node', () => {
   });
 
   it('debe delegar a ai_engine para buscar leads', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
       data: {
         decision: 'delegate_to_lead_gen',
