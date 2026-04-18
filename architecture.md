@@ -148,6 +148,7 @@
 │   │   │   ├── workers/
 │   │   │   │   ├── ai_engine_worker_node.ts
 │   │   │   │   ├── code_researcher_node.ts
+│   │   │   │   ├── code_writer_node.ts
 │   │   │   │   ├── codeResearcher.ts
 │   │   │   │   ├── documentation_worker.ts
 │   │   │   │   ├── git_worker_node.ts
@@ -194,6 +195,7 @@
 │   │   │   ├── ceo.types.ts
 │   │   │   ├── chief.types.ts
 │   │   │   ├── code-researcher.types.ts
+│   │   │   ├── code-writer.types.ts
 │   │   │   ├── engram.types.ts
 │   │   │   ├── git-worker.types.ts
 │   │   │   ├── index.ts
@@ -221,6 +223,7 @@
 │   │   ├── code_researcher.test.ts
 │   │   ├── concurrency_manual.ts
 │   │   ├── context_manager.test.ts
+│   │   ├── fs_tools.test.ts
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
 │   │   ├── mirror_node.test.ts
