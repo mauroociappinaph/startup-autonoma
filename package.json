@@ -21,9 +21,11 @@
     "format": "turbo run format",
     "check": "turbo run check",
     "check-laws": "node scripts/verify-sacred-laws.js",
+    "check-docker": "node scripts/check-docker.js",
     "verify-srp": "node scripts/verify-srp.js",
     "sync-arch": "node scripts/generate-architecture.js",
-    "sync-docs": "node scripts/sync-project-structure.js"
+    "sync-docs": "node scripts/sync-project-structure.js",
+    "infra:check": "npm run check-docker"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",

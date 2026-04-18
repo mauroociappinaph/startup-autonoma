@@ -90,6 +90,7 @@
 │   ├── tests/
 │   │   └── .gitkeep
 │   ├── .env.example
+│   ├── Dockerfile
 │   ├── package.json
 │   └── pyproject.toml
 ├── backend/
@@ -221,6 +222,7 @@
 │   │   └── test_runner_node.test.ts
 │   ├── .env
 │   ├── .prettierrc
+│   ├── Dockerfile
 │   ├── eslint.config.js
 │   ├── jest.config.js
 │   ├── package.json
@@ -308,6 +310,7 @@
 │   ├── .eslintrc.json
 │   ├── .prettierrc
 │   ├── components.json
+│   ├── Dockerfile
 │   ├── next-env.d.ts
 │   ├── next.config.js
 │   ├── package.json
@@ -321,6 +324,7 @@
 │   └── ai_engine.proto
 ├── scripts/
 │   ├── .gitkeep
+│   ├── check-docker.js
 │   ├── generate-architecture.js
 │   ├── sync-project-structure.js
 │   ├── verify-sacred-laws.js
@@ -335,6 +339,7 @@
 ├── AGENTS.md
 ├── architecture.md
 ├── commitlint.config.js
+├── docker-compose.yml
 ├── GEMINI.md
 ├── package.json
 ├── README.md

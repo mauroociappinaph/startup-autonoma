@@ -7,7 +7,7 @@ echo "=========================================================="
 
 # Correr lint, tipos y leyes sagradas antes de subir
 echo "🔍 Validando lint, tipos y leyes sagradas..."
-npm run lint && npm run check && npm run check-laws
+npm run lint && npm run check && npm run check-laws && npm run check-docker
 if [ $? -ne 0 ]; then
   echo "❌ Error de consistencia detectado. No podés subir código que rompa el CI."
   exit 1

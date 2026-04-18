@@ -19,10 +19,17 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 ---
 
-## --- Fase B: Interfaz y Control (En Progreso) ---
+## --- Fase B: Interfaz y Control ---
 - **Control Panel:** UI en Next.js 15 (React 19 RC) con Tailwind CSS y shadcn/ui. ✅
-- **HITL Gateways:** Interrupciones de seguridad para aprobación humana. 🚧
-- **Live Streaming:** Visualización del razonamiento vía SSE. 🚧
+- **HITL Gateways:** Interrupciones de seguridad para aprobación humana. ✅
+- **Live Streaming:** Visualización del razonamiento vía SSE. ✅
+
+---
+
+## --- Fase C: Infraestructura y Resiliencia ---
+- **Resiliencia:** Rewind de estado y persistencia de checkpoints. ✅
+- **Dockerization:** Ecosistema completo en contenedores con validación automática via Husky. ✅
+- **Escalabilidad:** Orquestación gRPC entre Node.js y Python optimizada. ✅
 
 ---
 
@@ -123,6 +130,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 │   │   ├── test_runner_node.test.ts
 │   ├── tsconfig.json
 ├── commitlint.config.js
+├── docker-compose.yml
 ├── /docs
 │   ├── /agents
 │   │   ├── /chiefs
@@ -168,5 +176,6 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ## --- Automatización y Calidad ---
 
 - **Conventional Commits:** `tipo(scope): mensaje`. Evaluado por Husky.
-- **Pipeline Local:** `pre-commit` (Sync Arch + Check + Test) y `pre-push` (Lint + Full Check). 
+- **Pipeline Local:** `pre-commit` (Sync Arch + Check + Test) y `pre-push` (Lint + Full Check + Docker Health). 
+- **Docker Health Check:** Script `check-docker.js` que valida la integridad de los contenedores antes de cada push.
 - **Comunicación:** gRPC de alta performance.
