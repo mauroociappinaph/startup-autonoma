@@ -1,6 +1,5 @@
 import { write_file, patch_file } from "@/tools/fs.js";
 import fs from "fs/promises";
-import path from "path";
 
 // Mock de fs/promises para aislar tests del FileSystem real
 jest.mock("fs/promises", () => ({
