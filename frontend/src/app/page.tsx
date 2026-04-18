@@ -3,7 +3,6 @@
 import React from "react";
 import { AnimatePresence } from "framer-motion";
 import { useAgentStream } from "@/helpers/useAgentStream";
-import { Brain } from "lucide-react";
 
 // Nuevos componentes modulares
 import { OrchestrationGraph } from "@/components/dashboard/OrchestrationGraph";
