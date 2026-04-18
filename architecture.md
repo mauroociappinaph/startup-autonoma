@@ -205,7 +205,6 @@
 │   │   ├── git_worker.test.ts
 │   │   ├── llm_factory.test.ts
 │   │   ├── mirror_node.test.ts
-│   │   ├── observability_gap6_test.ts
 │   │   ├── software_chief.test.ts
 │   │   └── test_runner_node.test.ts
 │   ├── .env
