@@ -35,6 +35,12 @@ export const GitActionSchema = z.discriminatedUnion('action', [
     action: z.literal('push'),
     branchName: z.string().optional(),
   }),
+  // Clonar un repositorio dedicado (Gap 3)
+  z.object({
+    action: z.literal('clone'),
+    repoUrl: z.string().url(),
+    branchName: z.string().optional(),
+  }),
 ]);
 
 /**

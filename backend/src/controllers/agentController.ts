@@ -14,14 +14,18 @@ export class AgentController {
    * @route POST /api/agents/run
    */
   static async run(req: Request, res: Response) {
-    const { prompt, projectId } = req.body as { prompt?: string; projectId?: string };
+    const { prompt, projectId, repoUrl } = req.body as { 
+      prompt?: string; 
+      projectId?: string;
+      repoUrl?: string;
+    };
 
     if (!prompt) {
       return res.status(400).json({ error: 'Falta el campo "prompt" en el body' });
     }
 
     try {
-      const { jobId, sessionId } = await enqueueAgentJob(prompt, projectId);
+      const { jobId, sessionId } = await enqueueAgentJob(prompt, projectId, repoUrl);
 
       return res.status(202).json({
         jobId,

@@ -4,6 +4,8 @@ import { AgentJobData, AgentJobResult } from "@/types/agent-job.types.js";
 import { GraphService } from "@/services/graphService.js";
 import { AGENT_QUEUE_NAME } from "@/jobs/agentQueue.js";
 import { projectService } from "@/services/projectService.js";
+import { gitWorker } from "@/nodes/workers/gitWorker.js";
+import fs from "fs/promises";
 
 /**
  * Worker de BullMQ que consume la cola de agentes.
@@ -65,7 +67,7 @@ export class AgentWorker {
    * Consume el stream del grafo y emite eventos al EventBus para el SSE.
    */
   private async processJob(job: Job<AgentJobData, AgentJobResult>): Promise<AgentJobResult> {
-    const { prompt, sessionId, projectId } = job.data;
+    const { prompt, sessionId, projectId, repoUrl } = job.data;
 
     console.log(`🧠 Procesando job ${job.id} | prompt: "${prompt.substring(0, 60)}..."`);
 
@@ -73,7 +75,21 @@ export class AgentWorker {
       // Resolvemos el contexto de proyecto (Gap 2)
       // Si no hay projectId, usamos uno genérico para mantener retrocompatibilidad
       const projectName = projectId || "default-startup";
-      const projectContext = await projectService.getOrCreateProject(projectName);
+      const projectContext = await projectService.getOrCreateProject(projectName, repoUrl);
+
+      // Lógica de Auto-Clone (Gap 3)
+      // Si el directorio está vacío y tenemos una URL de repo, clonamos
+      const files = await fs.readdir(projectContext.workDir);
+      if (files.length === 0 && projectContext.repoUrl) {
+        console.log(`🚚 Workspace de [${projectName}] vacío. Clonando: ${projectContext.repoUrl}`);
+        await gitWorker({
+          payload: {
+            action: 'clone',
+            repoUrl: projectContext.repoUrl
+          },
+          repoPath: projectContext.workDir
+        });
+      }
 
       // Consumimos el stream del grafo inyectando el contexto de aislamiento
       const stream = GraphService.runAgentStream(prompt, sessionId, projectContext);

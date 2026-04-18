@@ -11,6 +11,8 @@ export const AgentJobDataSchema = z.object({
   sessionId: z.string(),
   /** ID del proyecto al que pertenece esta ejecución */
   projectId: z.string().optional(),
+  /** URL del repositorio asociado (Gap 3: Auto-Clone) */
+  repoUrl: z.string().url().optional(),
   /** Timestamp de cuando se recibió el request */
   enqueuedAt: z.string().datetime(),
 });

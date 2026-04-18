@@ -39,6 +39,7 @@ export const getAgentQueue = (): Queue<AgentJobData> => {
 export const enqueueAgentJob = async (
   prompt: string,
   projectId?: string,
+  repoUrl?: string,
 ): Promise<{ jobId: string; sessionId: string }> => {
   const sessionId = randomUUID();
 
@@ -46,6 +47,7 @@ export const enqueueAgentJob = async (
     prompt,
     sessionId,
     projectId,
+    repoUrl,
     enqueuedAt: new Date().toISOString(),
   });
 

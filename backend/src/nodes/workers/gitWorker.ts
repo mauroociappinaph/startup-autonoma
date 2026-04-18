@@ -46,12 +46,28 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
         break;
       }
 
+      case 'clone': {
+        const token = process.env.GITHUB_TOKEN;
+        let authenticatedUrl = payload.repoUrl;
+        
+        // Inyectar token si es GitHub para permitir clonado de repos privados/dedicados
+        if (token && payload.repoUrl.includes('github.com')) {
+          authenticatedUrl = payload.repoUrl.replace('https://', `https://${token}@`);
+        }
+        
+        // Clonamos directamente en el directorio actual (que será el workDir del proyecto)
+        gitCommand = `git clone ${authenticatedUrl} .`;
+        break;
+      }
+
       default:
         // @ts-expect-error - Exhaustive check fallback
         throw new Error(`Acción no soportada: ${payload.action}`);
     }
 
-    console.log(`🚀 Ejecutando: ${gitCommand} en ${targetRepoPath}`);
+    // Enmascarar el token en los logs por seguridad
+    const maskedCommand = gitCommand.replace(/https:\/\/.*@/, 'https://[TOKEN]@');
+    console.log(`🚀 Ejecutando: ${maskedCommand} en ${targetRepoPath}`);
     
     // Promesa manual para evitar problemas con promisify y mocks de Jest
     const { stdout, stderr } = await new Promise<{ stdout: string, stderr: string }>((resolve, reject) => {
