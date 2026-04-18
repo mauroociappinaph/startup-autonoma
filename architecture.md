@@ -100,7 +100,11 @@
 │   │   │   └── pricing.ts
 │   │   ├── contracts/
 │   │   │   ├── ceo.ts
-│   │   │   └── researcher.ts
+│   │   │   ├── documentation_worker.ts
+│   │   │   ├── operations_chief.ts
+│   │   │   ├── researcher.ts
+│   │   │   ├── review_worker.ts
+│   │   │   └── security_worker.ts
 │   │   ├── controllers/
 │   │   │   ├── .gitkeep
 │   │   │   ├── agentController.ts
@@ -130,15 +134,19 @@
 │   │   │   ├── chiefs/
 │   │   │   │   ├── business_chief.ts
 │   │   │   │   ├── index.ts
+│   │   │   │   ├── operations_chief.ts
 │   │   │   │   └── software_chief.ts
 │   │   │   ├── workers/
 │   │   │   │   ├── ai_engine_worker_node.ts
 │   │   │   │   ├── code_researcher_node.ts
 │   │   │   │   ├── codeResearcher.ts
+│   │   │   │   ├── documentation_worker.ts
 │   │   │   │   ├── git_worker_node.ts
 │   │   │   │   ├── gitWorker.ts
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── persistence_node.ts
+│   │   │   │   ├── review_worker.ts
+│   │   │   │   ├── security_worker.ts
 │   │   │   │   └── test_runner_node.ts
 │   │   │   ├── .gitkeep
 │   │   │   ├── ceo.ts
@@ -206,6 +214,7 @@
 │   │   ├── llm_factory.test.ts
 │   │   ├── mirror_node.test.ts
 │   │   ├── software_chief.test.ts
+│   │   ├── telemetry.test.ts
 │   │   └── test_runner_node.test.ts
 │   ├── .env
 │   ├── .prettierrc
