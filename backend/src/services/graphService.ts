@@ -3,6 +3,7 @@ import { HumanMessage } from '@langchain/core/messages';
 import { AgentStateType } from '@/types/state.types.js';
 import { StreamEvent } from '@/types/index.js';
 import { ProjectContext } from '@/types/project.types.js';
+import { EventBus } from './eventBus.js';
 
 /**
  * Servicio encargado de la orquestación y streaming del grafo.
@@ -72,12 +73,14 @@ export class GraphService {
 
                const newChunk = cleaned.substring(lastYieldedLength);
                if (newChunk) {
-                 yield {
+                 const ev = {
                    agent: nodeName.toUpperCase(),
                    text: newChunk,
                    isPartial: true,
                    threadId
                  };
+                 await EventBus.publish(threadId, ev);
+                 yield ev;
                  lastYieldedLength = cleaned.length;
                }
              }
@@ -93,14 +96,17 @@ export class GraphService {
        if (eventType === "on_node_end") {
          const updates = event.data.output;
          if (updates) {
-            yield* this.formatUpdate(updates, threadId);
+            for (const updateEvent of this.formatUpdate(updates, threadId)) {
+              await EventBus.publish(threadId, updateEvent);
+              yield updateEvent;
+            }
          }
        }
     }
 
     const state = await graph.getState(config);
     if (state.next.length > 0) {
-      yield {
+      const waitEvent = {
         agent: "SYSTEM",
         text: "Estrategia generada. Esperando aprobación humana para proceder.",
         time: new Date().toLocaleTimeString(),
@@ -108,6 +114,8 @@ export class GraphService {
         isWaiting: true,
         threadId
       };
+      await EventBus.publish(threadId, waitEvent);
+      yield waitEvent;
     }
   }
 
@@ -163,7 +171,9 @@ export class GraphService {
                    .replace(/\\t/g, "\t");
                  const newChunk = cleaned.substring(lastYieldedLength);
                  if (newChunk) {
-                   yield { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
+                   const ev = { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
+                   await EventBus.publish(threadId, ev);
+                   yield ev;
                    lastYieldedLength = cleaned.length;
                  }
                }
@@ -178,7 +188,12 @@ export class GraphService {
   
         if (eventType === "on_node_end") {
           const updates = event.data.output;
-          if (updates) { yield* this.formatUpdate(updates, threadId); }
+          if (updates) { 
+            for (const updateEvent of this.formatUpdate(updates, threadId)) {
+              await EventBus.publish(threadId, updateEvent);
+              yield updateEvent;
+            }
+          }
         }
       }
 
@@ -196,7 +211,7 @@ export class GraphService {
     } while (true);
 
     if (isWaiting) {
-      yield {
+      const waitEv = {
         agent: "SYSTEM",
         text: "Misión pausada. Esperando nueva instrucción o confirmación.",
         time: new Date().toLocaleTimeString(),
@@ -204,6 +219,8 @@ export class GraphService {
         isWaiting: true,
         threadId
       };
+      await EventBus.publish(threadId, waitEv);
+      yield waitEv;
     }
   }
 

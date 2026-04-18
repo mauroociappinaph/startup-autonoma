@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { GraphService } from '@/services/graphService.js';
 import { enqueueAgentJob } from '@/jobs/index.js';
+import { EventBus } from '@/services/eventBus.js';
 
 /**
  * Controlador para las acciones de los Agentes.
@@ -61,21 +62,34 @@ export class AgentController {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    // Suscripción al EventBus para eventos generados por el Worker (Gap 4)
+    const unsubscribe = await EventBus.subscribe(resolvedSessionId, (data) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    });
+
+    // Manejar desconexión del cliente
+    req.on('close', async () => {
+      await unsubscribe();
+      res.end();
+    });
+
     try {
       // Si hay prompt directo (modo legacy), ejecutamos el grafo aquí.
-      // En modo encolado, el worker ya ejecutó el grafo y los eventos llegan via EventBus (Gap 3).
+      // Notese que los eventos también se publicarán en el bus si el worker está activo.
       if (resolvedPrompt) {
         const generator = GraphService.runAgentStream(resolvedPrompt, resolvedSessionId);
         for await (const event of generator) {
-          res.write(`data: ${JSON.stringify(event)}\n\n`);
+          // Publicamos manualmente para modo legacy para que otros suscriptores vean lo mismo
+          await EventBus.publish(resolvedSessionId, event);
         }
       }
 
-      res.write('event: end\ndata: "execution_complete"\n\n');
-      res.end();
+      // El stream del EventBus mantiene la conexión abierta hasta que el worker envíe el fin
+      // o el cliente cierre.
     } catch (error) {
       console.error('❌ Error en AgentController.stream:', error);
       res.write(`data: ${JSON.stringify({ error: 'Error en la orquestación' })}\n\n`);
+      await unsubscribe();
       res.end();
     }
   }

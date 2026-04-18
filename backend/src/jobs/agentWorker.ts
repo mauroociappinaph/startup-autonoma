@@ -5,6 +5,7 @@ import { GraphService } from "@/services/graphService.js";
 import { AGENT_QUEUE_NAME } from "@/jobs/agentQueue.js";
 import { projectService } from "@/services/projectService.js";
 import { gitWorker } from "@/nodes/workers/gitWorker.js";
+import { EventBus } from "@/services/eventBus.js"; // Nuevo sistema nervioso
 import fs from "fs/promises";
 
 /**
@@ -92,12 +93,11 @@ export class AgentWorker {
       }
 
       // Consumimos el stream del grafo inyectando el contexto de aislamiento
+      // y publicamos cada evento en el EventBus para el streaming SSE (Gap 4)
       const stream = GraphService.runAgentStream(prompt, sessionId, projectContext);
 
-      const iterator = stream[Symbol.asyncIterator]();
-      while (!(await iterator.next()).done) {
-        // En este nodo, los eventos se emiten por el bus interno de GraphService.
-        // Aquí solo consumimos el generador para asegurar la ejecución completa.
+      for await (const event of stream) {
+        await EventBus.publish(sessionId, event);
         await job.updateProgress(1);
       }
 
