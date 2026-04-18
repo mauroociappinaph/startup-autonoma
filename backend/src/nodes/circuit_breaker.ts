@@ -6,7 +6,6 @@ import { BudgetService } from "@/services/budgetService.js";
  * Límites de seguridad por defecto (Fallbacks si no hay contexto).
  */
 const FALLBACK_MAX_ITERATIONS = 20;
-const FALLBACK_MAX_TOKENS = 100000;
 
 /**
  * Nodo Circuit Breaker: El Guardián del Grafo.
