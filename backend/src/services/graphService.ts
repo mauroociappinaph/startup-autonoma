@@ -247,6 +247,7 @@ export class GraphService {
           executiveSummary: nodeData.executive_summary || undefined,
           token_usage: nodeData.token_usage || undefined,
           iteration_count: nodeData.iteration_count || undefined,
+          total_cost_usd: nodeData.total_cost_usd || undefined,
           threadId
         } as StreamEvent;
       }

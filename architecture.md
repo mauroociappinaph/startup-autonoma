@@ -265,6 +265,7 @@
 │   │   │   ├── dashboard/
 │   │   │   │   ├── CommandBar.tsx
 │   │   │   │   ├── CustomAgentNode.tsx
+│   │   │   │   ├── FinancialTicker.tsx
 │   │   │   │   ├── OrchestrationGraph.tsx
 │   │   │   │   ├── ReasoningFeed.tsx
 │   │   │   │   ├── StrategyCard.tsx

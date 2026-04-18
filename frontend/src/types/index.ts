@@ -16,6 +16,7 @@ export interface AgentThought {
     completion: number;
   };
   iteration_count?: number;
+  total_cost_usd?: number;
 }
 
 export * from "./ui.types";

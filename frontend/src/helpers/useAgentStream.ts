@@ -15,6 +15,7 @@ export function useAgentStream() {
   const [currentThreadId, setCurrentThreadId] = useState<string>("default-thread");
   const [totalTokens, setTotalTokens] = useState<number>(0);
   const [iterations, setIterations] = useState<number>(0);
+  const [totalCost, setTotalCost] = useState<number>(0);
 
   const processEvent = useCallback((data: AgentThought) => {
     if (data.error) {
@@ -35,6 +36,9 @@ export function useAgentStream() {
     if (data.threadId) setCurrentThreadId(data.threadId);
     if (data.token_usage) setTotalTokens(data.token_usage.total);
     if (data.iteration_count !== undefined) setIterations(data.iteration_count);
+    if (data.total_cost_usd !== undefined) {
+      setTotalCost(prev => prev + (data.total_cost_usd || 0));
+    }
     
     setThoughts(prev => {
       // Si es un token parcial, lo acumulamos en el último pensamiento si coincide el agente
@@ -69,6 +73,7 @@ export function useAgentStream() {
     setExecutiveSummary(null);
     setTotalTokens(0);
     setIterations(0);
+    setTotalCost(0);
 
     const eventSource = new EventSource(`/api/agents/stream?prompt=${encodeURIComponent(prompt)}&threadId=${currentThreadId}`);
 
@@ -165,6 +170,7 @@ export function useAgentStream() {
     executiveSummary,
     totalTokens,
     iterations,
+    totalCost,
     threadId: currentThreadId
   };
 }

@@ -33,25 +33,29 @@ const Metric: React.FC<MetricProps> = ({ label, value, icon, unit }) => (
 interface SystemHealthProps {
   totalTokens?: number;
   iterations?: number;
+  totalCost?: number;
 }
 
 export const SystemHealth: React.FC<SystemHealthProps> = ({ 
   totalTokens = 0, 
-  iterations = 0 
+  iterations = 0,
+  totalCost = 0
 }) => {
   const [metrics, setMetrics] = useState({
     latency: 24,
-    cpu: 18, // Simulamos carga de CPU básica
+    cpu: 18, 
     memory: 42,
   });
 
   // Límites definidos en el Circuit Breaker (Backend)
   const MAX_TOKENS = 100000;
   const MAX_ITERATIONS = 20;
+  const MAX_BUDGET = 10.00; // USD (Límite del Circuit Breaker)
 
   // Calculamos porcentajes de consumo para las barras de progreso
   const tokenPercent = Math.min((totalTokens / MAX_TOKENS) * 100, 100);
   const iterationPercent = Math.min((iterations / MAX_ITERATIONS) * 100, 100);
+  const budgetPercent = Math.min((totalCost / MAX_BUDGET) * 100, 100);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -79,6 +83,12 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({
 
       <div className="grid grid-cols-2 gap-3">
         <Metric 
+          label="Investment" 
+          value={Number(budgetPercent.toFixed(1))} 
+          icon={<Zap size={12} className="text-amber-400" />} 
+          unit="%" 
+        />
+        <Metric 
           label="Budget Use" 
           value={Number(tokenPercent.toFixed(1))} 
           icon={<Zap size={12} />} 
@@ -96,31 +106,29 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({
           icon={<Activity size={12} />} 
           unit="ms" 
         />
-        <Metric 
-          label="Mem Cache" 
-          value={metrics.memory} 
-          icon={<Database size={12} />} 
-          unit="%" 
-        />
       </div>
 
-      <div className="mt-2 p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mt-2 p-3 rounded-xl bg-blue-500/5 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.05)]">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
            <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-              <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider">Metrics Detail</span>
+              <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider">Financial Detail</span>
            </div>
-           <span className="text-[8px] font-mono text-white/40 uppercase tracking-tighter">
-             Limit: {MAX_TOKENS / 1000}k
+           <span className="text-[9px] font-mono font-bold text-amber-500 tracking-tighter">
+             ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
            </span>
         </div>
-        <div className="flex flex-col gap-1 text-[10px] font-medium text-slate-400">
+        <div className="flex flex-col gap-1.5 text-[10px] font-medium text-slate-400">
            <div className="flex justify-between border-b border-white/5 pb-1">
-             <span>Tokens:</span>
-             <span className="text-white font-mono">{totalTokens.toLocaleString()}</span>
+             <span>Tokens Total:</span>
+             <span className="text-white font-mono">{totalTokens.toLocaleString()} / 100k</span>
            </div>
-           <div className="flex justify-between pt-1">
-             <span>Steps:</span>
+           <div className="flex justify-between border-b border-white/5 pb-1">
+             <span>Investment:</span>
+             <span className="text-amber-500 font-mono font-bold">${totalCost.toFixed(4)} / ${MAX_BUDGET}</span>
+           </div>
+           <div className="flex justify-between pt-0.5">
+             <span>Exec Cycles:</span>
              <span className="text-white font-mono">{iterations} / {MAX_ITERATIONS}</span>
            </div>
         </div>
