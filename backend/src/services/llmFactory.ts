@@ -53,6 +53,7 @@ export class LLMFactory {
         return new ChatOpenAI({
           modelName,
           temperature: options.temperature ?? 0,
+          maxRetries: 0,
           apiKey: process.env.NVIDIA_API_KEY,
           configuration: {
             baseURL: "https://integrate.api.nvidia.com/v1",
