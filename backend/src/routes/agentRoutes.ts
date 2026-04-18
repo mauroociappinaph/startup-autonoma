@@ -20,5 +20,7 @@ router.post('/run', AgentController.run);
  * @desc Reanuda la ejecución del grafo pausado por una interrupción HITL.
  */
 router.post('/approve', AgentController.approve);
+router.get('/history/:threadId', AgentController.history);
+router.post('/rewind', AgentController.rewind);
 
 export default router;

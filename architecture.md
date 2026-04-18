@@ -120,7 +120,8 @@
 │   │   │   └── state.ts
 │   │   ├── helpers/
 │   │   │   ├── .gitkeep
-│   │   │   └── contextManager.ts
+│   │   │   ├── contextManager.ts
+│   │   │   └── graphFormatter.ts
 │   │   ├── jobs/
 │   │   │   ├── .gitkeep
 │   │   │   ├── agentQueue.ts
@@ -275,6 +276,7 @@
 │   │   │   │   ├── CommandBar.tsx
 │   │   │   │   ├── CustomAgentNode.tsx
 │   │   │   │   ├── FinancialTicker.tsx
+│   │   │   │   ├── HITLPanel.tsx
 │   │   │   │   ├── OrchestrationGraph.tsx
 │   │   │   │   ├── ReasoningFeed.tsx
 │   │   │   │   ├── StrategyCard.tsx
