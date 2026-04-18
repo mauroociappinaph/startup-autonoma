@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useAgentStream } from "@/helpers/useAgentStream";
-import { Zap, ShieldAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Brain } from "lucide-react";
 
 // Nuevos componentes modulares
 import { OrchestrationGraph } from "@/components/dashboard/OrchestrationGraph";
