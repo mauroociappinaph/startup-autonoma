@@ -13,6 +13,7 @@ import { CommandBar } from "@/components/dashboard/CommandBar";
 import { StrategyCard } from "@/components/dashboard/StrategyCard";
 import { SystemHealth } from "@/components/dashboard/SystemHealth";
 import { FinancialTicker } from "@/components/dashboard/FinancialTicker";
+import { HITLPanel } from "@/components/dashboard/HITLPanel";
 
 /**
  * Dashboard de Mission Control (v3.0 - Minimalist & Interactive)
@@ -24,6 +25,8 @@ export default function Dashboard() {
     isWaiting,
     startStream, 
     approvePlan,
+    rejectPlan,
+    rewind,
     activeNode, 
     currentPlan, 
     completedSteps,
@@ -46,46 +49,17 @@ export default function Dashboard() {
           {/* Panel Izquierdo: GRAFO (3/4) */}
           <div className="lg:col-span-3 flex flex-col gap-6 min-h-0">
             <div className="flex-1 bg-white/[0.02] rounded-3xl relative overflow-hidden border border-white/5 shadow-2xl">
-              {/* Overlay de Espera (HITL v3 - Super Minimal) */}
+              {/* HITL Gateway v3.0 */}
               <AnimatePresence>
                 {isWaiting && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-center justify-center p-6"
-                  >
-                    <motion.div 
-                      initial={{ scale: 0.98, y: 10 }}
-                      animate={{ scale: 1, y: 0 }}
-                      className="max-w-md w-full glass rounded-3xl p-10 border-white/20 flex flex-col items-center text-center gap-8 shadow-[0_0_50px_rgba(255,255,255,0.05)]"
-                    >
-                      <div className="p-4 rounded-full bg-blue-500/10 border border-blue-500/20">
-                        <ShieldAlert size={32} className="text-blue-500" />
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <h3 className="text-xl font-black text-white uppercase tracking-widest italic">Awaiting Authorization</h3>
-                        <p className="text-[13px] text-slate-400 font-medium leading-relaxed">
-                          The CEO Strategist has finalized the mission protocol. 
-                          Please review the strategy and authorize the execution cycle.
-                        </p>
-                      </div>
-
-                      <div className="w-full space-y-4 pt-4 border-t border-white/5">
-                        <Button 
-                          onClick={approvePlan} 
-                          className="w-full bg-white text-black hover:bg-white/90 font-black py-8 rounded-2xl gap-3 transition-all active:scale-95 text-base uppercase tracking-widest shadow-xl shadow-white/5"
-                        >
-                          <Zap size={18} fill="black" />
-                          Authorize Mission
-                        </Button>
-                        <button className="text-[9px] text-muted-foreground uppercase tracking-[0.3em] font-bold hover:text-white transition-colors">
-                          Modify INTENT_PROMPT
-                        </button>
-                      </div>
-                    </motion.div>
-                  </motion.div>
+                  <HITLPanel 
+                    isOpen={isWaiting}
+                    threadId={threadId}
+                    activeNode={activeNode}
+                    onApprove={approvePlan}
+                    onReject={rejectPlan}
+                    onRewind={rewind}
+                  />
                 )}
               </AnimatePresence>
 

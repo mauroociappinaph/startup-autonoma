@@ -120,7 +120,8 @@
 │   │   │   └── state.ts
 │   │   ├── helpers/
 │   │   │   ├── .gitkeep
-│   │   │   └── contextManager.ts
+│   │   │   ├── contextManager.ts
+│   │   │   └── graphFormatter.ts
 │   │   ├── jobs/
 │   │   │   ├── .gitkeep
 │   │   │   ├── agentQueue.ts
@@ -201,6 +202,8 @@
 │   │   ├── index.ts
 │   │   ├── test-business-workflow.ts
 │   │   ├── test-persistence.ts
+│   │   ├── test-resilience.ts
+│   │   ├── test-rewind-logic.ts
 │   │   ├── test-run.ts
 │   │   └── test-workflow.ts
 │   ├── tests/
@@ -275,6 +278,7 @@
 │   │   │   │   ├── CommandBar.tsx
 │   │   │   │   ├── CustomAgentNode.tsx
 │   │   │   │   ├── FinancialTicker.tsx
+│   │   │   │   ├── HITLPanel.tsx
 │   │   │   │   ├── OrchestrationGraph.tsx
 │   │   │   │   ├── ReasoningFeed.tsx
 │   │   │   │   ├── StrategyCard.tsx

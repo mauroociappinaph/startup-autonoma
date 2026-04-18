@@ -1,9 +1,10 @@
 import { getGraph } from '@/graph/index.js';
-import { HumanMessage } from '@langchain/core/messages';
 import { AgentStateType } from '@/types/state.types.js';
 import { StreamEvent } from '@/types/index.js';
 import { ProjectContext } from '@/types/project.types.js';
 import { EventBus } from './eventBus.js';
+import { GraphFormatter } from '@/helpers/graphFormatter.js';
+import { HumanMessage } from '@langchain/core/messages';
 
 /**
  * Servicio encargado de la orquestación y streaming del grafo.
@@ -93,15 +94,15 @@ export class GraphService {
          lastYieldedLength = 0;
        }
 
-       if (eventType === "on_node_end") {
-         const updates = event.data.output;
-         if (updates) {
-            for (const updateEvent of this.formatUpdate(updates, threadId)) {
-              await EventBus.publish(threadId, updateEvent);
-              yield updateEvent;
-            }
-         }
-       }
+        if (eventType === "on_node_end") {
+          const updates = event.data.output;
+          if (updates) {
+             for (const updateEvent of GraphFormatter.formatUpdate(updates, threadId)) {
+               await EventBus.publish(threadId, updateEvent);
+               yield updateEvent;
+             }
+          }
+        }
     }
 
     const state = await graph.getState(config);
@@ -122,74 +123,35 @@ export class GraphService {
   /**
    * Reanuda la ejecución del grafo después de una interrupción (HITL).
    */
-  static async *resumeAgent(threadId: string) {
+  static async *resumeAgent(threadId: string, status: 'approved' | 'rejected' = 'approved', feedback?: string) {
     const graph = await getGraph();
     const config = { 
       configurable: { thread_id: threadId }
     };
 
-    await graph.updateState(config, { is_mission_approved: true });
+    if (status === 'approved') {
+      await graph.updateState(config, { is_mission_approved: true });
+    } else if (status === 'rejected' && feedback) {
+      // Si el humano rechaza, inyectamos su feedback como un nuevo mensaje y reseteamos la aprobación
+      await graph.updateState(config, { 
+        is_mission_approved: false,
+        messages: [new HumanMessage(`[HUMAN_FEEDBACK]: ${feedback}`)]
+      });
+    }
 
     let isWaiting = false;
     let nextNode = "";
-    let reasoningBuffer = "";
-    let lastYieldedLength = 0;
 
     do {
       const eventStream = graph.streamEvents(null, { ...config, version: "v2" });
       
-      reasoningBuffer = "";
-      lastYieldedLength = 0;
-
       for await (const event of eventStream) {
         const eventType = event.event;
         
-        if (eventType === "on_chat_model_stream") {
-          const nodeName = event.metadata?.langgraph_node;
-          if (nodeName && ["ceo", "software_chief", "business_chief"].includes(nodeName)) {
-             const chunk = event.data.chunk;
-             
-             let delta = "";
-             if (typeof chunk.content === 'string') {
-               delta = chunk.content;
-             } else if (chunk.tool_call_chunks && chunk.tool_call_chunks.length > 0) {
-               delta = chunk.tool_call_chunks[0].args || "";
-             }
-  
-             if (delta) {
-               reasoningBuffer += delta;
-               const match = reasoningBuffer.match(/"reasoning":\s*"(.*)/);
-               if (match) {
-                 let fullReasoning = match[1];
-                 const closingQuoteIndex = fullReasoning.search(/[^\\]"/);
-                 if (closingQuoteIndex !== -1) {
-                   fullReasoning = fullReasoning.substring(0, closingQuoteIndex + 1);
-                 }
-                 const cleaned = fullReasoning
-                   .replace(/\\n/g, "\n")
-                   .replace(/\\"/g, '"')
-                   .replace(/\\t/g, "\t");
-                 const newChunk = cleaned.substring(lastYieldedLength);
-                 if (newChunk) {
-                   const ev = { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
-                   await EventBus.publish(threadId, ev);
-                   yield ev;
-                   lastYieldedLength = cleaned.length;
-                 }
-               }
-             }
-          }
-        }
-  
-        if (eventType === "on_node_start") {
-          reasoningBuffer = "";
-          lastYieldedLength = 0;
-        }
-  
         if (eventType === "on_node_end") {
           const updates = event.data.output;
           if (updates) { 
-            for (const updateEvent of this.formatUpdate(updates, threadId)) {
+            for (const updateEvent of GraphFormatter.formatUpdate(updates, threadId)) {
               await EventBus.publish(threadId, updateEvent);
               yield updateEvent;
             }
@@ -224,34 +186,46 @@ export class GraphService {
     }
   }
 
-  private static *formatUpdate(update: Record<string, unknown>, threadId: string) {
-    const nodeName = Object.keys(update)[0];
-    const nodeData = (update as Record<string, Partial<AgentStateType>>)[nodeName];
-
-    if (nodeData && nodeData.messages && nodeData.messages.length > 0) {
-      const lastMsg = nodeData.messages[nodeData.messages.length - 1];
-      const content = typeof lastMsg.content === 'string' 
-        ? lastMsg.content 
-        : JSON.stringify(lastMsg.content);
-
-      const tagMatch = content.match(/\[(.*?)\]/);
-      
-      if (tagMatch) {
-        yield {
-          agent: tagMatch[1],
-          text: content.replace(/\[.*?\]/g, "").trim(),
-          time: new Date().toLocaleTimeString(),
-          activeNode: nodeName,
-          plan: nodeData.plan || undefined,
-          completedSteps: nodeData.completed_steps || undefined,
-          executiveSummary: nodeData.executive_summary || undefined,
-          token_usage: nodeData.token_usage || undefined,
-          iteration_count: nodeData.iteration_count || undefined,
-          total_cost_usd: nodeData.total_cost_usd || undefined,
-          reasoning: nodeData.reasoning || undefined,
-          threadId
-        } as StreamEvent;
-      }
+  /**
+   * Obtiene el historial de estados (checkpoints) de un hilo.
+   */
+  static async getHistory(threadId: string) {
+    const graph = await getGraph();
+    const config = { configurable: { thread_id: threadId } };
+    const history = [];
+    
+    for await (const state of graph.getStateHistory(config)) {
+      history.push({
+        id: state.config.configurable?.checkpoint_id,
+        next: state.next,
+        values: state.values,
+        createdAt: (state.metadata as any)?.step // Opcional, dependiendo de la metadata del checkpointer
+      });
     }
+    
+    return history;
+  }
+
+  /**
+   * Retrocede el grafo a un checkpoint específico.
+   */
+  static async rewind(threadId: string, checkpointId: string) {
+    const graph = await getGraph();
+    const config = { 
+      configurable: { 
+        thread_id: threadId,
+        checkpoint_id: checkpointId
+      } 
+    };
+    
+    // Al obtener el estado con un checkpoint_id específico y luego actualizar el estado base,
+    // LangGraph se posiciona en ese punto del tiempo.
+    const state = await graph.getState(config);
+    if (!state) throw new Error("Checkpoint no encontrado");
+
+    // Guardamos el estado recuperado como el nuevo estado actual del hilo
+    await graph.updateState({ configurable: { thread_id: threadId } }, state.values);
+    
+    return { success: true, checkpointId };
   }
 }

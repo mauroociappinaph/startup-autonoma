@@ -117,7 +117,7 @@ export function useAgentStream() {
       const response = await fetch('/api/agents/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ threadId: currentThreadId })
+        body: JSON.stringify({ threadId: currentThreadId, status: 'approved' })
       });
 
       if (!response.ok) throw new Error('Fallo en la aprobación');
@@ -158,12 +158,76 @@ export function useAgentStream() {
     }
   }, [currentThreadId, processEvent]);
 
+  /**
+   * Rechaza el plan con feedback.
+   */
+  const rejectPlan = useCallback(async (feedback: string) => {
+    setIsStreaming(true);
+    setIsWaiting(false);
+
+    try {
+      const response = await fetch('/api/agents/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId: currentThreadId, status: 'rejected', feedback })
+      });
+
+      if (!response.ok) throw new Error('Fallo en el rechazo');
+      // Similar al approve, procesamos el stream de retorno al CEO
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const rawData = line.replace('data: ', '').trim();
+              try {
+                const data = JSON.parse(rawData) as AgentThought;
+                processEvent(data);
+              } catch (e) {}
+            }
+            if (line.startsWith('event: end')) setIsStreaming(false);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error al rechazar:', error);
+      setIsStreaming(false);
+    }
+  }, [currentThreadId, processEvent]);
+
+  /**
+   * Retrocede el estado a un checkpoint.
+   */
+  const rewind = useCallback(async (checkpointId: string) => {
+    try {
+      const response = await fetch('/api/agents/rewind', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId: currentThreadId, checkpointId })
+      });
+      if (response.ok) {
+        // Recargar la página o resetear el estado local
+        window.location.reload(); 
+      }
+    } catch (error) {
+      console.error('❌ Error en rewind:', error);
+    }
+  }, [currentThreadId]);
+
   return { 
     thoughts, 
     isStreaming, 
     isWaiting,
     startStream, 
     approvePlan,
+    rejectPlan,
+    rewind,
     activeNode, 
     currentPlan, 
     completedSteps, 

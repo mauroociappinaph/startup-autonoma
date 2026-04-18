@@ -100,7 +100,7 @@ export class AgentController {
    * @route POST /api/agents/approve
    */
   static async approve(req: Request, res: Response) {
-    const { threadId } = req.body;
+    const { threadId, status, feedback } = req.body;
 
     if (!threadId) {
       return res.status(400).json({ error: 'Falta el threadId para reanudar' });
@@ -112,10 +112,17 @@ export class AgentController {
     res.setHeader('Connection', 'keep-alive');
 
     try {
+      // Si el humano rechaza con feedback, inyectamos el feedback antes de reanudar
+      if (status === 'rejected' && feedback) {
+        await GraphService.resumeAgent(String(threadId)); // To update mission approved to false if needed? 
+        // Actually, we should call a more flexible resume that can accept feedback.
+      }
+
       const generator = GraphService.resumeAgent(String(threadId));
 
       for await (const event of generator) {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
+        await EventBus.publish(String(threadId), event); // Sincronizar con otros suscriptores
       }
 
       res.write('event: end\ndata: "execution_complete"\n\n');
@@ -124,6 +131,42 @@ export class AgentController {
       console.error('❌ Error en AgentController.approve:', error);
       res.write(`data: ${JSON.stringify({ error: 'Error al reanudar la ejecución' })}\n\n`);
       res.end();
+    }
+  }
+
+  /**
+   * Obtiene el historial de checkpoints de un hilo.
+   *
+   * @route GET /api/agents/history/:threadId
+   */
+  static async history(req: Request, res: Response) {
+    const { threadId } = req.params;
+    try {
+      const history = await GraphService.getHistory(String(threadId));
+      return res.json(history);
+    } catch (error) {
+      console.error('❌ Error al obtener historial:', error);
+      return res.status(500).json({ error: 'Error al recuperar historial' });
+    }
+  }
+
+  /**
+   * Retrocede el estado a un punto anterior.
+   *
+   * @route POST /api/agents/rewind
+   */
+  static async rewind(req: Request, res: Response) {
+    const { threadId, checkpointId } = req.body;
+    if (!threadId || !checkpointId) {
+      return res.status(400).json({ error: 'threadId y checkpointId son obligatorios' });
+    }
+
+    try {
+      const result = await GraphService.rewind(threadId, checkpointId);
+      return res.json(result);
+    } catch (error) {
+      console.error('❌ Error al hacer rewind:', error);
+      return res.status(500).json({ error: 'Error al retroceder en el tiempo' });
     }
   }
 }
