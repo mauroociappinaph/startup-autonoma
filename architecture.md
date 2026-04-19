@@ -211,6 +211,7 @@
 │   │   │   └── .gitkeep
 │   │   ├── index.ts
 │   │   ├── test-business-workflow.ts
+│   │   ├── test-full-autonomy.ts
 │   │   ├── test-persistence.ts
 │   │   ├── test-resilience.ts
 │   │   ├── test-rewind-logic.ts
@@ -237,6 +238,7 @@
 │   ├── eslint.config.js
 │   ├── jest.config.js
 │   ├── package.json
+│   ├── test-run.log
 │   └── tsconfig.json
 ├── docs/
 │   ├── agents/

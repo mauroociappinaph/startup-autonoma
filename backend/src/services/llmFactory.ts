@@ -88,7 +88,7 @@ export class LLMFactory {
       },
       ultra: {
         openai: "gpt-4o",
-        nvidia: "nvidia/nemotron-4-340b-instruct",
+        nvidia: "meta/llama-3.1-70b-instruct",
       },
       flow: {
         openai: "gpt-4o-mini",
@@ -99,7 +99,7 @@ export class LLMFactory {
         openai: "gpt-4o",
         anthropic: "claude-3-5-sonnet-20240620",
         google: "gemini-1.5-pro",
-        nvidia: process.env.NVIDIA_SMART_MODEL || "nvidia/nemotron-4-340b-instruct",
+        nvidia: process.env.NVIDIA_SMART_MODEL || "meta/llama-3.1-70b-instruct",
       },
       fast: {
         groq: "llama-3.3-70b-versatile",

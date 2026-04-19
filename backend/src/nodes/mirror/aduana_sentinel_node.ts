@@ -56,7 +56,7 @@ export async function aduana_sentinel_node(state: AgentStateType) {
     const updates: Partial<AgentStateType> = {
       is_malicious: result.is_injection,
       security_report: result.reasoning,
-      next_node: result.is_injection ? "ceo" : "mirror_node" // Si hay amenaza, el CEO toma control para reportar el bloqueo
+      next_node: result.is_injection ? "ceo" : undefined 
     };
 
     if (result.is_injection) {

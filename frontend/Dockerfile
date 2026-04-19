@@ -21,6 +21,9 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Instalar curl para healthchecks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Copiar dependencias y build
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.next ./.next

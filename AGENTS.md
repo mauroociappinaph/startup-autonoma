@@ -126,6 +126,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /skills
 │   │   ├── /state
 │   │   ├── test-business-workflow.ts
+│   │   ├── test-full-autonomy.ts
 │   │   ├── test-persistence.ts
 │   │   ├── test-resilience.ts
 │   │   ├── test-rewind-logic.ts
