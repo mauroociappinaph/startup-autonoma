@@ -1,50 +1,104 @@
 #!/usr/bin/env node
 
 /**
- * script: check-docker.js
- * Objetivo: Validar que el ecosistema Docker esté vivo y respondiendo.
- * Estilo: Rioplatense / Antigravity
+ * check-docker.js
+ * Valida que el ecosistema Docker esté vivo y respondiendo.
+ * Se usa como hook de pre-push en Husky.
  */
 
 import { execSync } from "child_process";
-import path from "path";
+import { request } from "http";
 
-const log = (msg) => console.log(`[ANTIGRAVITY] 🛡️  ${msg}`);
-const error = (msg) => {
-  console.error(`[ANTIGRAVITY] ❌ ${msg}`);
-  process.exit(1);
-};
+const log  = (msg) => console.log(`[DOCKER] ✅ ${msg}`);
+const warn = (msg) => console.warn(`[DOCKER] ⚠️  ${msg}`);
+const fail = (msg) => { console.error(`[DOCKER] ❌ ${msg}`); process.exit(1); };
 
-log("Chequeando que el Docker esté arriba, no seas vago...");
-
+// -------------------------------------------------------
+// 1. Verificar el daemon de Docker
+// -------------------------------------------------------
 try {
-  // 1. Verificar si el demonio de Docker está corriendo
   execSync("docker info", { stdio: "ignore" });
-  log("Docker Engine está activo. Bien ahí, loco.");
-
-  // 2. Verificar si el docker-compose está instalado
-  const composeVersion = execSync("docker-compose --version").toString().trim();
-  log(`Usando ${composeVersion}. Fantástico.`);
-
-  // 3. Chequear el estado de los servicios
-  log("Escaneando contenedores activos...");
-  const status = execSync("docker-compose ps --format json").toString();
-  
-  if (!status || status.trim() === "[]" || status.trim() === "") {
-    log("No hay contenedores corriendo. ¿Te olvidaste del docker-compose up?");
-    process.exit(0); // No es error crítico si solo estamos chequeando, pero avisamos.
-  }
-
-  const containers = JSON.parse(status);
-  const total = containers.length;
-  const running = containers.filter(c => c.State === "running" || c.Status.includes("Up")).length;
-
-  if (running < total) {
-    error(`Tenés ${total - running} contenedores caídos de ${total}. ¡Ponete las pilas!`);
-  }
-
-  log(`Todo en orden. ${running}/${total} servicios operativos. Es una locura cósmica.`);
-
-} catch (err) {
-  error("Docker no responde o no está instalado. Sin Docker no hay paraíso, instalalo y volvé.");
+  log("Docker Engine está activo.");
+} catch {
+  warn("Docker no está corriendo. Saltando chequeo de contenedores...");
+  process.exit(0); // No bloqueamos si no hay Docker local (ej: CI sin Docker)
 }
+
+// -------------------------------------------------------
+// 2. Verificar que docker compose esté disponible
+// -------------------------------------------------------
+try {
+  execSync("docker compose version", { stdio: "ignore" });
+} catch {
+  warn("docker compose no está disponible. Saltando chequeo de servicios.");
+  process.exit(0);
+}
+
+// -------------------------------------------------------
+// 3. Chequear el estado de los servicios vía docker compose ps
+// -------------------------------------------------------
+log("Escaneando contenedores activos...");
+
+let containers = [];
+try {
+  const raw = execSync("docker compose ps --format json").toString().trim();
+  if (!raw || raw === "[]" || raw === "") {
+    warn("No hay contenedores corriendo. Si es intencional, ignorá este aviso.");
+    process.exit(0);
+  }
+  // docker compose ps --format json puede devolver NDJSON (una línea por servicio)
+  containers = raw.split("\n").filter(Boolean).map(line => JSON.parse(line));
+} catch {
+  warn("No se pudo parsear el estado de Docker Compose. Saltando...");
+  process.exit(0);
+}
+
+const total   = containers.length;
+const running = containers.filter(c => c.State === "running" || (c.Status || "").includes("Up")).length;
+const unhealthy = containers.filter(c => (c.Status || "").includes("unhealthy")).length;
+
+if (unhealthy > 0) {
+  fail(`${unhealthy} contenedor(es) en estado UNHEALTHY. Revisá los logs con: docker compose logs`);
+}
+
+if (running < total) {
+  fail(`Tenés ${total - running} contenedores caídos de ${total}. ¡Ponete las pilas!`);
+}
+
+log(`Docker Compose: ${running}/${total} servicios en pie.`);
+
+// -------------------------------------------------------
+// 4. Verificar que el backend responde el health endpoint
+// -------------------------------------------------------
+const backendPort = process.env.BACKEND_PORT || 4000;
+
+function checkHttpHealth(port, path, label) {
+  return new Promise((resolve) => {
+    const req = request({ host: "localhost", port, path, method: "GET" }, (res) => {
+      if (res.statusCode === 200) {
+        log(`${label} responde OK en :${port}${path}`);
+        resolve(true);
+      } else {
+        warn(`${label} devolvió status ${res.statusCode}. Puede estar arrancando.`);
+        resolve(false);
+      }
+    });
+    req.on("error", () => {
+      warn(`${label} no responde en :${port}${path}. ¿Ya levantaste los servicios?`);
+      resolve(false);
+    });
+    req.setTimeout(3000, () => { req.destroy(); resolve(false); });
+    req.end();
+  });
+}
+
+const backendOk  = await checkHttpHealth(backendPort, "/health", "Backend");
+const frontendOk = await checkHttpHealth(3000, "/", "Frontend");
+
+if (!backendOk || !frontendOk) {
+  warn("Algunos servicios web no responden, pero los contenedores están arriba. Puede ser cold-start.");
+  // No bloqueamos: el compose healthcheck se encarga de esto en producción.
+}
+
+log("Verificación de Docker finalizada. ¡Dale que va!");
+

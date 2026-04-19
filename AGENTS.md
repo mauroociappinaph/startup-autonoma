@@ -68,6 +68,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 
 ```text
 /
+├── .env.example
 ├── /.github
 │   ├── /ISSUE_TEMPLATE
 │   ├── /workflows
