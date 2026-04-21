@@ -1,5 +1,5 @@
-import { codeResearcher } from '../src/nodes/workers/codeResearcher.js';
-import { CodeResearcherInput } from '../src/types/code-researcher.types.js';
+import { codeResearcher } from '@/nodes/workers/codeResearcher.js';
+import { CodeResearcherInput } from '@/types/code-researcher.types.js';
 
 describe('CodeResearcher Helper', () => {
   it('should list files in the current directory', async () => {

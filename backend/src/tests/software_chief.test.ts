@@ -9,17 +9,21 @@ import { HumanMessage } from '@langchain/core/messages';
 
 // Mockeamos los servicios que dejan handles abiertos
 jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
-    pipeline: jest.fn().mockReturnThis(),
-    hincrbyfloat: jest.fn().mockReturnThis(),
-    hincrby: jest.fn().mockReturnThis(),
-    exec: jest.fn().mockResolvedValue([]),
-    hgetall: jest.fn().mockResolvedValue({}),
-    set: jest.fn().mockResolvedValue("OK"),
-    get: jest.fn().mockResolvedValue(null),
-    on: jest.fn(),
-    quit: jest.fn().mockResolvedValue("OK")
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    pipeline: (jest.fn() as any).mockReturnThis(),
+    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
+    hincrby: (jest.fn() as any).mockReturnThis(),
+    exec: (jest.fn() as any).mockResolvedValue([]),
+    hgetall: (jest.fn() as any).mockResolvedValue({}),
+    set: (jest.fn() as any).mockResolvedValue("OK"),
+    get: (jest.fn() as any).mockResolvedValue(null),
+    on: jest.fn() as any,
+    quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
+  return {
+    Redis: MockRedis,
+    default: MockRedis
+  };
 });
 
 describe('SoftwareChief Node Delegation', () => {
@@ -40,9 +44,11 @@ describe('SoftwareChief Node Delegation', () => {
       total_cost_usd: 0,
       token_usage: { total: 0, prompt: 0, completion: 0 },
       project_context: {
-        projectId: 'test-project',
-        maxTokenBudget: 100000,
-        contextWindow: 128000
+        projectId: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Test Project',
+        workDir: '/tmp/test',
+        engramNamespace: 'test-namespace',
+        maxTokenBudget: 100000
       },
       reasoning: ""
     } as any;

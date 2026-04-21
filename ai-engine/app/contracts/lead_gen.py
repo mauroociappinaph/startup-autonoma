@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
+
 
 class LeadGenRequest(BaseModel):
     niche: str = Field(..., description="Industria o nicho de la empresa objetivo.")

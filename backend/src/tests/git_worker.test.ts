@@ -5,7 +5,12 @@ import { gitWorker } from '@/nodes/workers/gitWorker.js';
 
 // Mockeamos fs para evitar acceso real a disco en tests de idempotencia
 jest.mock('fs/promises', () => ({
-  stat: jest.fn().mockResolvedValue({
+  default: {
+    stat: (jest.fn() as any).mockResolvedValue({
+      isDirectory: () => true
+    })
+  },
+  stat: (jest.fn() as any).mockResolvedValue({
     isDirectory: () => true
   })
 }));

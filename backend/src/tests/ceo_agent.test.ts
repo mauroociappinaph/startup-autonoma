@@ -5,10 +5,24 @@ import { AuditService } from '@/services/auditService.js';
 import { AgentStateType } from '@/types/state.types.js';
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 
-// Mockeamos los servicios
-jest.mock('@/services/llmService.js');
-jest.mock('@/services/telemetryService.js');
-jest.mock('@/services/auditService.js');
+// Mockeamos ioredis para evitar conexiones reales
+jest.mock('ioredis', () => {
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    pipeline: (jest.fn() as any).mockReturnThis(),
+    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
+    hincrby: (jest.fn() as any).mockReturnThis(),
+    exec: (jest.fn() as any).mockResolvedValue([]),
+    hgetall: (jest.fn() as any).mockResolvedValue({}),
+    set: (jest.fn() as any).mockResolvedValue("OK"),
+    get: (jest.fn() as any).mockResolvedValue(null),
+    on: jest.fn() as any,
+    quit: (jest.fn() as any).mockResolvedValue("OK")
+  }));
+  return {
+    Redis: MockRedis,
+    default: MockRedis
+  };
+});
 
 describe('CEO Agent Node', () => {
   let initialState: AgentStateType;
@@ -27,19 +41,20 @@ describe('CEO Agent Node', () => {
       token_usage: { total: 0, prompt: 0, completion: 0 },
       last_recorded_tokens: 0,
       total_cost_usd: 0,
+      reasoning: "",
       project_context: {
-        projectId: 'test-project',
-        maxTokenBudget: 100000,
-        contextWindow: 128000
+        projectId: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Test Project',
+        workDir: '/tmp/test',
+        engramNamespace: 'test-namespace',
+        maxTokenBudget: 100000
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+    };
     jest.clearAllMocks();
   });
 
   it('debe actualizar el estado correctamente cuando el CEO decide delegar', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
+    const llmSpy = jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
         analysis: 'Análisis de prueba',
         next_step: 'delegate',
@@ -48,21 +63,25 @@ describe('CEO Agent Node', () => {
       },
       usage: { total: 200, prompt: 100, completion: 100 },
       cost: 0.002,
-      latency: 1200
+      latency: 1200,
+      model: 'test-model'
     });
+
+    const telemetrySpy = jest.spyOn(TelemetryService, 'recordMetric').mockResolvedValue(0.002);
+    const auditSpy = jest.spyOn(AuditService, 'logDecision').mockResolvedValue(undefined);
 
     const result = await ceo_node(initialState);
 
     expect(result.executive_summary).toBe('Análisis de prueba');
     expect(result.active_chief).toBe('business_chief');
     expect(result.total_cost_usd).toBe(0.002);
-    expect(TelemetryService.recordMetric).toHaveBeenCalled();
-    expect(AuditService.logDecision).toHaveBeenCalled();
+    expect(telemetrySpy).toHaveBeenCalled();
+    expect(auditSpy).toHaveBeenCalled();
+    expect(llmSpy).toHaveBeenCalled();
   });
 
   it('debe devolver finish cuando no hay más tareas', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (LLMService.getStructuredData as jest.MockedFunction<any>).mockResolvedValue({
+    const llmSpy = jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
         analysis: 'Todo listo',
         next_step: 'finish',
@@ -70,12 +89,14 @@ describe('CEO Agent Node', () => {
       },
       usage: { total: 50, prompt: 25, completion: 25 },
       cost: 0.0005,
-      latency: 500
+      latency: 500,
+      model: 'test-model'
     });
 
     const result = await ceo_node(initialState);
 
     expect(result.active_chief).toBeUndefined();
     expect(result.total_cost_usd).toBe(0.0005);
+    expect(llmSpy).toHaveBeenCalled();
   });
 });

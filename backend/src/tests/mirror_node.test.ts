@@ -7,17 +7,21 @@ import { HumanMessage } from '@langchain/core/messages';
 
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
-    pipeline: jest.fn().mockReturnThis(),
-    hincrbyfloat: jest.fn().mockReturnThis(),
-    hincrby: jest.fn().mockReturnThis(),
-    exec: jest.fn().mockResolvedValue([]),
-    hgetall: jest.fn().mockResolvedValue({}),
-    set: jest.fn().mockResolvedValue("OK"),
-    get: jest.fn().mockResolvedValue(null),
-    on: jest.fn(),
-    quit: jest.fn().mockResolvedValue("OK")
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    pipeline: (jest.fn() as any).mockReturnThis(),
+    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
+    hincrby: (jest.fn() as any).mockReturnThis(),
+    exec: (jest.fn() as any).mockResolvedValue([]),
+    hgetall: (jest.fn() as any).mockResolvedValue({}),
+    set: (jest.fn() as any).mockResolvedValue("OK"),
+    get: (jest.fn() as any).mockResolvedValue(null),
+    on: jest.fn() as any,
+    quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
+  return {
+    Redis: MockRedis,
+    default: MockRedis
+  };
 });
 
 describe('MirrorAgent Node', () => {

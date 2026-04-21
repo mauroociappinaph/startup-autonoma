@@ -1,14 +1,12 @@
-import grpc
-import sys
-import os
-from app.grpc_generated import ai_engine_pb2
-from app.grpc_generated import ai_engine_pb2_grpc
-from google.protobuf import json_format
-import logging
 import asyncio
+import logging
+
+import grpc
+
+from app.grpc_generated import ai_engine_pb2, ai_engine_pb2_grpc
 
 # Importamos la función del worker (ahora asíncrona)
-from app.workers.lead_gen_worker import process_lead_generation_task 
+from app.workers.lead_gen_worker import process_lead_generation_task
 
 logging.basicConfig(level=logging.INFO)
 

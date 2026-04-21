@@ -1,11 +1,13 @@
-from fastapi import FastAPI
-import uvicorn
-from app.core.grpc_server import serve
 import asyncio
-import sys
 import os
+import sys
 from contextlib import asynccontextmanager
+
+import uvicorn
 from dotenv import load_dotenv
+from fastapi import FastAPI
+
+from app.core.grpc_server import serve
 
 # Configurar el path para que los módulos de app sean visibles
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))

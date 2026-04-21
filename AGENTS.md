@@ -86,6 +86,8 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /ai-engine
 │   ├── /.pytest_cache
 │   │   ├── /v
+│   ├── /.ruff_cache
+│   │   ├── /0.15.11
 │   ├── /.venv
 │   │   ├── /bin
 │   │   ├── /include
@@ -132,22 +134,10 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── test-rewind-logic.ts
 │   │   ├── test-run.ts
 │   │   ├── test-workflow.ts
+│   │   ├── /tests
 │   │   ├── /tools
 │   │   ├── /types
 │   │   ├── /workers
-│   ├── /tests
-│   │   ├── business_chief.test.ts
-│   │   ├── ceo_agent.test.ts
-│   │   ├── code_researcher.test.ts
-│   │   ├── concurrency_manual.ts
-│   │   ├── context_manager.test.ts
-│   │   ├── fs_tools.test.ts
-│   │   ├── git_worker.test.ts
-│   │   ├── llm_factory.test.ts
-│   │   ├── mirror_node.test.ts
-│   │   ├── software_chief.test.ts
-│   │   ├── telemetry.test.ts
-│   │   ├── test_runner_node.test.ts
 │   ├── tsconfig.json
 ├── commitlint.config.js
 ├── docker-compose.yml

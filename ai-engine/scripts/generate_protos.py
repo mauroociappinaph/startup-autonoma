@@ -1,6 +1,6 @@
-import os
 import subprocess
 from pathlib import Path
+
 
 def generate_protos():
     # Rutas relativas

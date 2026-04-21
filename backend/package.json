@@ -7,8 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "build": "tsc && tsc-alias",
-    "test": "jest --passWithNoTests --detectOpenHandles",
-    "lint": "eslint '{src,tests}/**/*.ts' --max-warnings=0",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles",
+    "lint": "eslint 'src/**/*.ts' --max-warnings=0",
     "format": "prettier --write 'src/**/*.ts'",
     "test:business": "tsx src/test-business-workflow.ts",
     "check": "tsc --noEmit"

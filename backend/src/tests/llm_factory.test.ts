@@ -4,11 +4,31 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatGroq } from '@langchain/groq';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 
+import { jest, describe, beforeEach, afterAll, it, expect } from '@jest/globals';
+
+// Mockeamos ioredis para evitar conexiones reales
+jest.mock('ioredis', () => {
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    pipeline: (jest.fn() as any).mockReturnThis(),
+    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
+    hincrby: (jest.fn() as any).mockReturnThis(),
+    exec: (jest.fn() as any).mockResolvedValue([]),
+    hgetall: (jest.fn() as any).mockResolvedValue({}),
+    set: (jest.fn() as any).mockResolvedValue("OK"),
+    get: (jest.fn() as any).mockResolvedValue(null),
+    on: jest.fn() as any,
+    quit: (jest.fn() as any).mockResolvedValue("OK")
+  }));
+  return {
+    Redis: MockRedis,
+    default: MockRedis
+  };
+});
+
 describe('LLMFactory', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
     process.env = { ...originalEnv };
   });
 
