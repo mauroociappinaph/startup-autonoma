@@ -3,6 +3,9 @@ import { jest, describe, it, expect, afterEach } from '@jest/globals';
 import child_process from 'child_process';
 import { gitWorker } from '@/nodes/workers/gitWorker.js';
 
+// Mockeamos fs para evitar acceso real a disco en tests de idempotencia
+jest.mock('fs/promises');
+
 /**
  * Tests del Git Worker Node.
  *

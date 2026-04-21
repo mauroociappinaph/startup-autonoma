@@ -13,9 +13,9 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Correr tests unitarios
+# Correr tests unitarios (sin caché para asegurar veracidad)
 echo "🧪 Ejecutando suite de tests completa..."
-npm run test
+npx turbo run test --force
 if [ $? -ne 0 ]; then
   echo "❌ Los tests fallaron. El Push ha sido interceptado."
   exit 1

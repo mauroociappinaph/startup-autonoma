@@ -56,9 +56,12 @@ describe('MirrorAgent Node', () => {
 
   it('debería fallar si no hay mensaje humano en el historial', async () => {
     initialState.messages = []; // Limpiamos mensajes
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const result = await mirror_node(initialState);
 
     expect(result.executive_summary).toContain('Error: No hay una instrucción humana');
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });
