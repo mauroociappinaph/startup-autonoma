@@ -1,22 +1,22 @@
 # lead_gen_worker.py
 
-import time
+import asyncio
 import logging
 from typing import Dict, Any, List
 from google.protobuf import json_format, struct_pb2
 from app.grpc_generated import ai_engine_pb2
+from app.contracts.lead_gen import LeadGenRequest
 
 # Configuración de logging para el worker
 logger = logging.getLogger(__name__)
 
-def simulate_search(niche: str, location: str = "") -> List[Dict[str, Any]]:
+async def simulate_search(niche: str, location: str = "") -> List[Dict[str, Any]]:
     """
-    Simula una búsqueda estructurada de leads basada en nicho y ubicación.
-    Idealmente aquí se llamaría a una API de búsqueda o un scraper real.
+    Simula una búsqueda estructurada de leads de forma asíncrona (liberando el GIL).
     """
     logger.info(f"🔎 Buscando leads para: {niche} en {location or 'Global'}")
     
-    # Base de datos simulada de empresas (para demostrar el razonamiento)
+    # Base de datos simulada de empresas
     mock_directory = [
         {"name": "FinTech Soluciones México", "email": "contacto@fintechsol.mx", "industry": "FinTech", "location": "Ciudad de México"},
         {"name": "Digital Payments Latam", "email": "info@digipay.mx", "industry": "FinTech", "location": "Monterrey"},
@@ -33,48 +33,45 @@ def simulate_search(niche: str, location: str = "") -> List[Dict[str, Any]]:
         (not location or location.lower() in lead["location"].lower())
     ]
     
-    return filtered[:10] # Limitamos a 10 leads
+    return filtered
 
-def process_lead_generation_task(request_payload: struct_pb2.Struct, trace_id: str) -> ai_engine_pb2.WorkerTaskResponse:
+async def process_lead_generation_task(request_payload: struct_pb2.Struct, trace_id: str) -> ai_engine_pb2.WorkerTaskResponse:
     """
-    Procesa la tarea de generación de leads extrayendo datos y devolviendo un resultado estructurado.
+    Procesa la tarea de generación de leads de manera asíncrona extrayendo datos estandarizados.
     """
-    # Convertimos el Struct de gRPC a un diccionario de Python
-    payload = json_format.MessageToDict(request_payload)
-    
-    niche = payload.get("niche", "software_development")
-    location = payload.get("location", "")
-    limit = payload.get("limit", 5)
-
-    print(f"--- [LEAD GEN WORKER] Iniciando prospección para: {niche} ---")
-
     try:
-        # 1. Simulación de latencia de red (Scraping)
-        time.sleep(1.5)
+        # 1. Validación Estricta con Pydantic (Ley #3)
+        raw_payload = json_format.MessageToDict(request_payload)
+        parsed_request = LeadGenRequest(**raw_payload)
+
+        print(f"--- [LEAD GEN WORKER] Iniciando prospección para: {parsed_request.niche} ---")
+
+        # 2. Simulación de latencia de red asíncrona (libera Event Loop)
+        await asyncio.sleep(1.5)
         
-        # 2. Ejecución de la búsqueda
-        leads = simulate_search(niche, location)
+        # 3. Ejecución de la búsqueda
+        leads = await simulate_search(parsed_request.niche, parsed_request.location)
         
-        # 3. Formateo de resultados
+        # 4. Formateo de resultados (LIMIT)
+        final_leads = leads[:parsed_request.limit]
         result_data = {
             "status": "success",
-            "leads_found": len(leads),
-            "data": leads[:limit],
-            "niche": niche,
-            "location": location or "Not specified",
-            "message": f"Se encontraron {len(leads)} leads potenciales."
+            "leads_found": len(final_leads),
+            "data": final_leads,
+            "niche": parsed_request.niche,
+            "location": parsed_request.location or "Not specified",
+            "message": f"Se encontraron {len(final_leads)} leads potenciales."
         }
         
-        # 4. Construimos la respuesta gRPC
-        # El campo 'result' en el proto es un google.protobuf.Struct
+        # 5. Construimos la respuesta gRPC
         result_struct = struct_pb2.Struct()
         json_format.ParseDict(result_data, result_struct)
 
-        print(f"--- [LEAD GEN WORKER] Tarea completada. {len(leads)} leads enviados ---")
+        print(f"--- [LEAD GEN WORKER] Tarea completada. {len(final_leads)} leads enviados ---")
         
         return ai_engine_pb2.WorkerTaskResponse(
             success=True,
-            message=f"Proceso de Lead Generation exitoso para {niche}.",
+            message=f"Proceso de Lead Generation exitoso para {parsed_request.niche}.",
             result=result_struct,
             trace_id=trace_id
         )
@@ -83,7 +80,7 @@ def process_lead_generation_task(request_payload: struct_pb2.Struct, trace_id: s
         logger.error(f"❌ Error en Lead Gen Worker: {str(e)}")
         return ai_engine_pb2.WorkerTaskResponse(
             success=False,
-            message=f"Error interno en el worker de Python: {str(e)}",
+            message=f"Error validando o procesando worker de Python: {str(e)}",
             error_code="PYTHON_WORKER_ERROR",
             trace_id=trace_id
         )

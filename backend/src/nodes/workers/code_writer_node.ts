@@ -58,7 +58,22 @@ export async function code_writer_node(state: AgentStateType) {
 
     // Comprobamos si la herramienta dio error
     if (toolResultStr.toString().includes("error") || toolResultStr.toString().includes("No se encontró coincidencia")) {
-      throw new Error(`Fallo de Filesystem: ${toolResultStr}`);
+      if (payload.action === "patch" && payload.new_content) {
+        const fs = await import("fs/promises");
+        try {
+          const currentContent = await fs.readFile(payload.file_path, "utf-8");
+          if (currentContent.includes(payload.new_content)) {
+            console.log(`[CODE WRITER] Idempotencia Activa: Parche ya estaba aplicado en ${payload.file_path}`);
+            toolResultStr += " [⚠️ Idempotencia: Modificación ya estaba aplicada previamente]";
+          } else {
+            throw new Error(`Fallo de Filesystem: ${toolResultStr}`);
+          }
+        } catch {
+          throw new Error(`Fallo de Filesystem: ${toolResultStr}`);
+        }
+      } else {
+        throw new Error(`Fallo de Filesystem: ${toolResultStr}`);
+      }
     }
 
     // Validación opcional de sintaxis si es TS/TSX

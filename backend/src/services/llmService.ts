@@ -9,6 +9,16 @@ import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { TelemetryService } from "./telemetryService.js";
 
 /**
+ * Helper interno para Timeouts.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number = 45000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`LLM Timeout después de ${ms}ms`)), ms))
+  ]);
+}
+
+/**
  * Servicio de alto nivel para interactuar con LLMs.
  * Garantiza cumplimiento de Ley #13 (Trimming) y Ley #14 (Structured Data).
  */
@@ -44,7 +54,7 @@ export class LLMService {
 
     try {
       const modelWithStructuredOutput = rawModel.withStructuredOutput(schema, { includeRaw: true });
-      const response = (await modelWithStructuredOutput.invoke(trimmedMessages)) as { 
+      const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), 45000)) as { 
         parsed: z.infer<T>, 
         raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } 
       };
@@ -100,7 +110,7 @@ export class LLMService {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const modelName = (rawModel as any).modelName || (rawModel as any).model || "unknown";
 
-    const response = await rawModel.invoke(trimmedMessages);
+    const response = await withTimeout(rawModel.invoke(trimmedMessages), 45000);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
     const responseWithMetadata = response as { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } };
@@ -153,7 +163,7 @@ export class LLMService {
       return { role, content };
     });
 
-    const response = await model.invoke(formattedMessages);
+    const response = await withTimeout(model.invoke(formattedMessages), 45000);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
     // Cast seguro para evitar eslint error de no-explicit-any

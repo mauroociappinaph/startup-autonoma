@@ -1,32 +1,27 @@
 import grpc
+import sys
+import os
 from app.grpc_generated import ai_engine_pb2
 from app.grpc_generated import ai_engine_pb2_grpc
-from concurrent import futures
 from google.protobuf import json_format
 import logging
-import os
-import sys
+import asyncio
 
-# Los paths ya están configurados por el sistema de paquetes de Python
-
-# Importamos la función del worker
+# Importamos la función del worker (ahora asíncrona)
 from app.workers.lead_gen_worker import process_lead_generation_task 
 
 logging.basicConfig(level=logging.INFO)
 
 class AIEngineServicer(ai_engine_pb2_grpc.AIEngineServicer):
-    def ExecuteWorkerTask(self, request, context):
+    async def ExecuteWorkerTask(self, request, context):
         print(f"--- [GRPC SERVER] Received task: {request.worker_name} ---")
         print(f"Payload: {request.payload}")
         print(f"Trace ID: {request.trace_id}")
 
         try:
             if request.worker_name == "lead_gen":
-                # Despachamos la tarea al LeadGenWorker
-                result = process_lead_generation_task(request.payload, request.trace_id)
-            # Añadiremos más workers aquí en el futuro (ej: market_analyzer, etc.)
-            # elif request.worker_name == "market_analyzer":
-            #     result = process_market_analysis_task(request.payload, request.trace_id)
+                # Despachamos la tarea de manera asíncrona
+                result = await process_lead_generation_task(request.payload, request.trace_id)
             else:
                 # Si el worker no es reconocido, devolvemos un error
                 result = ai_engine_pb2.WorkerTaskResponse(
@@ -47,10 +42,11 @@ class AIEngineServicer(ai_engine_pb2_grpc.AIEngineServicer):
                 trace_id=request.trace_id
             )
 
-    def StreamWorkerProgress(self, request, context):
+    async def StreamWorkerProgress(self, request, context):
         print(f"--- [GRPC SERVER] Streaming progreso para: {request.worker_name} ---")
-        # Simulación de streaming de progreso
+        # Simulación de streaming de progreso asíncrono
         for i in range(1, 6):
+            await asyncio.sleep(0.5)
             yield ai_engine_pb2.WorkerProgressUpdate(
                 status=f"Processing step {i}/5",
                 progress_percentage=i*20,
@@ -59,20 +55,16 @@ class AIEngineServicer(ai_engine_pb2_grpc.AIEngineServicer):
             )
         yield ai_engine_pb2.WorkerProgressUpdate(status="Finalizing", progress_percentage=100, log_message="Streaming finalizado", trace_id=request.trace_id)
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+async def serve():
+    server = grpc.aio.server()
     ai_engine_pb2_grpc.add_AIEngineServicer_to_server(AIEngineServicer(), server)
     server_address = '[::]:50051'
     server.add_insecure_port(server_address)
-    server.start()
-    print(f"🚀 Servidor gRPC iniciado. Escuchando en {server_address}")
-    try:
-        # Mantenemos el servidor corriendo hasta que se interrumpe
-        while True:
-            server.wait_for_termination()
-    except KeyboardInterrupt:
-        server.stop(0)
-        print("Servidor gRPC detenido.")
+    await server.start()
+    print(f"🚀 Servidor gRPC asíncrono iniciado. Escuchando en {server_address}")
+    await server.wait_for_termination()
 
 if __name__ == '__main__':
-    serve()
+    # Para ejecución aislada del servidor gRPC
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(serve())

@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 import uvicorn
 from app.core.grpc_server import serve
-import threading
+import asyncio
 import sys
 import os
-
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 # Configurar el path para que los módulos de app sean visibles
@@ -14,21 +14,21 @@ sys.path.insert(0, os.path.join(CURRENT_DIR, "grpc_generated"))
 
 load_dotenv()
 
-app = FastAPI(title="AI Engine - Startup Autónoma")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Iniciar servidor gRPC como una tarea del event loop en background
+    grpc_task = asyncio.create_task(serve())
+    yield
+    # Opción de detener gracefully si implementamos server.stop()
+    grpc_task.cancel()
+
+app = FastAPI(title="AI Engine - Startup Autónoma", lifespan=lifespan)
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "ai-engine"}
 
-def run_grpc():
-    print("🚀 Iniciando servidor gRPC en el AI Engine...")
-    serve()
-
 if __name__ == "__main__":
-    # Iniciar gRPC en un hilo separado
-    grpc_thread = threading.Thread(target=run_grpc, daemon=True)
-    grpc_thread.start()
-    
-    # Iniciar FastAPI
     port = int(os.getenv("AI_ENGINE_PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Uvicorn manejará su propio event loop, y nuestro lifespan montará gRPC en él
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)
