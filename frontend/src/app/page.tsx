@@ -47,19 +47,8 @@ export default function Dashboard() {
           {/* Panel Izquierdo: GRAFO (3/4) */}
           <div className="lg:col-span-3 flex flex-col gap-6 min-h-0">
             <div className="flex-1 bg-white/[0.02] rounded-3xl relative overflow-hidden border border-white/5 shadow-2xl">
-              {/* HITL Gateway v3.0 */}
-              <AnimatePresence>
-                {isWaiting && (
-                  <HITLPanel 
-                    isOpen={isWaiting}
-                    threadId={threadId}
-                    activeNode={activeNode}
-                    onApprove={approvePlan}
-                    onReject={rejectPlan}
-                    onRewind={rewind}
-                  />
-                )}
-              </AnimatePresence>
+              {/* HITL Gateway v3.0 movido al overlay global para evitar redundancia */}
+
 
               <OrchestrationGraph activeNode={activeNode} />
               

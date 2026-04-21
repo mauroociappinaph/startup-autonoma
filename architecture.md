@@ -309,7 +309,8 @@
 │   │   │   ├── .gitkeep
 │   │   │   ├── index.ts
 │   │   │   ├── useAgentStream.ts
-│   │   │   └── utils.ts
+│   │   │   ├── utils.ts
+│   │   │   └── xmlParser.ts
 │   │   ├── hooks/
 │   │   │   └── .gitkeep
 │   │   ├── store/

@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { type AgentThought } from "@/types/index";
+import { parseAgentThought } from "./xmlParser";
 
 /**
  * Hook para manejar el streaming de pensamientos desde el backend.
@@ -16,6 +17,8 @@ export function useAgentStream() {
   const [totalTokens, setTotalTokens] = useState<number>(0);
   const [iterations, setIterations] = useState<number>(0);
   const [totalCost, setTotalCost] = useState<number>(0);
+  
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const processEvent = useCallback((data: AgentThought) => {
     if (data.error) {
@@ -26,17 +29,11 @@ export function useAgentStream() {
       return false;
     }
     
-    // Parser ultra-ligero para tags XML (útil para mostrar razonamiento separado)
-    const extractTag = (text: string, tag: string) => {
-      const regex = new RegExp(`<${tag}>([\\s\\S]*?)(?:</${tag}>|$)`, "i");
-      const match = text.match(regex);
-      return match ? match[1].trim() : undefined;
-    };
-
     if (data.text) {
-      data.thought = extractTag(data.text, "thought");
-      data.plan_steps = extractTag(data.text, "plan");
-      data.verification = extractTag(data.text, "verification");
+      const parsed = parseAgentThought(data.text);
+      data.thought = parsed.thought;
+      data.plan_steps = parsed.plan;
+      data.verification = parsed.verification;
     }
 
     if (data.activeNode) setActiveNode(data.activeNode);
@@ -47,30 +44,41 @@ export function useAgentStream() {
     if (data.executiveSummary) setExecutiveSummary(data.executiveSummary);
     if (data.isWaiting) setIsWaiting(true);
     if (data.threadId) setCurrentThreadId(data.threadId);
-    if (data.token_usage) setTotalTokens(data.token_usage.total);
-    if (data.iteration_count !== undefined) setIterations(data.iteration_count);
+    if (data.token_usage) {
+      setTotalTokens(prev => prev + (data.token_usage?.total || 0));
+    }
+    if (data.iteration_count !== undefined) {
+      setIterations(prev => prev + (data.iteration_count || 0));
+    }
     if (data.total_cost_usd !== undefined) {
       setTotalCost(prev => prev + (data.total_cost_usd || 0));
     }
     
     setThoughts(prev => {
+      let next: AgentThought[];
+      
       // Si es un token parcial, lo acumulamos en el último pensamiento si coincide el agente
       if (data.isPartial) {
         const last = prev[prev.length - 1];
         if (last && last.isPartial && last.agent === data.agent) {
           const updated = { ...last, text: last.text + data.text };
-          return [...prev.slice(0, -1), updated];
+          next = [...prev.slice(0, -1), updated];
+        } else {
+          next = [...prev, { ...data, time: new Date().toLocaleTimeString() }];
         }
-        return [...prev, { ...data, time: new Date().toLocaleTimeString() }];
-      } 
-      
-      // Si es un mensaje completo, verificamos si hay un parcial previo del mismo agente para reemplazarlo
-      const last = prev[prev.length - 1];
-      if (last && last.isPartial && last.agent === data.agent) {
-        return [...prev.slice(0, -1), data];
+      } else {
+        // Si es un mensaje completo, verificamos si hay un parcial previo del mismo agente para reemplazarlo
+        const last = prev[prev.length - 1];
+        if (last && last.isPartial && last.agent === data.agent) {
+          next = [...prev.slice(0, -1), data];
+        } else {
+          next = [...prev, data];
+        }
       }
-      
-      return [...prev, data];
+
+      // Aplicar límite de historia (State Bloat protection)
+      const limit = 100;
+      return next.length > limit ? next.slice(-limit) : next;
     });
 
     return true;
@@ -89,6 +97,7 @@ export function useAgentStream() {
     setTotalCost(0);
 
     const eventSource = new EventSource(`/api/agents/stream?prompt=${encodeURIComponent(prompt)}&threadId=${currentThreadId}`);
+    eventSourceRef.current = eventSource;
 
     eventSource.onmessage = (event) => {
       try {
@@ -98,6 +107,7 @@ export function useAgentStream() {
         const data = JSON.parse(rawData) as AgentThought;
         if (!processEvent(data)) {
           eventSource.close();
+          eventSourceRef.current = null;
         }
       } catch (e) {
         console.error("❌ Error parseando stream:", e);
@@ -107,17 +117,27 @@ export function useAgentStream() {
     eventSource.addEventListener("end", () => {
       console.log("🏁 Stream finalizado");
       eventSource.close();
+      eventSourceRef.current = null;
       setIsStreaming(false);
     });
 
     eventSource.onerror = (err) => {
       console.error("❌ EventSource error:", err);
       eventSource.close();
+      eventSourceRef.current = null;
       setIsStreaming(false);
     };
-
-    return () => eventSource.close();
   }, [currentThreadId, processEvent]);
+
+  // Limpieza global de conexiones al desmontar el hook
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        console.log("🧹 Cerrando conexión de stream por desmontaje");
+        eventSourceRef.current.close();
+      }
+    };
+  }, []);
 
   /**
    * Envía la aprobación para continuar el plan.
