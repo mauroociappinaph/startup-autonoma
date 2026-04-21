@@ -7,10 +7,20 @@ import { AgentStateType } from '@/types/state.types.js';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
 
-// Mockeamos los servicios
-jest.mock('@/services/llmService.js');
-jest.mock('@/services/telemetryService.js');
-jest.mock('@/services/auditService.js');
+// Mockeamos los servicios que dejan handles abiertos
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => ({
+    pipeline: jest.fn().mockReturnThis(),
+    hincrbyfloat: jest.fn().mockReturnThis(),
+    hincrby: jest.fn().mockReturnThis(),
+    exec: jest.fn().mockResolvedValue([]),
+    hgetall: jest.fn().mockResolvedValue({}),
+    set: jest.fn().mockResolvedValue("OK"),
+    get: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+    quit: jest.fn().mockResolvedValue("OK")
+  }));
+});
 
 describe('SoftwareChief Node Delegation', () => {
   let initialState: AgentStateType;
@@ -33,13 +43,14 @@ describe('SoftwareChief Node Delegation', () => {
         projectId: 'test-project',
         maxTokenBudget: 100000,
         contextWindow: 128000
-      }
+      },
+      reasoning: ""
     } as any;
     jest.clearAllMocks();
   });
 
   it('debe delegar al ResearchWorker cuando el razonamiento sugiere investigación', async () => {
-    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
+    const llmSpy = jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
         decision: "delegate_to_researcher",
         reasoning: "Necesitamos entender cómo está estructurado el código antes de cambiar nada.",
@@ -51,15 +62,18 @@ describe('SoftwareChief Node Delegation', () => {
       model: "nemotron-340b"
     });
 
+    const telemetrySpy = jest.spyOn(TelemetryService, 'recordMetric').mockResolvedValue(0.001);
+
     const result = await software_chief_node(initialState);
 
     expect(result.active_chief).toBe('software_chief');
     expect(result.total_cost_usd).toBe(0.001);
-    expect(TelemetryService.recordMetric).toHaveBeenCalled();
+    expect(telemetrySpy).toHaveBeenCalled();
+    expect(llmSpy).toHaveBeenCalled();
   });
 
   it('debe delegar al GitWorker con el payload correcto para crear una branch', async () => {
-    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
+    const llmSpy = jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
         decision: "delegate_to_git_worker",
         reasoning: "Creando branch para iniciar el desarrollo.",
@@ -71,15 +85,18 @@ describe('SoftwareChief Node Delegation', () => {
       model: "nemotron-340b"
     });
 
+    const auditSpy = jest.spyOn(AuditService, 'logDecision').mockResolvedValue(undefined);
+
     const result = await software_chief_node(initialState);
 
     expect(result.active_chief).toBe('software_chief');
     expect(result.total_cost_usd).toBe(0.0015);
-    expect(AuditService.logDecision).toHaveBeenCalled();
+    expect(auditSpy).toHaveBeenCalled();
+    expect(llmSpy).toHaveBeenCalled();
   });
 
   it('debe delegar al TestRunner con el payload correcto para validar calidad', async () => {
-    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
+    const llmSpy = jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
         decision: "delegate_to_test_runner",
         reasoning: "Validando que los cambios no rompan la suite de tests.",
@@ -95,10 +112,11 @@ describe('SoftwareChief Node Delegation', () => {
 
     expect(result.active_chief).toBe('software_chief');
     expect(result.total_cost_usd).toBe(0.0012);
+    expect(llmSpy).toHaveBeenCalled();
   });
 
   it('debe finalizar la misión cuando la decisión es "complete"', async () => {
-    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
+    const llmSpy = jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
         decision: "complete",
         reasoning: "Todas las tareas técnicas han sido completadas con éxito."
@@ -113,5 +131,6 @@ describe('SoftwareChief Node Delegation', () => {
 
     expect(result.plan).toEqual([]);
     expect(result.executive_summary).toBe('Todas las tareas técnicas han sido completadas con éxito.');
+    expect(llmSpy).toHaveBeenCalled();
   });
 });

@@ -5,8 +5,20 @@ import { AgentStateType } from '@/types/state.types.js';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
 
-// Mockeamos el servicio de LLM
-jest.mock('@/services/llmService.js');
+// Mockeamos ioredis para evitar conexiones reales
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => ({
+    pipeline: jest.fn().mockReturnThis(),
+    hincrbyfloat: jest.fn().mockReturnThis(),
+    hincrby: jest.fn().mockReturnThis(),
+    exec: jest.fn().mockResolvedValue([]),
+    hgetall: jest.fn().mockResolvedValue({}),
+    set: jest.fn().mockResolvedValue("OK"),
+    get: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+    quit: jest.fn().mockResolvedValue("OK")
+  }));
+});
 
 describe('MirrorAgent Node', () => {
   let initialState: AgentStateType;
@@ -23,6 +35,8 @@ describe('MirrorAgent Node', () => {
       retry_count: 0,
       iteration_count: 0,
       last_recorded_tokens: 0,
+      total_cost_usd: 0,
+      reasoning: "",
       token_usage: { total: 0, prompt: 0, completion: 0 }
     };
     jest.clearAllMocks();
@@ -32,7 +46,7 @@ describe('MirrorAgent Node', () => {
     const mockRefined = "Crear una nueva rama de desarrollo y realizar un commit con los cambios actuales.";
     const mockIntentions = ["crear branch", "realizar commit"];
 
-    (LLMService.getStructuredData as jest.MockedFunction<typeof LLMService.getStructuredData>).mockResolvedValue({
+    const llmSpy = jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
         refined_prompt: "Crear una nueva rama de desarrollo y realizar un commit con los cambios actuales.",
         intentions: ["crear branch", "realizar commit"],
@@ -52,6 +66,7 @@ describe('MirrorAgent Node', () => {
     expect(result.executive_summary).toContain('Mirror optimizó la petición');
     expect(result.messages?.[0].content).toContain(mockRefined);
     expect(result.messages?.[0].content).toContain(mockIntentions[0]);
+    expect(llmSpy).toHaveBeenCalled();
   });
 
   it('debería fallar si no hay mensaje humano en el historial', async () => {
