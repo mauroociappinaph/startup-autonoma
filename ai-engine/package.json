@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "lint": "([ -f .venv/bin/ruff ] && .venv/bin/ruff check .) || python -m ruff check .",
-    "format": "([ -f .venv/bin/ruff ] && .venv/bin/ruff format .) || python -m ruff format .",
-    "test": "([ -f .venv/bin/pytest ] && .venv/bin/pytest) || python -m pytest",
-    "check": "([ -f .venv/bin/ruff ] && .venv/bin/ruff check .) || python -m ruff check ."
+    "lint": "([ -f .venv/bin/ruff ] && .venv/bin/ruff check .) || python3 -m ruff check .",
+    "format": "([ -f .venv/bin/ruff ] && .venv/bin/ruff format .) || python3 -m ruff format .",
+    "test": "([ -f .venv/bin/pytest ] && .venv/bin/pytest) || python3 -m pytest",
+    "check": "([ -f .venv/bin/ruff ] && .venv/bin/ruff check .) || python3 -m ruff check ."
   }
 }
