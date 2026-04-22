@@ -64,7 +64,8 @@ function checkSacredLaws(filePath) {
     // LEY #7: Ubicación de Contratos/Tipos
     if (!filePath.includes('/types/') && !filePath.includes('/contracts/') && !filePath.includes('/state/')) {
       if (content.includes('export interface ') || content.includes('export type ')) {
-         console.warn(`⚠️ [LEY #7 SUGGESTION]: Se detectó exportación de tipos en ${filePath}. Considera moverlo a /types o /contracts.`);
+         console.error(`🚨 [LEY #7 ROTA]: Se detectó exportación de tipos en ${filePath}. Deben ir en /types o /contracts.`);
+         errors++;
       }
     }
 

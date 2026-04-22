@@ -173,7 +173,6 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── tsconfig.json
 ├── full_validation.log
 ├── /infra
-├── memory_save.json
 ├── package-lock.json
 ├── package.json
 ├── /protos
