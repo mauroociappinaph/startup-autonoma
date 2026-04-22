@@ -167,6 +167,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /helpers
 │   │   ├── /hooks
 │   │   ├── index.ts
+│   │   ├── /services
 │   │   ├── /store
 │   │   ├── /types
 │   ├── tsconfig.json

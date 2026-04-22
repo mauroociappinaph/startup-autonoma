@@ -1,4 +1,4 @@
-import { type AgentThought } from "./AgentThought.types";
+import { type AgentThought, type BackendAgentState } from "./index";
 
 export interface AgentState {
   // Estado del Grafo
@@ -27,5 +27,6 @@ export interface AgentState {
   setThreadId: (id: string) => void;
   
   updateTelemetry: (data: { tokens?: number; iterations?: number; cost?: number }) => void;
+  populateState: (state: BackendAgentState) => void;
   resetSession: () => void;
 }

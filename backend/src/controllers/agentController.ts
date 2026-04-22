@@ -143,7 +143,14 @@ export class AgentController {
     const { threadId } = req.params;
     try {
       const history = await GraphService.getHistory(String(threadId));
-      return res.json(history);
+      
+      // Obtener el estado actual (último checkpoint) para facilitar la repoblación del store
+      const currentState = history.length > 0 ? history[0].values : null;
+
+      return res.json({
+        history,
+        currentState
+      });
     } catch (error) {
       console.error('❌ Error al obtener historial:', error);
       return res.status(500).json({ error: 'Error al recuperar historial' });

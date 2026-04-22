@@ -9,6 +9,8 @@
 ## 🗺️ Estructura del Repositorio (Actualizada Automáticamente)
 
 ```text
+├── .atl/
+│   └── skill-registry.md
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml
@@ -58,6 +60,15 @@
 │   │   ├── .gitignore
 │   │   ├── CACHEDIR.TAG
 │   │   └── README.md
+│   ├── .ruff_cache/
+│   │   ├── 0.15.11/
+│   │   │   ├── 17863837009432448284
+│   │   │   ├── 3444622322250119880
+│   │   │   ├── 606851975018145708
+│   │   │   ├── 8144735202343255292
+│   │   │   └── 9421679760194198113
+│   │   ├── .gitignore
+│   │   └── CACHEDIR.TAG
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── __init__.py
@@ -89,7 +100,8 @@
 │   ├── scripts/
 │   │   └── generate_protos.py
 │   ├── tests/
-│   │   └── .gitkeep
+│   │   ├── .gitkeep
+│   │   └── test_dummy.py
 │   ├── .env.example
 │   ├── Dockerfile
 │   ├── package.json
@@ -99,7 +111,8 @@
 │   │   ├── debug_regex.js
 │   │   └── git_debug_stdout.txt
 │   ├── scripts/
-│   │   └── check-grpc-sync.ts
+│   │   ├── check-grpc-sync.ts
+│   │   └── stress-test.ts
 │   ├── src/
 │   │   ├── agents/
 │   │   │   └── .gitkeep
@@ -181,6 +194,19 @@
 │   │   │   └── .gitkeep
 │   │   ├── state/
 │   │   │   └── .gitkeep
+│   │   ├── tests/
+│   │   │   ├── .gitkeep
+│   │   │   ├── business_chief.test.ts
+│   │   │   ├── ceo_agent.test.ts
+│   │   │   ├── code_researcher.test.ts
+│   │   │   ├── context_manager.test.ts
+│   │   │   ├── fs_tools.test.ts
+│   │   │   ├── git_worker.test.ts
+│   │   │   ├── llm_factory.test.ts
+│   │   │   ├── mirror_node.test.ts
+│   │   │   ├── software_chief.test.ts
+│   │   │   ├── telemetry.test.ts
+│   │   │   └── test_runner_node.test.ts
 │   │   ├── tools/
 │   │   │   ├── domain/
 │   │   │   │   └── software/
@@ -218,20 +244,6 @@
 │   │   ├── test-rewind-logic.ts
 │   │   ├── test-run.ts
 │   │   └── test-workflow.ts
-│   ├── tests/
-│   │   ├── .gitkeep
-│   │   ├── business_chief.test.ts
-│   │   ├── ceo_agent.test.ts
-│   │   ├── code_researcher.test.ts
-│   │   ├── concurrency_manual.ts
-│   │   ├── context_manager.test.ts
-│   │   ├── fs_tools.test.ts
-│   │   ├── git_worker.test.ts
-│   │   ├── llm_factory.test.ts
-│   │   ├── mirror_node.test.ts
-│   │   ├── software_chief.test.ts
-│   │   ├── telemetry.test.ts
-│   │   └── test_runner_node.test.ts
 │   ├── .env
 │   ├── .prettierrc
 │   ├── debug_tests.log
@@ -295,8 +307,10 @@
 │   │   │   │   ├── CustomAgentNode.tsx
 │   │   │   │   ├── FinancialTicker.tsx
 │   │   │   │   ├── HITLPanel.tsx
+│   │   │   │   ├── index.ts
 │   │   │   │   ├── OrchestrationGraph.tsx
 │   │   │   │   ├── ReasoningFeed.tsx
+│   │   │   │   ├── StatusIndicators.tsx
 │   │   │   │   ├── StrategyCard.tsx
 │   │   │   │   └── SystemHealth.tsx
 │   │   │   ├── ui/
@@ -308,19 +322,29 @@
 │   │   ├── helpers/
 │   │   │   ├── .gitkeep
 │   │   │   ├── index.ts
-│   │   │   ├── useAgentStream.ts
 │   │   │   ├── utils.ts
 │   │   │   └── xmlParser.ts
 │   │   ├── hooks/
-│   │   │   └── .gitkeep
-│   │   ├── store/
-│   │   │   └── .gitkeep
-│   │   ├── styles/
-│   │   │   └── .gitkeep
-│   │   ├── types/
 │   │   │   ├── .gitkeep
 │   │   │   ├── index.ts
-│   │   │   └── ui.types.ts
+│   │   │   └── useAgentStream.ts
+│   │   ├── store/
+│   │   │   ├── .gitkeep
+│   │   │   └── useAgentStore.ts
+│   │   ├── types/
+│   │   │   ├── local/
+│   │   │   │   ├── CommandBar.types.ts
+│   │   │   │   ├── HITLPanel.types.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   └── SystemHealth.types.ts
+│   │   │   ├── shared/
+│   │   │   │   ├── AgentNode.types.ts
+│   │   │   │   ├── AgentThought.types.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── Store.types.ts
+│   │   │   │   └── UI.types.ts
+│   │   │   ├── .gitkeep
+│   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── .eslintrc.json
 │   ├── .prettierrc
@@ -343,7 +367,8 @@
 │   ├── generate-architecture.js
 │   ├── sync-project-structure.js
 │   ├── verify-sacred-laws.js
-│   └── verify-srp.js
+│   ├── verify-srp.js
+│   └── verify-types-isolation.js
 ├── skills/
 │   └── .gitkeep
 ├── types/
@@ -356,6 +381,7 @@
 ├── architecture.md
 ├── commitlint.config.js
 ├── docker-compose.yml
+├── full_validation.log
 ├── GEMINI.md
 ├── package.json
 ├── README.md

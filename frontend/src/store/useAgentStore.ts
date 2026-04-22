@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type AgentState } from "@/types/index";
+import { type AgentState, type BackendAgentState } from "@/types/index";
 
 export const useAgentStore = create<AgentState>((set) => ({
   thoughts: [],
@@ -28,6 +28,16 @@ export const useAgentStore = create<AgentState>((set) => ({
     iterations: state.iterations + (data.iterations || 0),
     totalCost: state.totalCost + (data.cost || 0),
   })),
+
+  populateState: (state: BackendAgentState) => set({
+    activeNode: state.active_chief || state.next_node || null,
+    currentPlan: state.plan || [],
+    completedSteps: state.completed_steps || [],
+    executiveSummary: state.executive_summary || null,
+    totalTokens: state.token_usage?.total || 0,
+    iterations: state.iteration_count || 0,
+    totalCost: state.total_cost_usd || 0,
+  }),
 
   resetSession: () => set({
     thoughts: [],
