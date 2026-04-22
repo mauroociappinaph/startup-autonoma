@@ -5,12 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { type AgentThought } from "@/types/index";
 
-interface ReasoningFeedProps {
-  thoughts: AgentThought[];
-  isStreaming: boolean;
-}
+import { useAgentStore } from "@/store/useAgentStore";
 
-export const ReasoningFeed: React.FC<ReasoningFeedProps> = ({ thoughts, isStreaming }) => {
+export const ReasoningFeed: React.FC = () => {
+  const { thoughts, isStreaming } = useAgentStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

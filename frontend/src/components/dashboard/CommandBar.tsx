@@ -5,13 +5,14 @@ import { motion } from "framer-motion";
 import { Terminal, Zap, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { useAgentStore } from "@/store/useAgentStore";
+
 interface CommandBarProps {
   onSend: (input: string) => void;
-  isStreaming: boolean;
-  isWaiting: boolean;
 }
 
-export const CommandBar: React.FC<CommandBarProps> = ({ onSend, isStreaming, isWaiting }) => {
+export const CommandBar: React.FC<CommandBarProps> = ({ onSend }) => {
+  const { isStreaming, isWaiting } = useAgentStore();
   const [input, setInput] = useState("");
 
   const handleSubmit = () => {

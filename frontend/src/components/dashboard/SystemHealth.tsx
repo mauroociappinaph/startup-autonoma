@@ -30,17 +30,10 @@ const Metric: React.FC<MetricProps> = ({ label, value, icon, unit }) => (
   </div>
 );
 
-interface SystemHealthProps {
-  totalTokens?: number;
-  iterations?: number;
-  totalCost?: number;
-}
+import { useAgentStore } from "@/store/useAgentStore";
 
-export const SystemHealth: React.FC<SystemHealthProps> = ({ 
-  totalTokens = 0, 
-  iterations = 0,
-  totalCost = 0
-}) => {
+export const SystemHealth: React.FC = () => {
+  const { totalTokens, iterations, totalCost } = useAgentStore();
   const [metrics, setMetrics] = useState({
     latency: 24,
     cpu: 18, 

@@ -20,9 +20,7 @@ const nodeTypes = {
   agentNode: CustomAgentNode,
 };
 
-interface OrchestrationGraphProps {
-  activeNode: string | null;
-}
+import { useAgentStore } from "@/store/useAgentStore";
 
 const initialNodes: Node<AgentNodeData>[] = [
   { 
@@ -69,7 +67,8 @@ const initialEdges: Edge[] = [
   { id: "e-b-p", source: "business_chief", target: "persistence_worker", animated: true },
 ];
 
-export const OrchestrationGraph: React.FC<OrchestrationGraphProps> = ({ activeNode }) => {
+export const OrchestrationGraph: React.FC = () => {
+  const { activeNode } = useAgentStore();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 

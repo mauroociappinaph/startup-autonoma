@@ -5,13 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Info, ListTodo, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-interface StrategyCardProps {
-  summary: string;
-  plan: string[];
-  completedSteps: string[];
-}
+import { useAgentStore } from "@/store/useAgentStore";
 
-export const StrategyCard: React.FC<StrategyCardProps> = ({ summary, plan, completedSteps }) => {
+export const StrategyCard: React.FC = () => {
+  const { executiveSummary: summary, currentPlan: plan, completedSteps } = useAgentStore();
   const isCompleted = (step: string) => completedSteps.includes(step);
 
   return (

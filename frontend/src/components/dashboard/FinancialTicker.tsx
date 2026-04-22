@@ -3,19 +3,10 @@
 import React from "react";
 import { DollarSign, TrendingUp, Clock, Globe } from "lucide-react";
 
-interface FinancialTickerProps {
-  totalCost: number;
-  isStreaming: boolean;
-}
+import { useAgentStore } from "@/store/useAgentStore";
 
-/**
- * FinancialTicker: Telemetría financiera en tiempo real (Gap 6).
- * Estética premium inspirada en terminales de trading.
- */
-export const FinancialTicker: React.FC<FinancialTickerProps> = ({ 
-  totalCost = 0, 
-  isStreaming 
-}) => {
+export const FinancialTicker: React.FC = () => {
+  const { totalCost, isStreaming } = useAgentStore();
   return (
     <div className="w-full bg-black/40 backdrop-blur-md border-b border-white/5 py-1 px-6 flex items-center justify-between overflow-hidden relative group">
       {/* Luz de estado lateral (sutil) */}

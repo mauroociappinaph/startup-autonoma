@@ -7,11 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShieldAlert, Zap, RotateCcw, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAgentStore } from "@/store/useAgentStore";
 
 interface HITLPanelProps {
-  isOpen: boolean;
-  threadId: string;
-  activeNode: string | null;
   onApprove: () => void;
   onReject: (feedback: string) => void;
   onRewind: (checkpointId: string) => void;
@@ -25,13 +23,11 @@ interface HistoryItem {
 }
 
 export const HITLPanel: React.FC<HITLPanelProps> = ({ 
-  isOpen, 
-  threadId, 
-  activeNode, 
   onApprove, 
   onReject, 
   onRewind 
 }) => {
+  const { isWaiting: isOpen, threadId, activeNode } = useAgentStore();
   const [feedback, setFeedback] = useState("");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -58,7 +54,6 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
     }
   }, [isOpen, mode, fetchHistory]);
 
-  if (!isOpen) return null;
 
   return (
     <motion.div 
