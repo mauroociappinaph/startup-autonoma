@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["PATH", "PYTHONPATH", "PYTHONHOME"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
