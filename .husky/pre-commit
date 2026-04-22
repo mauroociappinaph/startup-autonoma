@@ -31,6 +31,12 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+node scripts/verify-types-isolation.js
+if [ $? -ne 0 ]; then
+  echo "❌ Aislamiento de tipos fallido. Movelo a /types. Abortando commit."
+  exit 1
+fi
+
 # 2. Validar Tipos (TypeScript)
 echo "🔍 Verificando integridad de tipos..."
 npm run check

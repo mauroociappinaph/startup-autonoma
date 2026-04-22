@@ -4,12 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Activity, Cpu, Zap } from "lucide-react";
 
-interface MetricProps {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  unit: string;
-}
+import { type MetricProps } from "@/types/index";
 
 const Metric: React.FC<MetricProps> = ({ label, value, icon, unit }) => (
   <div className="flex flex-col gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">

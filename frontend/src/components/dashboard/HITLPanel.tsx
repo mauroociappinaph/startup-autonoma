@@ -9,18 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAgentStore } from "@/store/useAgentStore";
 
-interface HITLPanelProps {
-  onApprove: () => void;
-  onReject: (feedback: string) => void;
-  onRewind: (checkpointId: string) => void;
-}
-
-interface HistoryItem {
-  id: string;
-  next: string[];
-  values: { executive_summary?: string };
-  createdAt?: string;
-}
+import { type HITLPanelProps, type HistoryItem } from "@/types/index";
 
 export const HITLPanel: React.FC<HITLPanelProps> = ({ 
   onApprove, 

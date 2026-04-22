@@ -7,9 +7,7 @@ import { Button } from "@/components/ui/button";
 
 import { useAgentStore } from "@/store/useAgentStore";
 
-interface CommandBarProps {
-  onSend: (input: string) => void;
-}
+import { type CommandBarProps } from "@/types/index";
 
 export const CommandBar: React.FC<CommandBarProps> = ({ onSend }) => {
   const { isStreaming, isWaiting } = useAgentStore();

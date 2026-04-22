@@ -1,4 +1,4 @@
-import { type AgentThought } from "./index";
+import { type AgentThought } from "./AgentThought.types";
 
 export interface AgentState {
   // Estado del Grafo
