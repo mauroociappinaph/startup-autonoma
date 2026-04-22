@@ -168,7 +168,6 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /hooks
 │   │   ├── index.ts
 │   │   ├── /store
-│   │   ├── /styles
 │   │   ├── /types
 │   ├── tsconfig.json
 ├── full_validation.log
