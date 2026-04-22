@@ -110,7 +110,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /scratch
 │   ├── /scripts
 │   │   ├── check-grpc-sync.ts
-│   │   ├── concurrency-stress-test.ts
+│   │   ├── stress-test.ts
 │   ├── /src
 │   │   ├── /agents
 │   │   ├── /config
