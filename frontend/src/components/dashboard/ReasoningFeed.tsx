@@ -3,8 +3,6 @@
 import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { type AgentThought } from "@/types/index";
-
 import { useAgentStore } from "@/store/useAgentStore";
 
 export const ReasoningFeed: React.FC = () => {
