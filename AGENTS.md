@@ -170,6 +170,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /styles
 │   │   ├── /types
 │   ├── tsconfig.json
+├── full_validation.log
 ├── /infra
 ├── package-lock.json
 ├── package.json

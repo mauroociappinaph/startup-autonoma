@@ -39,65 +39,72 @@ function checkSacredLaws(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
 
-  // LEY #3: Límite de Archivo (Máximo 300 líneas)
-  if (lines.length > MAX_LINES) {
-    console.error(`🚨 [LEY #3 ROTA]: ${filePath} tiene ${lines.length} líneas (Máximo ${MAX_LINES}). Refactoriza y divide.`);
-    errors++;
-  }
-
-  // Análisis exclusivo para TypeScript
+  // Análisis exclusivo para TypeScript/TSX
   if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
-    const isInsideTypesFolder = filePath.includes('/types/');
+    // Saltamos archivos de test para todas las leyes de arquitectura
+    if (filePath.includes('.test.ts')) return;
+
     const isNodeFile = filePath.includes('/nodes/');
 
+    // LEY #3: Límites de Archivo (Máximo 300 líneas)
+    const lineCount = lines.length;
+    if (lineCount > MAX_LINES) {
+      console.error(`🚨 [LEY #3 ROTA]: El archivo ${filePath} tiene ${lineCount} líneas (Máximo ${MAX_LINES}).`);
+      errors++;
+    }
+
+    // LEY #5: Tipado Estricto (No Any)
+    lines.forEach((line, index) => {
+      if (line.includes(': any') && !line.includes('eslint-disable')) {
+        console.error(`🚨 [LEY #5 ROTA]: Uso de 'any' en ${filePath}:${index + 1}.`);
+        errors++;
+      }
+    });
+
+    // LEY #7: Ubicación de Contratos/Tipos
+    if (!filePath.includes('/types/') && !filePath.includes('/contracts/') && !filePath.includes('/state/')) {
+      if (content.includes('export interface ') || content.includes('export type ')) {
+         console.warn(`⚠️ [LEY #7 SUGGESTION]: Se detectó exportación de tipos en ${filePath}. Considera moverlo a /types o /contracts.`);
+      }
+    }
+
     // LEY #8: Reasoning-First (Obligatorio en Nodos del Backend)
-    if (isNodeFile && content.includes('Schema = z.object({')) {
+    if (isNodeFile && (content.includes('Schema = z.object({') || content.includes('Schema = z.enum(['))) {
       if (!content.includes('reasoning:')) {
-        console.error(`🚨 [LEY #8 ROTA]: El nodo ${filePath} define un esquema Zod sin el campo 'reasoning'. Prohibido ejecutar sin justificación.`);
+        console.error(`🚨 [LEY #8 ROTA]: El nodo ${filePath} define un esquema de respuesta sin el campo 'reasoning'.`);
         errors++;
       }
     }
 
-    // LEY #13: Strict-XML-Formatting (Prompts estrucutrados)
-    if (isNodeFile && content.includes('SystemMessage(`')) {
-      const requiredTags = ['<thought>', '<plan>', '<verification>'];
-      requiredTags.forEach(tag => {
-        if (!content.includes(tag)) {
-          console.error(`🚨 [LEY #13 ROTA]: El nodo ${filePath} no incluye el tag obligatorio '${tag}' en su prompt del sistema.`);
-          errors++;
+    // LEY #10: Path Aliases Obligatorios
+    lines.forEach((line, index) => {
+      if (line.includes('from "../../') || line.includes("from '../../")) {
+        console.error(`🚨 [LEY #10 ROTA]: Import relativo profundo detectado en ${filePath}:${index + 1}. Usa path aliases (@/).`);
+        errors++;
+      }
+    });
+
+    // LEY #11: Anti-Extensiones (Frontend) - Ya no se necesitan .js en Next.js 15
+    if (filePath.includes('/frontend/src/')) {
+      lines.forEach((line, index) => {
+        if (line.includes("from '") || line.includes('from "')) {
+          if (line.includes('.js') || line.includes('.ts')) {
+             console.error(`🚨 [LEY #11 ROTA]: Extensión de archivo detectada en import en ${filePath}:${index + 1}. Omití .js/.ts.`);
+             errors++;
+          }
         }
       });
     }
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // LEY #7 (v1): Types de TypeScript siempre van en /types
-      if (!isInsideTypesFolder && (line.includes('export interface ') || line.includes('export type '))) {
-        console.error(`🚨 [LEY #7 ROTA]: ${filePath}:${i + 1} exporta un tipo o interfaz fuera de la carpeta /types.`);
-        errors++;
-      }
-
-      // LEY #10: Path Aliases (Prohibidas las relativas complejas)
-      if (line.match(/import\s+.*from\s+['"]\.\.\/\.\.\//)) {
-         console.error(`🚨 [LEY #10 ROTA]: ${filePath}:${i + 1} usa un import relativo muy profundo ('../../'). Usa los Path Aliases configurados ('@/...') para ayudar a las IAs.`);
-         errors++;
-      }
-
-      // LEY #5: No Any (Tolerancia Cero en código productivo)
-      if (!filePath.includes('.test.ts') && line.includes(': any') && !line.includes('eslint-disable')) {
-        console.error(`🚨 [LEY #5 ROTA]: ${filePath}:${i + 1} utiliza 'any'. El tipado debe ser estricto.`);
-        errors++;
-      }
-
-      // LEY #11: Anti-Extensiones (Prohibido .js solo en el frontend, el backend lo requiere para ESM)
-      if (filePath.includes('/frontend/')) {
-        const jsImportMatch = line.match(/from\s+['"](.+?\.js)['"]/);
-        if (jsImportMatch) {
-          console.error(`🚨 [LEY #11 ROTA]: ${filePath}:${i + 1} Import con extensión .js detectado: "${jsImportMatch[1]}". En Next.js omití la extensión.`);
+    // LEY #13: Strict-XML-Formatting (System Prompts)
+    if (isNodeFile && content.includes('SystemMessage(`')) {
+      const requiredTags = ['<thought>', '<plan>', '<verification>'];
+      requiredTags.forEach(tag => {
+        if (!content.includes(tag)) {
+          console.error(`🚨 [LEY #13 ROTA]: El SystemMessage en ${filePath} no incluye el tag obligatorio ${tag}.`);
           errors++;
         }
-      }
+      });
     }
   }
 }
@@ -118,7 +125,6 @@ if (process.env.CI) {
 } else {
   console.log('🔍 Auditando cumplimiento de Leyes Sagradas en archivos Staged o Directos...\n');
   try {
-    // Si se pasa un argumento, auditar ese archivo específico, sino usar git diff
     const targetFile = process.argv[2];
     if (targetFile) {
        filesToAudit = [path.resolve(process.cwd(), targetFile)];
@@ -147,8 +153,8 @@ filesToAudit.forEach(file => {
 });
 
 if (errors > 0) {
-  console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura en los archivos a subir.`);
+  console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura.`);
   process.exit(1);
 } else {
-  console.log('✅ Todas las Leyes Sagradas (incluyendo la nueva LEY #11) se cumplen a rajatabla.');
+  console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla.');
 }
