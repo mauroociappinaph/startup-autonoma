@@ -7,6 +7,7 @@ import { projectService } from "@/services/projectService.js";
 import { gitWorker } from "@/nodes/workers/gitWorker.js";
 import { EventBus } from "@/services/eventBus.js"; // Nuevo sistema nervioso
 import fs from "fs/promises";
+import path from "path";
 
 /**
  * Worker de BullMQ que consume la cola de agentes.
@@ -78,11 +79,14 @@ export class AgentWorker {
       const projectName = projectId || "default-startup";
       const projectContext = await projectService.getOrCreateProject(projectName, repoUrl);
 
-      // Lógica de Auto-Clone (Gap 3)
-      // Si el directorio está vacío y tenemos una URL de repo, clonamos
-      const files = await fs.readdir(projectContext.workDir);
-      if (files.length === 0 && projectContext.repoUrl) {
-        console.log(`🚚 Workspace de [${projectName}] vacío. Clonando: ${projectContext.repoUrl}`);
+      // Lógica de Auto-Clone robusta (Gap 3)
+      // Si no existe la carpeta .git y tenemos una URL de repo, clonamos
+      const hasGit = await fs.stat(path.join(projectContext.workDir, ".git"))
+        .then(() => true)
+        .catch(() => false);
+
+      if (!hasGit && projectContext.repoUrl) {
+        console.log(`🚚 Workspace de [${projectName}] sin .git. Clonando: ${projectContext.repoUrl}`);
         await gitWorker({
           payload: {
             action: 'clone',
@@ -98,8 +102,10 @@ export class AgentWorker {
 
       for await (const event of stream) {
         await EventBus.publish(sessionId, event);
-        await job.updateProgress(1);
       }
+
+      // Notificamos finalización exitosa al stream (Gap 4)
+      await EventBus.publish(sessionId, { type: "end", status: "completed" });
 
       return {
         sessionId,
@@ -109,6 +115,12 @@ export class AgentWorker {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`❌ Error en job ${job.id}:`, errorMessage);
+
+      // Publicamos el error para que el SSE no quede colgado (Gap 1)
+      await EventBus.publish(sessionId, {
+        type: "error",
+        error: errorMessage,
+      });
 
       return {
         sessionId,
