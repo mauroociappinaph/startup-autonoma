@@ -28,17 +28,24 @@ app.listen(PORT, () => {
   console.log('==========================================================');
 
   // Iniciamos el worker de BullMQ al arrancar el servidor
-  agentWorker.start(parseInt(process.env.WORKER_CONCURRENCY || '2', 10));
+  const concurrency = parseInt(process.env.AGENT_CONCURRENCY || '2', 10);
+  agentWorker.start(concurrency);
 });
 
 /**
  * Graceful shutdown: esperamos que los jobs activos terminen antes de cerrar.
  */
 const shutdown = async (signal: string): Promise<void> => {
-  console.log(`\n🛑 Señal ${signal} recibida. Apagando gracefully...`);
-  await agentWorker.stop();
-  await closeRedisConnections();
-  process.exit(0);
+  console.log(`\n🛑 Señal ${signal} recibida. Apagando worker y cerrando conexiones...`);
+  try {
+    await agentWorker.stop();
+    await closeRedisConnections();
+    console.log("✅ Apagado completado con éxito.");
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ Error durante el apagado:", error);
+    process.exit(1);
+  }
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

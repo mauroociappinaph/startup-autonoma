@@ -141,6 +141,9 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /types
 │   │   ├── /workers
 │   ├── tsconfig.json
+│   ├── /workspaces
+│   │   ├── /stress-test-1776895876969
+│   │   ├── /stress-test-1776895990115
 ├── commitlint.config.js
 ├── docker-compose.yml
 ├── /docs
