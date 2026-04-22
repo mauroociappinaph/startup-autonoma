@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from "react";
 import { type AgentThought } from "@/types/index";
-import { parseAgentThought } from "@/helpers/xmlParser";
+import { parseAgentThought } from "@/helpers";
 import { useAgentStore } from "@/store/useAgentStore";
 
 /**
