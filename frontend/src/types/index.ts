@@ -24,6 +24,7 @@ export interface AgentThought {
 }
 
 export * from "./ui.types";
+export * from "./store.types";
 
 export type AgentNodeData = {
   label: string;
