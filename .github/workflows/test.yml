@@ -19,11 +19,28 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Node dependencies
         run: npm install
 
+      - name: Install Python dependencies for ai-engine
+        working-directory: ai-engine
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install pytest ruff
+          fi
+
       - name: Run tests
-        run: npm test  # Falla: No verifica que los tests pasen antes del push
+        run: npm test
 
       - name: Run type checking
         run: npx tsc --noEmit
