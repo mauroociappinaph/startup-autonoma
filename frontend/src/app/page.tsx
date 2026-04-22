@@ -2,7 +2,7 @@
 
 import React from "react";
 import { AnimatePresence } from "framer-motion";
-import { useAgentStream } from "@/helpers/useAgentStream";
+import { useAgentStream } from "@/hooks/useAgentStream";
 
 // Nuevos componentes modulares
 import { OrchestrationGraph } from "@/components/dashboard/OrchestrationGraph";
