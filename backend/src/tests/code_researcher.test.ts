@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { codeResearcher } from '@/nodes/workers/codeResearcher.js';
 import { CodeResearcherInput } from '@/types/code-researcher.types.js';
 

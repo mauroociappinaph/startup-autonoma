@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { enqueueAgentJob } from "@/jobs/agentQueue.js";
 import { agentWorker } from "@/jobs/agentWorker.js";
 import { closeRedisConnections } from "@/db/redis.js";

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { write_file, patch_file } from "@/tools/fs.js";
 import fs from "fs/promises";
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';

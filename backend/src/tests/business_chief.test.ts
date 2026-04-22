@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { business_chief_node } from '@/nodes/chiefs/business_chief.js';
 import { LLMService } from '@/services/llmService.js';
 import { TelemetryService } from '@/services/telemetryService.js';

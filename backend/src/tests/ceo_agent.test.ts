@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { ceo_node } from '@/nodes/ceo.js';
 import { LLMService } from '@/services/llmService.js';
 import { TelemetryService } from '@/services/telemetryService.js';

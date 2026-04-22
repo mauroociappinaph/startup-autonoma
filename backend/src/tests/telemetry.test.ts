@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { TelemetryService } from "@/services/telemetryService.js";
 import { getRedisConnection } from "@/db/redis.js";
 
