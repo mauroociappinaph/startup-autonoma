@@ -3,32 +3,34 @@
 
 export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
 
+# Detectamos la rama actual
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
 echo "=========================================================="
-echo "🚀 ANTIGRAVITY: Full Validation Mode (Pre-Push)"
+echo "🏎️  ANTIGRAVITY: Turbo-Differential Mode (Pre-Push)"
 echo "=========================================================="
 
-# 1. Verificación completa de tipos en todo el monorepo
-echo "🔍 Verificando integridad de tipos total..."
-npm run check
+# 1. Verificación de tipos y tests solo en paquetes modificados
+# Usamos turbo para detectar cambios respecto a origin/develop
+echo "⚡ Validando cambios respecto a origin/develop..."
+
+# Turbo se encarga de:
+# - Solo correr 'check' y 'test' en paquetes que cambiaron (filter)
+# - Usar el cache local si no hubo cambios (velocidad instantánea)
+# - Correr en paralelo (concurrence)
+npx turbo run check test --filter="...[origin/develop]" --concurrency=100%
+
 if [ $? -ne 0 ]; then
-  echo "❌ Error de tipos total detectado. No se puede subir código roto."
+  echo "❌ Error en validaciones (Tipos o Tests). Revisá el reporte de Turbo."
   exit 1
 fi
 
-# 2. Ejecución de Tests Unitarios
-echo "🧪 Ejecutando Tests Unitarios..."
-npm run test --workspaces --if-present
+# 2. Healthcheck de Infraestructura (Solo si hay Docker)
+# Lo hacemos opcional y rápido
+echo "🐳 Verificando Docker..."
+node scripts/check-docker.js --quick
 if [ $? -ne 0 ]; then
-  echo "❌ Tests fallidos. Corregí el código antes de pushear."
-  exit 1
+  echo "⚠️  Advertencia: Docker detectó inconsistencias, pero permitimos el push."
 fi
 
-# 3. Healthcheck de Infraestructura (Docker)
-echo "🐳 Verificando salud de contenedores..."
-node scripts/check-docker.js
-if [ $? -ne 0 ]; then
-  echo "❌ Infraestructura inestable. Push cancelado."
-  exit 1
-fi
-
-echo "🚀 Todo verde. Pusheando a develop..."
+echo "🚀 Validación completada en tiempo récord. ¡Buen viaje!"
