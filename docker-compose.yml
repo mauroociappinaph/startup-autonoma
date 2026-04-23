@@ -146,6 +146,22 @@ services:
       retries: 4
       start_period: 90s
 
+  # -------------------------------------------------------
+  # AGENT SANDBOX (Aislamiento para ejecución de código)
+  # -------------------------------------------------------
+  sandbox:
+    image: node:20-alpine
+    container_name: startup-sandbox
+    restart: unless-stopped
+    command: tail -f /dev/null
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro # Montamos el monorepo como SOLO LECTURA por seguridad
+      - sandbox_temp:/workspace/temp # Carpeta para que el agente escriba cosas
+    networks:
+      - internal
+    user: node # No corremos como root en el sandbox
+
 # -------------------------------------------------------
 # REDES: separación interna/pública para seguridad
 # -------------------------------------------------------
@@ -166,4 +182,6 @@ volumes:
     name: startup-postgres-data
   redis_data:
     name: startup-redis-data
+  sandbox_temp:
+    name: startup-sandbox-temp
 
