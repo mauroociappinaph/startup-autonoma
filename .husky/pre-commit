@@ -25,7 +25,7 @@ npm run sync-docs
 git add docs/ AGENTS.md README.md 2>/dev/null
 
 # 1. Validar reglas de arquitectura en archivos Stages
-node scripts/verify-sacred-laws.js
+npm run check-laws
 if [ $? -ne 0 ]; then
   echo "❌ Leyes Sagradas violadas. Abortando commit."
   exit 1
