@@ -11,6 +11,7 @@ import { FrontendExtensionsRule } from "./rules/frontend-extensions.rule.js";
 import { StrictXMLRule } from "./rules/strict-xml.rule.js";
 import { ReasoningFirstRule } from "./rules/reasoning-first.rule.js";
 import { checkBarrelFiles, checkStructuralIntegrity } from "./structural-checks.js";
+import { CacheManager } from "./cache-manager.js";
 
 const rules: Rule[] = [
   NoAnyRule,
@@ -92,21 +93,45 @@ async function run() {
   // 3. Run Rules per File
   if (filesToAudit.length > 0) {
     logger.header(`Auditoría de Archivos (${filesToAudit.length})`);
+    const cache = new CacheManager();
+    let cacheHits = 0;
     
     filesToAudit.forEach((file) => {
       if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return;
       if (!file.endsWith(".ts") && !file.endsWith(".tsx")) return;
 
       try {
-        const sourceFile = project.addSourceFileAtPath(file);
+        const content = fs.readFileSync(file, "utf-8");
+        const cachedViolations = cache.getValidEntry(file, content);
+
+        if (cachedViolations) {
+          allViolations.push(...cachedViolations);
+          cacheHits++;
+          return;
+        }
+
+        const sourceFile = project.createSourceFile(file, content, { overwrite: true });
+        const fileViolations: Violation[] = [];
+
         rules.forEach((rule) => {
           const results = rule.check(sourceFile);
-          results.forEach(v => allViolations.push({ ...v, rule: rule.name }));
+          results.forEach(v => {
+            const fullV = { ...v, rule: rule.name };
+            fileViolations.push(fullV);
+            allViolations.push(fullV);
+          });
         });
+
+        cache.updateEntry(file, content, fileViolations);
       } catch (e) {
         logger.error(`Error al procesar el archivo ${file}: ${e instanceof Error ? e.message : String(e)}`);
       }
     });
+
+    if (cacheHits > 0) {
+      logger.info(`Incremental: ${cacheHits} archivos recuperados del cache ⚡`);
+    }
+    cache.save();
   }
 
   // 4. Report Summary
