@@ -22,6 +22,14 @@ const rules: Rule[] = [
   ReasoningFirstRule,
 ];
 
+const logger = {
+  info: (msg: string) => console.log(`ℹ️  ${msg}`),
+  warn: (msg: string) => console.warn(`⚠️  ${msg}`),
+  error: (msg: string) => console.error(`🚨 ${msg}`),
+  success: (msg: string) => console.log(`✅ ${msg}`),
+  header: (msg: string) => console.log(`\n=== ${msg} ===`),
+};
+
 function walkDir(dir: string, callback: (path: string) => void) {
   const IGNORE_DIRS = ["node_modules", "dist", ".git", ".next", ".husky", ".github", ".venv", "venv"];
   if (!fs.existsSync(dir)) return;
@@ -35,56 +43,69 @@ function walkDir(dir: string, callback: (path: string) => void) {
   });
 }
 
+function getAllFiles(): string[] {
+  const files: string[] = [];
+  walkDir(process.cwd(), (fsPath) => {
+    if (fsPath.endsWith(".ts") || fsPath.endsWith(".tsx")) {
+      files.push(fsPath);
+    }
+  });
+  return files;
+}
+
 async function run() {
   const project = new Project();
   const allViolations: Violation[] = [];
   let filesToAudit: string[] = [];
 
   // 1. Structural Checks
-  console.log("🏗️  Verificando Integridad Estructural...");
+  logger.header("Verificando Integridad Estructural");
   const structuralResults = [...checkStructuralIntegrity(), ...checkBarrelFiles()];
-  
   allViolations.push(...structuralResults);
 
   // 2. Collect Files
-  if (process.env.CI) {
-    console.log("📡 Entorno CI detectado: Escaneando todo el proyecto...");
-    walkDir(process.cwd(), (fsPath) => {
-      if (fsPath.endsWith(".ts") || fsPath.endsWith(".tsx")) {
-        filesToAudit.push(fsPath);
-      }
-    });
+  const targetFile = process.argv[2];
+  if (targetFile) {
+    filesToAudit = [path.resolve(process.cwd(), targetFile)];
+  } else if (process.env.CI === "true") {
+    logger.info("Modo CI detectado: Escaneo completo activado.");
+    filesToAudit = getAllFiles();
   } else {
-    const targetFile = process.argv[2];
-    if (targetFile) {
-      filesToAudit = [path.resolve(process.cwd(), targetFile)];
-    } else {
-      try {
-        const diffOutput = execSync("git diff --cached --name-only --diff-filter=ACMR", {
-          encoding: "utf-8",
-        });
-        filesToAudit = diffOutput.split("\n").filter(Boolean).map((f) => path.resolve(process.cwd(), f));
-      } catch (e) {
-        console.error("No se pudo obtener la lista de archivos de Git.");
-        process.exit(1);
+    try {
+      const diffOutput = execSync("git diff --cached --name-only --diff-filter=ACMR", {
+        encoding: "utf-8",
+        env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" }
+      });
+      filesToAudit = diffOutput.split("\n").filter(Boolean).map((f) => path.resolve(process.cwd(), f));
+      
+      if (filesToAudit.length === 0) {
+        logger.info("No hay archivos staged para auditar.");
+      } else {
+        logger.info(`Auditando archivos staged (${filesToAudit.length} encontrados).`);
       }
+    } catch (e) {
+      logger.warn("Falla en Git al obtener archivos staged. Fallback a escaneo completo...");
+      filesToAudit = getAllFiles();
     }
   }
 
   // 3. Run Rules per File
   if (filesToAudit.length > 0) {
-    console.log(`🔍 Auditando ${filesToAudit.length} archivos...\n`);
+    logger.header(`Auditoría de Archivos (${filesToAudit.length})`);
     
     filesToAudit.forEach((file) => {
       if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return;
       if (!file.endsWith(".ts") && !file.endsWith(".tsx")) return;
 
-      const sourceFile = project.addSourceFileAtPath(file);
-      
-      rules.forEach((rule) => {
-        const results = rule.check(sourceFile);
-        results.forEach(v => allViolations.push({ ...v, rule: rule.name }));
-      });
+      try {
+        const sourceFile = project.addSourceFileAtPath(file);
+        rules.forEach((rule) => {
+          const results = rule.check(sourceFile);
+          results.forEach(v => allViolations.push({ ...v, rule: rule.name }));
+        });
+      } catch (e) {
+        logger.error(`Error al procesar el archivo ${file}: ${e instanceof Error ? e.message : String(e)}`);
+      }
     });
   }
 
@@ -93,8 +114,7 @@ async function run() {
   const warnings = allViolations.filter(v => v.severity === "warning");
 
   if (allViolations.length > 0) {
-    console.log("\n📋 RESUMEN DE AUDITORÍA:");
-    console.log("-----------------------");
+    logger.header("RESUMEN DE AUDITORÍA");
     
     allViolations.forEach(v => {
       const icon = v.severity === "error" ? "🚨" : "⚠️";
@@ -104,14 +124,14 @@ async function run() {
     });
 
     console.log("-----------------------");
-    console.log(`✅ Total: ${allViolations.length} | 🚨 Errores: ${errors.length} | ⚠️ Warnings: ${warnings.length}`);
+    logger.info(`Total: ${allViolations.length} | 🚨 Errores: ${errors.length} | ⚠️ Warnings: ${warnings.length}`);
   }
 
   if (errors.length > 0) {
-    console.error(`\n❌ Se encontraron ${errors.length} errores críticos. Abortando.`);
+    logger.error(`Se encontraron ${errors.length} errores críticos. Abortando.`);
     process.exit(1);
   } else {
-    console.log("\n✅ Auditoría completada con éxito.");
+    logger.success("Auditoría completada con éxito.");
     process.exit(0);
   }
 }
