@@ -184,6 +184,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /scripts
 │   ├── /architecture-audit
 │   │   ├── cache-manager.ts
+│   │   ├── /eslint-plugin
 │   │   ├── /rules
 │   │   ├── runner.ts
 │   │   ├── structural-checks.ts

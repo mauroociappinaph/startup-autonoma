@@ -40,17 +40,17 @@ function getAllFiles(): string[] {
       encoding: "utf-8",
       env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" }
     });
-    
+
     return output.split("\n")
       .filter(f => {
         const fsPath = f.trim();
         if (!fsPath || (!fsPath.endsWith(".ts") && !fsPath.endsWith(".tsx"))) return false;
-        
+
         const basename = path.basename(fsPath);
-        const isTest = fsPath.includes("/tests/") || fsPath.includes("/__tests__/") || 
+        const isTest = fsPath.includes("/tests/") || fsPath.includes("/__tests__/") ||
                        fsPath.includes(".test.") || fsPath.includes(".spec.") ||
                        basename.startsWith("test-") || basename.startsWith("jest-");
-        
+
         return !isTest;
       })
       .map(f => path.resolve(process.cwd(), f.trim()));
@@ -77,21 +77,21 @@ async function run() {
   } else if (process.env.CI === "true") {
     const baseRef = process.env.GITHUB_BASE_REF || "main";
     logger.info(`Modo CI detectado (Rama Base: ${baseRef})`);
-    
+
     try {
       // Intentamos auditar solo la diferencia del PR para máxima velocidad
       const diffOutput = execSync(`git diff origin/${baseRef}...HEAD --name-only --diff-filter=ACMR`, {
         encoding: "utf-8",
         env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" }
       });
-      
+
       filesToAudit = diffOutput.split("\n")
         .filter(Boolean)
         .map((f) => path.resolve(process.cwd(), f.trim()))
         .filter(f => {
           const isProductive = f.includes("/backend/src/") || f.includes("/frontend/src/");
           const basename = path.basename(f);
-          const isTest = f.includes("/tests/") || f.includes("/__tests__/") || 
+          const isTest = f.includes("/tests/") || f.includes("/__tests__/") ||
                          f.includes(".test.") || f.includes(".spec.") ||
                          basename.startsWith("test-") || basename.startsWith("jest-");
           return isProductive && !isTest && (f.endsWith(".ts") || f.endsWith(".tsx"));
@@ -191,4 +191,5 @@ async function run() {
 run().catch((e) => {
   console.error("Error fatal en la auditoría:", e);
   process.exit(1);
-});
+})
+}
