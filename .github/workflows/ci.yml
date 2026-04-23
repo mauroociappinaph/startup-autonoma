@@ -33,6 +33,9 @@ jobs:
       - name: 📦 Install Node dependencies
         run: npm ci
 
+      - name: 🏗️ Build Shared Library (Physical)
+        run: npm run build --workspace=@startup/shared
+
       - name: 🏗️ Build & Validate Type References (Monorepo)
         run: npx tsc --build
 
