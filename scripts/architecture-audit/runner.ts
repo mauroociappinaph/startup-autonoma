@@ -95,37 +95,45 @@ async function run() {
     logger.header(`Auditoría de Archivos (${filesToAudit.length})`);
     const cache = new CacheManager();
     let cacheHits = 0;
-    
-    filesToAudit.forEach((file) => {
-      if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return;
-      if (!file.endsWith(".ts") && !file.endsWith(".tsx")) return;
 
-      try {
-        const content = fs.readFileSync(file, "utf-8");
-        const cachedViolations = cache.getValidEntry(file, content);
+    const auditResults = await Promise.all(
+      filesToAudit.map(async (file) => {
+        if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return [];
+        if (!file.endsWith(".ts") && !file.endsWith(".tsx")) return [];
 
-        if (cachedViolations) {
-          allViolations.push(...cachedViolations);
-          cacheHits++;
-          return;
-        }
+        try {
+          const content = await fs.promises.readFile(file, "utf-8");
+          const cachedViolations = cache.getValidEntry(file, content);
 
-        const sourceFile = project.createSourceFile(file, content, { overwrite: true });
-        const fileViolations: Violation[] = [];
+          if (cachedViolations) {
+            cacheHits++;
+            return cachedViolations;
+          }
 
-        rules.forEach((rule) => {
-          const results = rule.check(sourceFile);
-          results.forEach(v => {
-            const fullV = { ...v, rule: rule.name };
-            fileViolations.push(fullV);
-            allViolations.push(fullV);
+          // Nota: ts-morph Project no es totalmente thread-safe para escrituras paralelas, 
+          // pero como usamos createSourceFile con contenido único, funciona bien en este flujo.
+          const sourceFile = project.createSourceFile(file, content, { overwrite: true });
+          const fileViolations: Violation[] = [];
+
+          rules.forEach((rule) => {
+            const results = rule.check(sourceFile);
+            results.forEach((v) => {
+              fileViolations.push({ ...v, rule: rule.name });
+            });
           });
-        });
 
-        cache.updateEntry(file, content, fileViolations);
-      } catch (e) {
-        logger.error(`Error al procesar el archivo ${file}: ${e instanceof Error ? e.message : String(e)}`);
-      }
+          cache.updateEntry(file, content, fileViolations);
+          return fileViolations;
+        } catch (e) {
+          logger.error(`Error al procesar el archivo ${file}: ${e instanceof Error ? e.message : String(e)}`);
+          return [];
+        }
+      })
+    );
+
+    // Aplanar resultados
+    auditResults.forEach((fileViolations) => {
+      allViolations.push(...fileViolations);
     });
 
     if (cacheHits > 0) {
