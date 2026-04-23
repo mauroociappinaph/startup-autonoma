@@ -5,6 +5,7 @@ import agentRoutes from '@/routes/agentRoutes.js';
 import { SystemController } from '@/controllers/systemController.js';
 import { agentWorker } from '@/jobs/index.js';
 import { closeRedisConnections } from '@/db/redis.js';
+import { SacredLogger } from '@/helpers/logger.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,10 +23,10 @@ app.use('/api/agents', agentRoutes);
 app.get('/health', SystemController.healthCheck);
 
 app.listen(PORT, () => {
-  console.log('==========================================================');
-  console.log(`🏢 Startup Autónoma escuchando en http://localhost:${PORT}`);
-  console.log(`🚀 API Base: http://localhost:${PORT}/api/agents`);
-  console.log('==========================================================');
+  SacredLogger.info('==========================================================');
+  SacredLogger.info(`🏢 Startup Autónoma escuchando en http://localhost:${PORT}`);
+  SacredLogger.info(`🚀 API Base: http://localhost:${PORT}/api/agents`);
+  SacredLogger.info('==========================================================');
 
   // Iniciamos el worker de BullMQ al arrancar el servidor
   const concurrency = parseInt(process.env.AGENT_CONCURRENCY || '2', 10);
@@ -36,14 +37,14 @@ app.listen(PORT, () => {
  * Graceful shutdown: esperamos que los jobs activos terminen antes de cerrar.
  */
 const shutdown = async (signal: string): Promise<void> => {
-  console.log(`\n🛑 Señal ${signal} recibida. Apagando worker y cerrando conexiones...`);
+  SacredLogger.warn(`Señal ${signal} recibida. Apagando worker y cerrando conexiones...`, "SYSTEM");
   try {
     await agentWorker.stop();
     await closeRedisConnections();
-    console.log("✅ Apagado completado con éxito.");
+    SacredLogger.success("Apagado completado con éxito.", "SYSTEM");
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error durante el apagado:", error);
+    SacredLogger.error(`Error durante el apagado: ${error}`, "SYSTEM");
     process.exit(1);
   }
 };

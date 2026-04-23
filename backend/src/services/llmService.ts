@@ -7,6 +7,7 @@ import { ContextManager } from "../helpers/contextManager.js";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 import { TelemetryService } from "./telemetryService.js";
+import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Helper interno para Timeouts.
@@ -42,8 +43,8 @@ export class LLMService {
     const trimmedMessages = await ContextManager.trim(messages, rawModel);
 
     const provider = LLMFactory.getProviderForType(config.type);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const modelName = (rawModel as any).modelName || (rawModel as any).model || "unknown";
+    const modelWithName = rawModel as BaseChatModel & { modelName?: string; model?: string };
+    const modelName = modelWithName.modelName || modelWithName.model || "unknown";
 
     if (provider === "nvidia") {
       const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
@@ -82,7 +83,7 @@ export class LLMService {
         model: modelName
       };
     } catch (error) {
-       console.warn("⚠️ Falló formato nativo, intentando fallback manual...");
+       SacredLogger.warn("Falló formato nativo, intentando fallback manual...", "LLM_SERVICE");
        const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
        const latency = performance.now() - startTime;
        const cost = TelemetryService.calculateCost(result.usage, modelName);
@@ -107,8 +108,8 @@ export class LLMService {
     const rawModel = LLMFactory.createModel(config) as BaseChatModel;
     const trimmedMessages = await ContextManager.trim(messages, rawModel);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const modelName = (rawModel as any).modelName || (rawModel as any).model || "unknown";
+    const modelWithName = rawModel as BaseChatModel & { modelName?: string; model?: string };
+    const modelName = modelWithName.modelName || modelWithName.model || "unknown";
 
     const response = await withTimeout(rawModel.invoke(trimmedMessages), 45000);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
@@ -185,7 +186,7 @@ export class LLMService {
         }
       };
     } catch (e) {
-      console.error("❌ Error crítico: El modelo no cumplió con el formato JSON solicitado.");
+      SacredLogger.error("Error crítico: El modelo no cumplió con el formato JSON solicitado.", "LLM_SERVICE");
       throw e;
     }
   }

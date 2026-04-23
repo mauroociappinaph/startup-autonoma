@@ -2,19 +2,20 @@ import { AgentStateType } from "@/types/state.types.js";
 import { LLMService } from "@/services/llmService.js";
 import { MirrorResponseSchema } from "@/types/mirror.types.js";
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
+import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Nodo MirrorAgent: El Arquitecto de Intenciones.
  * Filtra, optimiza y clarifica la petición del usuario antes de que llegue al CEO.
  */
 export async function mirror_node(state: AgentStateType) {
-  console.log("--- EJECUTANDO NODO MIRROR (INTROSPECCIÓN) ---");
+  SacredLogger.node("MIRROR (INTROSPECCIÓN)");
 
   // Buscamos el prompt original del usuario en los mensajes
   const originalPrompt = state.messages.find(m => m._getType() === 'human')?.content || "";
 
   if (!originalPrompt) {
-    console.error("❌ No se encontró un prompt original en el historial.");
+    SacredLogger.error("No se encontró un prompt original en el historial.", "MIRROR");
     return {
       executive_summary: "Error: No hay una instrucción humana para procesar.",
     };
@@ -39,9 +40,9 @@ export async function mirror_node(state: AgentStateType) {
       MirrorResponseSchema
     );
 
-    console.log(`🧠 Intenciones detectadas: ${response.intentions.join(', ')}`);
-    console.log(`✨ Prompt refinado: ${response.refined_prompt}`);
-    console.log(`📊 Tokens usandos en este paso: ${usage.total}`);
+    SacredLogger.info(`Intenciones detectadas: ${response.intentions.join(', ')}`, "MIRROR");
+    SacredLogger.info(`Prompt refinado: ${response.refined_prompt}`, "MIRROR");
+    SacredLogger.info(`Tokens usandos en este paso: ${usage.total}`, "MIRROR");
 
     // Preparamos la respuesta para el grafo
     return {
@@ -55,9 +56,8 @@ export async function mirror_node(state: AgentStateType) {
       })]
     };
   } catch (error: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const err = error as any;
-    console.error("❌ Fallo en el Nodo Mirror:", err.message);
+    const err = error as Error;
+    SacredLogger.error(`Fallo en el Nodo Mirror: ${err.message}`, "MIRROR");
     throw err;
   }
 }
