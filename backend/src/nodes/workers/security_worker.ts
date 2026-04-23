@@ -3,7 +3,7 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { TelemetryService } from "@/services/telemetryService.js";
 import { AuditService } from "@/services/auditService.js";
-import { SecurityWorkerSchema } from "@/contracts/security_worker.js";
+import { SecurityWorkerSchema } from "@startup/shared";
 
 /**
  * SecurityWorker: El Guardián de la Ciberseguridad.

@@ -3,7 +3,7 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { TelemetryService } from "@/services/telemetryService.js";
 import { AuditService } from "@/services/auditService.js";
-import { ReviewWorkerSchema } from "@/contracts/review_worker.js";
+import { ReviewWorkerSchema } from "@startup/shared";
 
 /**
  * ReviewWorker: El Sensor de Calidad Técnica.

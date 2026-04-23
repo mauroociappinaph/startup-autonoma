@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CEOResponseSchema } from "../contracts/ceo.js";
+import { CEOResponseSchema } from "@startup/shared";
 
 /**
  * Tipo inferido de la respuesta del CEO.

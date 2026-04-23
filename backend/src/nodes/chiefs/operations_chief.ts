@@ -3,7 +3,7 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { TelemetryService } from "@/services/telemetryService.js";
 import { AuditService } from "@/services/auditService.js";
-import { OperationsChiefSchema } from "@/contracts/operations_chief.js";
+import { OperationsChiefSchema } from "@startup/shared";
 
 /**
  * Nodo OperationsChief: El Guardián de la Infraestructura.

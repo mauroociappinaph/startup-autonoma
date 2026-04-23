@@ -117,7 +117,6 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /src
 │   │   ├── /agents
 │   │   ├── /config
-│   │   ├── /contracts
 │   │   ├── /controllers
 │   │   ├── /db
 │   │   ├── /graph
