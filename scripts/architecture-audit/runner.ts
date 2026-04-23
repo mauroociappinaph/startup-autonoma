@@ -99,7 +99,8 @@ async function run() {
     allViolations.forEach(v => {
       const icon = v.severity === "error" ? "🚨" : "⚠️";
       const relativePath = path.relative(process.cwd(), v.filePath);
-      console.log(`${icon} [${v.rule}] ${relativePath}:${v.line} - ${v.message}`);
+      const ruleName = v.rule || "General";
+      console.log(`${icon} [${ruleName}] ${relativePath}:${v.line} - ${v.message}`);
     });
 
     console.log("-----------------------");
