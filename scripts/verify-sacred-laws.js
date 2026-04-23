@@ -1,9 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { Project, SyntaxKind } from 'ts-morph';
 
 const MAX_LINES = 300;
 let errors = 0;
+
+// Inicializar proyecto ts-morph
+const project = new Project();
 
 // Ley de Integridad Estructural: Cada paquete debe tener su propia configuración
 function checkStructuralIntegrity() {
@@ -36,14 +40,14 @@ function checkSacredLaws(filePath) {
   // Ignorar archivos que no sean código puro o documentación
   if (filePath.endsWith('.json') || filePath.endsWith('.lock') || filePath.endsWith('.md')) return;
 
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const lines = content.split('\n');
-
   // Análisis exclusivo para TypeScript/TSX
   if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
     // Saltamos archivos de test para todas las leyes de arquitectura
     if (filePath.includes('.test.ts')) return;
 
+    const sourceFile = project.addSourceFileAtPath(filePath);
+    const content = sourceFile.getFullText();
+    const lines = content.split('\n');
     const isNodeFile = filePath.includes('/nodes/');
 
     // LEY #3: Límites de Archivo (Máximo 300 líneas)
@@ -53,19 +57,27 @@ function checkSacredLaws(filePath) {
       errors++;
     }
 
-    // LEY #5: Tipado Estricto (No Any)
-    lines.forEach((line, index) => {
-      if (line.includes(': any') && !line.includes('eslint-disable')) {
-        console.error(`🚨 [LEY #5 ROTA]: Uso de 'any' en ${filePath}:${index + 1}.`);
-        errors++;
+    // LEY #5: Tipado Estricto (No Any) - Análisis Inteligente vía AST
+    sourceFile.forEachDescendant((node) => {
+      if (node.getKind() === SyntaxKind.AnyKeyword) {
+        const startLine = node.getStartLineNumber();
+        const lineText = lines[startLine - 1];
+        // Ignorar si tiene eslint-disable en la misma línea
+        if (!lineText.includes('eslint-disable')) {
+          console.error(`🚨 [LEY #5 ROTA]: Uso de 'any' en ${filePath}:${startLine}.`);
+          errors++;
+        }
       }
     });
 
-    // LEY #7: Ubicación de Contratos/Tipos
-    if (!filePath.includes('/types/') && !filePath.includes('/contracts/') && !filePath.includes('/state/')) {
-      if (content.includes('export interface ') || content.includes('export type ')) {
-         console.error(`🚨 [LEY #7 ROTA]: Se detectó exportación de tipos en ${filePath}. Deben ir en /types o /contracts.`);
-         errors++;
+    // LEY #7: Ubicación de Contratos/Tipos - Análisis vía AST
+    const isTypesDir = filePath.includes('/types/') || filePath.includes('/contracts/') || filePath.includes('/state/');
+    if (!isTypesDir) {
+      const hasExportedTypes = sourceFile.getInterfaces().some(i => i.isExported()) ||
+                               sourceFile.getTypeAliases().some(t => t.isExported());
+      if (hasExportedTypes) {
+        console.error(`🚨 [LEY #7 ROTA]: Se detectó exportación de tipos en ${filePath}. Deben ir en /types o /contracts.`);
+        errors++;
       }
     }
 
@@ -77,22 +89,22 @@ function checkSacredLaws(filePath) {
       }
     }
 
-    // LEY #10: Path Aliases Obligatorios
-    lines.forEach((line, index) => {
-      if (line.includes('from "../../') || line.includes("from '../../")) {
-        console.error(`🚨 [LEY #10 ROTA]: Import relativo profundo detectado en ${filePath}:${index + 1}. Usa path aliases (@/).`);
+    // LEY #10: Path Aliases Obligatorios - Análisis vía AST
+    sourceFile.getImportDeclarations().forEach(imp => {
+      const moduleSpecifier = imp.getModuleSpecifierValue();
+      if (moduleSpecifier.startsWith('../../')) {
+        console.error(`🚨 [LEY #10 ROTA]: Import relativo profundo detectado en ${filePath}:${imp.getStartLineNumber()}. Usa path aliases (@/).`);
         errors++;
       }
     });
 
-    // LEY #11: Anti-Extensiones (Frontend) - Ya no se necesitan .js en Next.js 15
+    // LEY #11: Anti-Extensiones (Frontend) - Análisis vía AST
     if (filePath.includes('/frontend/src/')) {
-      lines.forEach((line, index) => {
-        if (line.includes("from '") || line.includes('from "')) {
-          if (line.includes('.js') || line.includes('.ts')) {
-             console.error(`🚨 [LEY #11 ROTA]: Extensión de archivo detectada en import en ${filePath}:${index + 1}. Omití .js/.ts.`);
-             errors++;
-          }
+      sourceFile.getImportDeclarations().forEach(imp => {
+        const moduleSpecifier = imp.getModuleSpecifierValue();
+        if (moduleSpecifier.endsWith('.js') || moduleSpecifier.endsWith('.ts') || moduleSpecifier.endsWith('.tsx')) {
+          console.error(`🚨 [LEY #11 ROTA]: Extensión de archivo detectada en import en ${filePath}:${imp.getStartLineNumber()}. Omití .js/.ts/.tsx.`);
+          errors++;
         }
       });
     }
@@ -184,4 +196,9 @@ filesToAudit.forEach(file => {
   }
 });
 
-console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla.');
+if (errors > 0) {
+  console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura.`);
+  process.exit(1);
+} else {
+  console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla.');
+}
