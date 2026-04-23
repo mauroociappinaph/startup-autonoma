@@ -23,7 +23,7 @@ export const useAgentStore = create<AgentState>((set) => ({
   setExecutiveSummary: (executiveSummary) => set({ executiveSummary }),
   setThreadId: (threadId) => set({ threadId }),
 
-  updateTelemetry: (data: { tokens?: number; iterations?: number; cost?: number }) => set((state) => ({
+  updateTelemetry: (data: { tokens?: number; iterations?: number; cost?: number }) => set((state: AgentState) => ({
     totalTokens: state.totalTokens + (data.tokens || 0),
     iterations: state.iterations + (data.iterations || 0),
     totalCost: state.totalCost + (data.cost || 0),

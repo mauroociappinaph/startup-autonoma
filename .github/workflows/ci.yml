@@ -34,10 +34,12 @@ jobs:
         run: npm ci
 
       - name: 🏗️ Build Shared Library (Physical)
-        run: npm run build --workspace=@startup/shared
+        run: |
+          rm -rf packages/shared/dist
+          npm run build --workspace=@startup/shared
 
       - name: 🏗️ Build & Validate Type References (Monorepo)
-        run: npx tsc --build
+        run: npx tsc --build --force
 
       - name: 🏗️ Run Architectural Audit (Sacred Laws)
         run: npm run check-laws
