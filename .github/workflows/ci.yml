@@ -33,8 +33,8 @@ jobs:
       - name: 📦 Install Node dependencies
         run: npm ci
 
-      - name: 🏗️ Build Shared Library
-        run: npx turbo run build --filter=@startup/shared
+      - name: 🏗️ Build & Validate Type References (Monorepo)
+        run: npx tsc --build
 
       - name: 🏗️ Run Architectural Audit (Sacred Laws)
         run: npm run check-laws

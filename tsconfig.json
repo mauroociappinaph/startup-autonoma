@@ -1,18 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022"],
+    "lib": ["ESNext"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@workspace/types": ["types/index.ts"]
+      "@startup/shared": ["packages/shared/src/index.ts"],
+      "@startup/shared/*": ["packages/shared/src/*"]
     }
   },
-  "include": ["types/**/*"],
-  "exclude": ["node_modules", "dist", "backend", "frontend", "ai-engine"]
+  "files": [],
+  "references": [
+    { "path": "packages/shared" },
+    { "path": "backend" },
+    { "path": "frontend" }
+  ],
+  "exclude": ["node_modules", "dist"]
 }
