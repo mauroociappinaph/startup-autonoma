@@ -72,7 +72,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
         plan: [] // Tarea terminada, vuelve al Chief via guardian
       };
     } else {
-      throw new Error(response.error_code || response.message);
+      throw new Error(response.errorCode || response.message);
     }
   } catch (error) {
     console.error("❌ Fallo en la comunicación con el AI Engine:", error);

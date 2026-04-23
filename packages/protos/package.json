@@ -1,0 +1,28 @@
+{
+  "name": "@startup/protos",
+  "version": "1.0.0",
+  "description": "Contratos gRPC formalizados para la Startup Autónoma",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src/**/*.proto"
+  ],
+  "scripts": {
+    "build": "npm run generate:ts",
+    "generate:ts": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=src/generated src/*.proto",
+    "clean": "rm -rf dist src/generated"
+  },
+  "keywords": [
+    "grpc",
+    "protos",
+    "startup"
+  ],
+  "author": "Antigravity Architect",
+  "license": "ISC",
+  "devDependencies": {
+    "@grpc/grpc-js": "^1.10.0",
+    "@grpc/proto-loader": "^0.7.10",
+    "typescript": "^5.0.0"
+  }
+}
