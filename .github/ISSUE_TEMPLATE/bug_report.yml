@@ -1,15 +1,34 @@
 name: 🐛 Bug Report
 description: Se detectó una falla en el flujo o código roto
 title: "fix(modulo): [Qué se rompió]"
-labels: ["bug"]
+labels: ["bug", "👀 status:needs-review"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar un bug. Asegurate de incluir logs y pasos claros para que el **GitWorker** pueda arreglarlo rápido.
+
+  - type: textarea
+    id: user_story
+    attributes:
+      label: 📖 User Story / Contexto
+      description: "Como [usuario/dev], quiero [comportamiento esperado], para que [valor de negocio]."
+      placeholder: "Ej: Como dev, quiero que el linter no falle con archivos vacíos para no bloquear el CI."
+    validations:
+      required: true
+
   - type: textarea
     id: reproduction
     attributes:
-      label: 🔬 Pasos para reproducir (Opcional si es obvio)
-      description: Explicá exactamente cómo el agente o vos pueden recrear el problema para debuggearlo.
+      label: 🔬 Pasos para reproducir
+      description: Explicá exactamente cómo el agente o vos pueden recrear el problema.
+      placeholder: |
+        1. Ejecutar 'npm run dev'
+        2. Abrir el dashboard
+        3. Click en 'Sync Agents'
     validations:
       required: true
+
   - type: textarea
     id: expected
     attributes:
@@ -17,10 +36,23 @@ body:
       description: ¿Qué debería haber pasado?
     validations:
       required: true
+
   - type: textarea
     id: logs
     attributes:
-      label: 📜 Logs de Error (stderr)
-      description: Copia acá la salida de la terminal o el LangGraph Trace ID para inyectarlo al GitWorker.
+      label: 📜 Logs y Evidencia
+      description: Copiá acá el stack trace, errores de consola o el LangGraph Trace ID.
+      render: shell
     validations:
       required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 🚨 Impacto
+      options:
+        - "🔴 priority:high (Bloqueante/Crash)"
+        - "🟡 priority:medium (Funcionalidad rota)"
+        - "⚪ priority:low (Glitch visual/menor)"
+    validations:
+      required: true
