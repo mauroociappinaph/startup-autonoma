@@ -105,6 +105,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── package.json
 │   ├── /scripts
 │   ├── /tests
+│   │   ├── /__pycache__
 ├── architecture.md
 ├── /backend
 │   ├── package.json

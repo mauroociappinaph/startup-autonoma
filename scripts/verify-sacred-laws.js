@@ -110,8 +110,34 @@ function checkSacredLaws(filePath) {
   }
 }
 
+// LEY #2: Barrel Files Obligatorios en directorios clave
+function checkBarrelFiles() {
+  const PACKAGES = ['backend/src', 'frontend/src'];
+  const REQUIRED_BARREL_DIRS = [
+    'nodes', 'types', 'contracts', 'state', 'services', 'jobs', 'helpers', 'controllers', 'routes', 'api', 'hooks', 'store'
+  ];
+
+  PACKAGES.forEach(pkg => {
+    const srcPath = path.join(process.cwd(), pkg);
+    if (!fs.existsSync(srcPath)) return;
+
+    REQUIRED_BARREL_DIRS.forEach(subDir => {
+      const dirPath = path.join(srcPath, subDir);
+      if (fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory()) {
+        const indexPath = path.join(dirPath, 'index.ts');
+        const indexJsxPath = path.join(dirPath, 'index.tsx');
+        if (!fs.existsSync(indexPath) && !fs.existsSync(indexJsxPath)) {
+          console.error(`🚨 [LEY #2 ROTA]: El directorio '${pkg}/${subDir}' no tiene un index.ts (Barrel File obligatorio).`);
+          errors++;
+        }
+      }
+    });
+  });
+}
+
 // Iniciar auditoría
 checkStructuralIntegrity();
+checkBarrelFiles();
 
 // Recolección de archivos a auditar
 let filesToAudit = [];
@@ -142,6 +168,11 @@ if (process.env.CI) {
   }
 }
 
+if (errors > 0) {
+  console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura.`);
+  process.exit(1);
+}
+
 if (filesToAudit.length === 0) {
   console.log('✅ No hay archivos para auditar. Adelante.');
   process.exit(0);
@@ -153,9 +184,4 @@ filesToAudit.forEach(file => {
   }
 });
 
-if (errors > 0) {
-  console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura.`);
-  process.exit(1);
-} else {
-  console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla.');
-}
+console.log('✅ Todas las Leyes Sagradas se cumplen a rajatabla.');
