@@ -10,16 +10,18 @@ jobs:
   validate:
     name: "Architectural Audit & Quality Check"
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Necesario para que Turbo y Git Diff funcionen correctamente
 
-      - name: 🟢 Setup Node.js
+      - name: 🟢 Setup Node.js (v24 Elite)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: 🐍 Setup Python
@@ -30,6 +32,9 @@ jobs:
 
       - name: 📦 Install Node dependencies
         run: npm ci
+
+      - name: 🏗️ Build Shared Library
+        run: npx turbo run build --filter=@startup/shared
 
       - name: 🏗️ Run Architectural Audit (Sacred Laws)
         run: npm run check-laws
