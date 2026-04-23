@@ -32,7 +32,10 @@ const logger = {
 };
 
 function walkDir(dir: string, callback: (path: string) => void) {
-  const IGNORE_DIRS = ["node_modules", "dist", ".git", ".next", ".husky", ".github", ".venv", "venv"];
+  const IGNORE_DIRS = [
+    "node_modules", "dist", ".git", ".next", ".husky", ".github", ".venv", "venv",
+    "tests", "__tests__", "mocks", "spec"
+  ];
   if (!fs.existsSync(dir)) return;
   fs.readdirSync(dir).forEach((f) => {
     const dirPath = path.join(dir, f);
@@ -46,9 +49,21 @@ function walkDir(dir: string, callback: (path: string) => void) {
 
 function getAllFiles(): string[] {
   const files: string[] = [];
-  walkDir(process.cwd(), (fsPath) => {
-    if (fsPath.endsWith(".ts") || fsPath.endsWith(".tsx")) {
-      files.push(fsPath);
+  const TARGET_DIRS = ["backend/src", "frontend/src"];
+  
+  TARGET_DIRS.forEach(dir => {
+    const fullDir = path.join(process.cwd(), dir);
+    if (fs.existsSync(fullDir)) {
+      walkDir(fullDir, (fsPath) => {
+        const basename = path.basename(fsPath);
+        const isTest = fsPath.includes("/tests/") || fsPath.includes("/__tests__/") || 
+                       fsPath.includes(".test.") || fsPath.includes(".spec.") ||
+                       basename.startsWith("test-");
+        
+        if ((fsPath.endsWith(".ts") || fsPath.endsWith(".tsx")) && !isTest) {
+          files.push(fsPath);
+        }
+      });
     }
   });
   return files;
@@ -59,7 +74,7 @@ async function run() {
   const allViolations: Violation[] = [];
   let filesToAudit: string[] = [];
 
-  // 1. Structural Checks
+  // 1. Structural Checks (Siempre corren, validan integridad del repo)
   logger.header("Verificando Integridad Estructural");
   const structuralResults = [...checkStructuralIntegrity(), ...checkBarrelFiles()];
   allViolations.push(...structuralResults);
@@ -69,7 +84,7 @@ async function run() {
   if (targetFile) {
     filesToAudit = [path.resolve(process.cwd(), targetFile)];
   } else if (process.env.CI === "true") {
-    logger.info("Modo CI detectado: Escaneo completo activado.");
+    logger.info("Modo CI detectado: Escaneando backend/src y frontend/src...");
     filesToAudit = getAllFiles();
   } else {
     try {
@@ -77,15 +92,26 @@ async function run() {
         encoding: "utf-8",
         env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" }
       });
-      filesToAudit = diffOutput.split("\n").filter(Boolean).map((f) => path.resolve(process.cwd(), f));
+      filesToAudit = diffOutput.split("\n")
+        .filter(Boolean)
+        .map((f) => path.resolve(process.cwd(), f))
+        // Solo auditamos archivos en src y EXCLUIMOS tests/mocks
+        .filter(f => {
+          const isProductive = f.includes("/backend/src/") || f.includes("/frontend/src/");
+          const isTest = f.includes("/tests/") || f.includes("/__tests__/") || 
+                         f.includes(".test.") || f.includes(".spec.") ||
+                         path.basename(f).startsWith("test-") ||
+                         path.basename(f).startsWith("jest-");
+          return isProductive && !isTest;
+        });
       
       if (filesToAudit.length === 0) {
-        logger.info("No hay archivos staged para auditar.");
+        logger.info("No hay archivos staged productivos para auditar.");
       } else {
-        logger.info(`Auditando archivos staged (${filesToAudit.length} encontrados).`);
+        logger.info(`Auditando ${filesToAudit.length} archivos staged (filtrados por src).`);
       }
     } catch (e) {
-      logger.warn("Falla en Git al obtener archivos staged. Fallback a escaneo completo...");
+      logger.warn("Falla en Git. Fallback a escaneo completo de src...");
       filesToAudit = getAllFiles();
     }
   }
@@ -110,7 +136,7 @@ async function run() {
             return cachedViolations;
           }
 
-          // Nota: ts-morph Project no es totalmente thread-safe para escrituras paralelas, 
+          // Nota: ts-morph Project no es totalmente thread-safe para escrituras paralelas,
           // pero como usamos createSourceFile con contenido único, funciona bien en este flujo.
           const sourceFile = project.createSourceFile(file, content, { overwrite: true });
           const fileViolations: Violation[] = [];
@@ -148,7 +174,7 @@ async function run() {
 
   if (allViolations.length > 0) {
     logger.header("RESUMEN DE AUDITORÍA");
-    
+
     allViolations.forEach(v => {
       const icon = v.severity === "error" ? "🚨" : "⚠️";
       const relativePath = path.relative(process.cwd(), v.filePath);
