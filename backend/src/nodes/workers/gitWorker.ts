@@ -4,8 +4,9 @@ import path from 'path';
 import {
   GitCommandSchema,
   GitCommandInput,
-  GitWorkerResponse
+  GitWorkerResponse 
 } from '@/types/git-worker.types.js';
+import { SacredLogger } from '@/helpers/logger.js';
 
 /**
  * Helper interno para ejecutar comandos de shell como promesas.
@@ -34,7 +35,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
   const { payload, repoPath } = GitCommandSchema.parse(commandInput);
   const targetRepoPath = repoPath || process.cwd();
 
-  console.log(`--- [GIT WORKER] Ejecutando acción: ${payload.action} ---`);
+  SacredLogger.info(`Ejecutando acción: ${payload.action}`, "GIT_WORKER");
 
   const actionName = payload.action;
 
@@ -43,7 +44,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
     if (payload.action === 'commit-all') {
       const { stdout: status } = await runCommand('git status --porcelain', targetRepoPath);
       if (!status || !status.trim()) {
-        console.log('ℹ️ [GIT] Nada para commitear, el árbol de trabajo está limpio.');
+        SacredLogger.info('Nada para commitear, el árbol de trabajo está limpio.', "GIT");
         return { success: true, action: actionName, stdout: 'Nothing to commit, working tree clean' };
       }
 
@@ -64,7 +65,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
         }
       }
 
-      console.log(`✅ Acción ${actionName} completada. CommitId: ${response.commitId}`);
+      SacredLogger.success(`Acción ${actionName} completada. CommitId: ${response.commitId}`, "GIT");
       return response;
     }
 
@@ -73,7 +74,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       try {
         const stats = await fs.stat(path.join(targetRepoPath, '.git'));
         if (stats.isDirectory()) {
-          console.log('ℹ️ [GIT] El repositorio ya está clonado en este directorio.');
+          SacredLogger.info('El repositorio ya está clonado en este directorio.', "GIT");
           return { success: true, action: actionName, stdout: 'Already cloned' };
         }
       } catch {
@@ -102,7 +103,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
         try {
           const { stdout: branchList } = await runCommand(`git branch --list ${payload.branchName}`, targetRepoPath);
           if (branchList && branchList.trim()) {
-            console.log(`ℹ️ [GIT] La rama '${payload.branchName}' ya existe. Cambiando a ella...`);
+            SacredLogger.info(`La rama '${payload.branchName}' ya existe. Cambiando a ella...`, "GIT");
             gitCommand = `git checkout ${payload.branchName}`;
           } else {
             gitCommand = `git checkout ${payload.baseBranch} && git pull origin ${payload.baseBranch} && git checkout -b ${payload.branchName}`;
@@ -133,7 +134,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
     }
 
     const maskedCommand = gitCommand.replace(/https:\/\/.*@/, 'https://[TOKEN]@');
-    console.log(`🚀 Ejecutando: ${maskedCommand} en ${targetRepoPath}`);
+    SacredLogger.info(`Ejecutando: ${maskedCommand} en ${targetRepoPath}`, "GIT");
 
     const { stdout, stderr } = await runCommand(gitCommand, targetRepoPath);
 
@@ -148,13 +149,12 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       response.branchName = payload.branchName;
     }
 
-    console.log(`✅ Acción ${actionName} completada con éxito.`);
+    SacredLogger.success(`Acción ${actionName} completada con éxito.`, "GIT");
     return response;
 
   } catch (error: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const err = error as any;
-    console.error(`❌ Falló la acción ${actionName}: ${err.message || 'Error desconocido'}`);
+    const err = error as Error & { stderr?: string; stdout?: string; error?: { message: string } };
+    SacredLogger.error(`Falló la acción ${actionName}: ${err.message || 'Error desconocido'}`, "GIT");
     return {
       success: false,
       action: actionName,

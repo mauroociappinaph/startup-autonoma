@@ -75,8 +75,7 @@ workflow.addConditionalEdges(
         documentation_worker: "documentation_worker",
         code_writer: "code_writer",
         end: END
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any
+    } as Record<string, NodeName | typeof END>
 );
 
 workflow.addConditionalEdges(
