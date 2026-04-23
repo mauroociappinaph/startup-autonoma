@@ -19,9 +19,14 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@startup/shared": ["../packages/shared/src/index.ts"],
+      "@startup/shared/*": ["../packages/shared/src/*"]
     }
   },
+  "references": [
+    { "path": "../packages/shared" }
+  ],
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

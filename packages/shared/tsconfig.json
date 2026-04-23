@@ -15,7 +15,9 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@startup/shared": ["./src/index.ts"],
+      "@startup/shared/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],

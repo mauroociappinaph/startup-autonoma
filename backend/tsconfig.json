@@ -12,9 +12,14 @@
     "rootDir": "src",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@startup/shared": ["../packages/shared/src/index.ts"],
+      "@startup/shared/*": ["../packages/shared/src/*"]
     }
   },
+  "references": [
+    { "path": "../packages/shared" }
+  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
