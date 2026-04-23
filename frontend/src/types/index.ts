@@ -1,5 +1,5 @@
-// Tipos Compartidos (Globales)
-export * from "./shared";
+// Re-export shared types from the workspace package
+export * from "@startup/shared";
 
-// Tipos Locales (Por componente/dominio específico)
+// Local types (Specific to components/domain)
 export * from "./local";

@@ -117,7 +117,6 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /src
 │   │   ├── /agents
 │   │   ├── /config
-│   │   ├── /contracts
 │   │   ├── /controllers
 │   │   ├── /db
 │   │   ├── /graph
@@ -180,6 +179,11 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /infra
 ├── package-lock.json
 ├── package.json
+├── /packages
+│   ├── /shared
+│   │   ├── package.json
+│   │   ├── /src
+│   │   ├── tsconfig.json
 ├── /protos
 ├── /scripts
 │   ├── /architecture-audit

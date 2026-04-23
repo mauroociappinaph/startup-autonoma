@@ -1,4 +1,4 @@
-import { type AgentThought, type BackendAgentState } from "./index";
+import { type AgentThought, type BackendAgentState } from "./index.js";
 
 export interface AgentState {
   // Estado del Grafo

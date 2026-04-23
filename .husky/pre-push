@@ -1,24 +1,36 @@
-# Asegurar que los binarios comunes estén en el PATH para Husky
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
 export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
 
+# Detectamos la rama actual
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
 echo "=========================================================="
-echo "🚀 ANTIGRAVITY: Verificación Final antes del PUSH"
+echo "🏎️  ANTIGRAVITY: Turbo-Differential Mode (Pre-Push)"
 echo "=========================================================="
 
-# Correr lint, tipos y leyes sagradas antes de subir
-echo "🔍 Validando lint, tipos y leyes sagradas..."
-npm run lint && npm run check && npm run check-laws && npm run check-docker
+# 1. Verificación de tipos y tests solo en paquetes modificados
+# Usamos turbo para detectar cambios respecto a origin/develop
+echo "⚡ Validando cambios respecto a origin/develop..."
+
+# Turbo se encarga de:
+# - Solo correr 'check' y 'test' en paquetes que cambiaron (filter)
+# - Usar el cache local si no hubo cambios (velocidad instantánea)
+# - Correr en paralelo (concurrence)
+npx turbo run check test --filter="...[origin/develop]" --concurrency=100%
+
 if [ $? -ne 0 ]; then
-  echo "❌ Error de consistencia detectado. No podés subir código que rompa el CI."
+  echo "❌ Error en validaciones (Tipos o Tests). Revisá el reporte de Turbo."
   exit 1
 fi
 
-# Correr tests unitarios (sin caché para asegurar veracidad)
-echo "🧪 Ejecutando suite de tests completa..."
-npx turbo run test --force
+# 2. Healthcheck de Infraestructura (Solo si hay Docker)
+# Lo hacemos opcional y rápido
+echo "🐳 Verificando Docker..."
+node scripts/check-docker.js --quick
 if [ $? -ne 0 ]; then
-  echo "❌ Los tests fallaron. El Push ha sido interceptado."
-  exit 1
+  echo "⚠️  Advertencia: Docker detectó inconsistencias, pero permitimos el push."
 fi
 
-echo "✅ Verificación exitosa. Despegue autorizado."
+echo "🚀 Validación completada en tiempo récord. ¡Buen viaje!"

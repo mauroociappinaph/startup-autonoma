@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type AgentState, type BackendAgentState } from "@/types/index";
+import { type AgentState, type BackendAgentState } from "@startup/shared";
 
 export const useAgentStore = create<AgentState>((set) => ({
   thoughts: [],

@@ -8,7 +8,8 @@
   "workspaces": [
     "backend",
     "frontend",
-    "ai-engine"
+    "ai-engine",
+    "packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",

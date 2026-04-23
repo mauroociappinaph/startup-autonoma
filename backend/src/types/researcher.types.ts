@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ResearcherResponseSchema } from "../contracts/researcher.js";
+import { ResearcherResponseSchema } from "@startup/shared";
 
 /**
  * Tipo inferido de la respuesta del ResearchWorker.

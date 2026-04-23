@@ -23,6 +23,7 @@
     "@langchain/langgraph": "latest",
     "@langchain/langgraph-checkpoint-redis": "^1.0.4",
     "@langchain/openai": "^1.4.4",
+    "@startup/shared": "^1.0.0",
     "bullmq": "^5.74.1",
     "cors": "^2.8.6",
     "dotenv": "^16.4.5",
