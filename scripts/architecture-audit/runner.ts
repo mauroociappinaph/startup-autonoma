@@ -10,6 +10,7 @@ import { ExportedTypesRule } from "./rules/exported-types.rule.js";
 import { FrontendExtensionsRule } from "./rules/frontend-extensions.rule.js";
 import { StrictXMLRule } from "./rules/strict-xml.rule.js";
 import { ReasoningFirstRule } from "./rules/reasoning-first.rule.js";
+import { NoConsoleRule } from "./rules/no-console.rule.js";
 import { checkBarrelFiles, checkStructuralIntegrity } from "./structural-checks.js";
 import { CacheManager } from "./cache-manager.js";
 
@@ -21,6 +22,7 @@ const rules: Rule[] = [
   FrontendExtensionsRule,
   StrictXMLRule,
   ReasoningFirstRule,
+  NoConsoleRule,
 ];
 
 const logger = {
