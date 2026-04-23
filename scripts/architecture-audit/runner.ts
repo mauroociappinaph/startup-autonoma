@@ -44,12 +44,7 @@ async function run() {
   console.log("🏗️  Verificando Integridad Estructural...");
   const structuralResults = [...checkStructuralIntegrity(), ...checkBarrelFiles()];
   
-  structuralResults.forEach(v => {
-    allViolations.push({
-      ...v,
-      rule: "Estructural"
-    });
-  });
+  allViolations.push(...structuralResults);
 
   // 2. Collect Files
   if (process.env.CI) {

@@ -20,9 +20,10 @@ export function checkBarrelFiles(): Violation[] {
         const indexJsxPath = path.join(dirPath, "index.tsx");
         if (!fs.existsSync(indexPath) && !fs.existsSync(indexJsxPath)) {
           results.push({
-            filePath: `${pkg}/${subDir}`,
+            rule: "LEY #2: Barrel Files",
+            filePath: path.join(srcPath, subDir),
             line: 0,
-            message: `🚨 [LEY #2 ROTA]: El directorio no tiene un index.ts (Barrel File obligatorio).`,
+            message: `El directorio no tiene un index.ts o index.tsx (Barrel File obligatorio).`,
             severity: "error",
           });
         }
@@ -41,9 +42,10 @@ export function checkStructuralIntegrity(): Violation[] {
     const tsconfigPath = path.join(process.cwd(), pkg, "tsconfig.json");
     if (!fs.existsSync(tsconfigPath)) {
       results.push({
-        filePath: pkg,
+        rule: "Integridad Estructural",
+        filePath: tsconfigPath,
         line: 0,
-        message: `🚨 [LEY DE INTEGRIDAD ROTA]: El paquete no tiene un tsconfig.json.`,
+        message: `El paquete no tiene un tsconfig.json.`,
         severity: "error",
       });
     }
