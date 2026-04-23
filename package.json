@@ -26,6 +26,7 @@
     "verify-srp": "node scripts/verify-srp.js",
     "sync-arch": "node scripts/generate-architecture.js",
     "sync-docs": "node scripts/sync-project-structure.js",
+    "commit": "tsx scripts/quick-commit.ts",
     "infra:check": "npm run check-docker"
   },
   "devDependencies": {

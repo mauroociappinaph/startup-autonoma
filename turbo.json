@@ -4,18 +4,19 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "package.json", "tsconfig.json", "next.config.js"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "test": {
+      "inputs": ["src/**", "package.json", "tsconfig.json", "jest.config.js"],
       "outputs": []
     },
     "lint": {
-      "outputs": []
-    },
-    "format": {
+      "inputs": ["src/**", ".eslintrc.json", "package.json"],
       "outputs": []
     },
     "check": {
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
       "outputs": []
     },
     "dev": {
