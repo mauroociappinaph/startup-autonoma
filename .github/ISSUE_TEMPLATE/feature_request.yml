@@ -1,33 +1,58 @@
 name: 🚀 Feature Request
 description: El Director (Vos) o un Manager piden una nueva funcionalidad
 title: "feat(modulo): [Título descriptivo]"
-labels: ["enhancement"]
+labels: ["enhancement", "👀 status:needs-review"]
 body:
-  - type: textarea
-    id: context
+  - type: markdown
     attributes:
-      label: 🎯 Contexto y Objetivo
-      description: ¿Qué problema resolvemos con esta feature? (Pensá en el impacto de negocio).
-    validations:
-      required: true
-  - type: textarea
-    id: requirements
-    attributes:
-      label: 📋 Criterios de Aceptación (Checklist)
-      description: Requisitos técnicos indispensables que el GitWorker debe tildar antes de mandar código.
       value: |
-        - [ ] La feature debe hacer X...
-        - [ ] Validaciones de entrada implementadas
-        - [ ] Tests unitarios agregados y en verde
-    validations:
-      required: true
-  - type: dropdown
-    id: urgency
+        Definí la visión de la nueva funcionalidad. Pensá en términos de **valor** y **criterios de éxito**.
+
+  - type: textarea
+    id: user_story
     attributes:
-      label: ⚡ Nivel de Urgencia
-      options:
-        - 🔥 Alta (Bloqueante)
-        - 🚀 Media (Roadmap actual)
-        - ☕ Baja (Backlog a futuro)
+      label: 📖 User Story
+      description: "¿Quién lo necesita, qué necesita y por qué?"
+      placeholder: "Como CEO, quiero un dashboard de costos para saber cuánto gasto en tokens."
     validations:
       required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: ✅ Criterios de Aceptación (Definición de Done)
+      description: Requisitos técnicos que deben cumplirse para dar la tarea por terminada.
+      value: |
+        - [ ] La feature debe...
+        - [ ] Validaciones de entrada implementadas (Zod)
+        - [ ] Tests unitarios agregados y en verde
+        - [ ] Documentación actualizada en /docs
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation_details
+    attributes:
+      label: 🛠️ Detalles de Implementación (Opcional)
+      description: Si tenés una idea técnica de cómo hacerlo, dejala acá.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: ⚡ Prioridad Estratégica
+      options:
+        - "🔴 priority:high (Siguiente Sprint/Urgente)"
+        - "🟡 priority:medium (Roadmap actual)"
+        - "⚪ priority:low (Deseable/Backlog)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: ⚠️ Riesgos Potenciales
+      description: "¿Puede esto romper algo existente o aumentar mucho la latencia?"
+    validations:
+      required: false

@@ -1,0 +1,48 @@
+name: 🛠️ Refactor / Technical Debt
+description: Mejorar el código existente sin cambiar su funcionalidad
+title: "refactor(modulo): [Qué se está mejorando]"
+labels: ["refactor", "👀 status:needs-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        El refactor es inversión en el futuro de la Startup. Explicá por qué esto hace que el código sea más resiliente.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 🧱 Problema Actual / Deuda Técnica
+      description: ¿Qué parte del código es difícil de mantener o está duplicada?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 💡 Propuesta de Mejora
+      description: ¿Cómo vamos a reestructurar el código?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: ✅ Criterios de Aceptación
+      description: ¿Cómo sabemos que el refactor no rompió nada?
+      value: |
+        - [ ] El código es más legible/mantenible
+        - [ ] No hay cambios de comportamiento funcional
+        - [ ] Todos los tests existentes siguen en verde
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: ⚡ Urgencia Técnica
+      options:
+        - "🔴 priority:high (Bloquea otras tareas)"
+        - "🟡 priority:medium (Mantenibilidad regular)"
+        - "⚪ priority:low (Cleanup menor)"
+    validations:
+      required: true
