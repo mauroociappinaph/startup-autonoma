@@ -2,7 +2,7 @@ import { Project } from "ts-morph";
 import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
-import { Rule, RuleResult } from "./types.js";
+import { Rule, Violation } from "./types.js";
 import { NoAnyRule } from "./rules/no-any.rule.js";
 import { MaxLinesRule } from "./rules/max-lines.rule.js";
 import { NoDeepImportsRule } from "./rules/no-deep-imports.rule.js";
@@ -37,21 +37,19 @@ function walkDir(dir: string, callback: (path: string) => void) {
 
 async function run() {
   const project = new Project();
-  let errors = 0;
+  const allViolations: Violation[] = [];
   let filesToAudit: string[] = [];
 
   // 1. Structural Checks
   console.log("🏗️  Verificando Integridad Estructural...");
   const structuralResults = [...checkStructuralIntegrity(), ...checkBarrelFiles()];
-  structuralResults.forEach((res) => {
-    console.error(`${res.severity === "error" ? "🚨" : "⚠️"} [${res.filePath}]: ${res.message}`);
-    if (res.severity === "error") errors++;
+  
+  structuralResults.forEach(v => {
+    allViolations.push({
+      ...v,
+      rule: "Estructural"
+    });
   });
-
-  if (errors > 0) {
-     console.error(`\n❌ Se encontraron ${errors} infracciones estructurales.`);
-     process.exit(1);
-  }
 
   // 2. Collect Files
   if (process.env.CI) {
@@ -78,34 +76,47 @@ async function run() {
     }
   }
 
-  if (filesToAudit.length === 0) {
-    console.log("✅ No hay archivos para auditar. Adelante.");
-    process.exit(0);
-  }
-
   // 3. Run Rules per File
-  console.log(`🔍 Auditando ${filesToAudit.length} archivos...\n`);
-  
-  filesToAudit.forEach((file) => {
-    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return;
-    if (!file.endsWith(".ts") && !file.endsWith(".tsx")) return;
-
-    const sourceFile = project.addSourceFileAtPath(file);
+  if (filesToAudit.length > 0) {
+    console.log(`🔍 Auditando ${filesToAudit.length} archivos...\n`);
     
-    rules.forEach((rule) => {
-      const results = rule.check(sourceFile);
-      results.forEach((res) => {
-        console.error(`${res.severity === "error" ? "🚨" : "⚠️"} [${rule.name}]: ${path.relative(process.cwd(), res.filePath)}:${res.line} - ${res.message}`);
-        if (res.severity === "error") errors++;
+    filesToAudit.forEach((file) => {
+      if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return;
+      if (!file.endsWith(".ts") && !file.endsWith(".tsx")) return;
+
+      const sourceFile = project.addSourceFileAtPath(file);
+      
+      rules.forEach((rule) => {
+        const results = rule.check(sourceFile);
+        results.forEach(v => allViolations.push({ ...v, rule: rule.name }));
       });
     });
-  });
+  }
 
-  if (errors > 0) {
-    console.error(`\n❌ Se encontraron ${errors} infracciones a la arquitectura.`);
+  // 4. Report Summary
+  const errors = allViolations.filter(v => v.severity === "error");
+  const warnings = allViolations.filter(v => v.severity === "warning");
+
+  if (allViolations.length > 0) {
+    console.log("\n📋 RESUMEN DE AUDITORÍA:");
+    console.log("-----------------------");
+    
+    allViolations.forEach(v => {
+      const icon = v.severity === "error" ? "🚨" : "⚠️";
+      const relativePath = path.relative(process.cwd(), v.filePath);
+      console.log(`${icon} [${v.rule}] ${relativePath}:${v.line} - ${v.message}`);
+    });
+
+    console.log("-----------------------");
+    console.log(`✅ Total: ${allViolations.length} | 🚨 Errores: ${errors.length} | ⚠️ Warnings: ${warnings.length}`);
+  }
+
+  if (errors.length > 0) {
+    console.error(`\n❌ Se encontraron ${errors.length} errores críticos. Abortando.`);
     process.exit(1);
   } else {
-    console.log("✅ Todas las Leyes Sagradas se cumplen a rajatabla.");
+    console.log("\n✅ Auditoría completada con éxito.");
+    process.exit(0);
   }
 }
 

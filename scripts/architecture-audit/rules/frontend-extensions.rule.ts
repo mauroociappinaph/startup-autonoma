@@ -1,10 +1,10 @@
 import { SourceFile } from "ts-morph";
-import { Rule, RuleResult } from "../types.js";
+import { Rule, Violation } from "../types.js";
 
 export const FrontendExtensionsRule: Rule = {
   name: "LEY #11: Anti-Extensiones (Frontend)",
-  check(sourceFile: SourceFile): RuleResult[] {
-    const results: RuleResult[] = [];
+  check(sourceFile: SourceFile): Violation[] {
+    const results: Violation[] = [];
     const filePath = sourceFile.getFilePath();
 
     if (filePath.includes("/frontend/src/")) {

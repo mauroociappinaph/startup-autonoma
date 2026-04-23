@@ -1,10 +1,10 @@
 import { SourceFile } from "ts-morph";
-import { Rule, RuleResult } from "../types.js";
+import { Rule, Violation } from "../types.js";
 
 export const ExportedTypesRule: Rule = {
   name: "LEY #7: Ubicación de Contratos/Tipos",
-  check(sourceFile: SourceFile): RuleResult[] {
-    const results: RuleResult[] = [];
+  check(sourceFile: SourceFile): Violation[] {
+    const results: Violation[] = [];
     const filePath = sourceFile.getFilePath();
 
     const isTypesDir = filePath.includes("/types/") || filePath.includes("/contracts/") || filePath.includes("/state/");

@@ -1,6 +1,7 @@
 import { SourceFile } from "ts-morph";
 
-export interface RuleResult {
+export interface Violation {
+  rule: string;
   filePath: string;
   line: number;
   message: string;
@@ -9,5 +10,5 @@ export interface RuleResult {
 
 export interface Rule {
   name: string;
-  check(sourceFile: SourceFile): RuleResult[];
+  check(sourceFile: SourceFile): Violation[];
 }

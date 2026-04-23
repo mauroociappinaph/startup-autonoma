@@ -1,12 +1,12 @@
 import { SourceFile } from "ts-morph";
-import { Rule, RuleResult } from "../types.js";
+import { Rule, Violation } from "../types.js";
 
 const MAX_LINES = 300;
 
 export const MaxLinesRule: Rule = {
   name: "LEY #3: Límites de Archivo",
-  check(sourceFile: SourceFile): RuleResult[] {
-    const results: RuleResult[] = [];
+  check(sourceFile: SourceFile): Violation[] {
+    const results: Violation[] = [];
     const lineCount = sourceFile.getFullText().split("\n").length;
 
     if (lineCount > MAX_LINES) {

@@ -1,10 +1,10 @@
 import { SourceFile } from "ts-morph";
-import { Rule, RuleResult } from "../types.js";
+import { Rule, Violation } from "../types.js";
 
 export const StrictXMLRule: Rule = {
   name: "LEY #13: Strict-XML-Formatting",
-  check(sourceFile: SourceFile): RuleResult[] {
-    const results: RuleResult[] = [];
+  check(sourceFile: SourceFile): Violation[] {
+    const results: Violation[] = [];
     const filePath = sourceFile.getFilePath();
     const content = sourceFile.getFullText();
 

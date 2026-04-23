@@ -1,10 +1,10 @@
 import { SourceFile } from "ts-morph";
-import { Rule, RuleResult } from "../types.js";
+import { Rule, Violation } from "../types.js";
 
 export const NoDeepImportsRule: Rule = {
   name: "LEY #10: Path Aliases Obligatorios",
-  check(sourceFile: SourceFile): RuleResult[] {
-    const results: RuleResult[] = [];
+  check(sourceFile: SourceFile): Violation[] {
+    const results: Violation[] = [];
     
     sourceFile.getImportDeclarations().forEach((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();

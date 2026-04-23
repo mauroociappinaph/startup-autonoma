@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { RuleResult } from "./types.js";
+import { Violation } from "./types.js";
 
-export function checkBarrelFiles(): RuleResult[] {
-  const results: RuleResult[] = [];
+export function checkBarrelFiles(): Violation[] {
+  const results: Violation[] = [];
   const PACKAGES = ["backend/src", "frontend/src"];
   const REQUIRED_BARREL_DIRS = [
     "nodes", "types", "contracts", "state", "services", "jobs", "helpers", "controllers", "routes", "api", "hooks", "store"
@@ -33,8 +33,8 @@ export function checkBarrelFiles(): RuleResult[] {
   return results;
 }
 
-export function checkStructuralIntegrity(): RuleResult[] {
-  const results: RuleResult[] = [];
+export function checkStructuralIntegrity(): Violation[] {
+  const results: Violation[] = [];
   const PACKAGES = ["backend", "frontend"];
   
   PACKAGES.forEach((pkg) => {

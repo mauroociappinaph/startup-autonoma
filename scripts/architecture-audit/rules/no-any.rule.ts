@@ -1,10 +1,10 @@
 import { SyntaxKind, SourceFile } from "ts-morph";
-import { Rule, RuleResult } from "../types.js";
+import { Rule, Violation } from "../types.js";
 
 export const NoAnyRule: Rule = {
   name: "LEY #5: Tipado Estricto (No Any)",
-  check(sourceFile: SourceFile): RuleResult[] {
-    const results: RuleResult[] = [];
+  check(sourceFile: SourceFile): Violation[] {
+    const results: Violation[] = [];
     const filePath = sourceFile.getFilePath();
     const lines = sourceFile.getFullText().split("\n");
 
