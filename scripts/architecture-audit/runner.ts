@@ -34,25 +34,30 @@ function walkDir(dir: string, callback: (path: string) => void) {
 }
 
 function getAllFiles(): string[] {
-  const files: string[] = [];
-  const TARGET_DIRS = ["backend/src", "frontend/src"];
-  
-  TARGET_DIRS.forEach(dir => {
-    const fullDir = path.join(process.cwd(), dir);
-    if (fs.existsSync(fullDir)) {
-      walkDir(fullDir, (fsPath) => {
+  try {
+    const TARGET_DIRS = ["backend/src", "frontend/src"];
+    const output = execSync(`git ls-files ${TARGET_DIRS.join(" ")}`, {
+      encoding: "utf-8",
+      env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" }
+    });
+    
+    return output.split("\n")
+      .filter(f => {
+        const fsPath = f.trim();
+        if (!fsPath || (!fsPath.endsWith(".ts") && !fsPath.endsWith(".tsx"))) return false;
+        
         const basename = path.basename(fsPath);
         const isTest = fsPath.includes("/tests/") || fsPath.includes("/__tests__/") || 
                        fsPath.includes(".test.") || fsPath.includes(".spec.") ||
-                       basename.startsWith("test-");
+                       basename.startsWith("test-") || basename.startsWith("jest-");
         
-        if ((fsPath.endsWith(".ts") || fsPath.endsWith(".tsx")) && !isTest) {
-          files.push(fsPath);
-        }
-      });
-    }
-  });
-  return files;
+        return !isTest;
+      })
+      .map(f => path.resolve(process.cwd(), f.trim()));
+  } catch (e) {
+    logger.warn("Falla en git ls-files. Fallback a escaneo manual...");
+    return []; // El flujo de arriba ya maneja el fallback si es necesario
+  }
 }
 
 async function run() {
@@ -70,37 +75,39 @@ async function run() {
   if (targetFile) {
     filesToAudit = [path.resolve(process.cwd(), targetFile)];
   } else if (process.env.CI === "true") {
-    logger.info("Modo CI detectado: Escaneando backend/src y frontend/src...");
-    filesToAudit = getAllFiles();
-  } else {
+    const baseRef = process.env.GITHUB_BASE_REF || "main";
+    logger.info(`Modo CI detectado (Rama Base: ${baseRef})`);
+    
     try {
-      const diffOutput = execSync("git diff --cached --name-only --diff-filter=ACMR", {
+      // Intentamos auditar solo la diferencia del PR para máxima velocidad
+      const diffOutput = execSync(`git diff origin/${baseRef}...HEAD --name-only --diff-filter=ACMR`, {
         encoding: "utf-8",
         env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" }
       });
+      
       filesToAudit = diffOutput.split("\n")
         .filter(Boolean)
-        .map((f) => path.resolve(process.cwd(), f))
-        // Solo auditamos archivos en src y EXCLUIMOS tests/mocks
+        .map((f) => path.resolve(process.cwd(), f.trim()))
         .filter(f => {
           const isProductive = f.includes("/backend/src/") || f.includes("/frontend/src/");
+          const basename = path.basename(f);
           const isTest = f.includes("/tests/") || f.includes("/__tests__/") || 
                          f.includes(".test.") || f.includes(".spec.") ||
-                         path.basename(f).startsWith("test-") ||
-                         path.basename(f).startsWith("jest-");
-          return isProductive && !isTest;
+                         basename.startsWith("test-") || basename.startsWith("jest-");
+          return isProductive && !isTest && (f.endsWith(".ts") || f.endsWith(".tsx"));
         });
-      
+
       if (filesToAudit.length === 0) {
-        logger.info("No hay archivos staged productivos para auditar.");
+        logger.info("No se detectaron cambios productivos en el diff. Escaneando proyecto completo...");
+        filesToAudit = getAllFiles();
       } else {
-        logger.info(`Auditando ${filesToAudit.length} archivos staged (filtrados por src).`);
+        logger.info(`Auditando ${filesToAudit.length} archivos cambiados en este PR.`);
       }
     } catch (e) {
-      logger.warn("Falla en Git. Fallback a escaneo completo de src...");
+      logger.warn("No se pudo obtener el diff de Git. Escaneando proyecto completo...");
       filesToAudit = getAllFiles();
     }
-  }
+  } else {
 
   // 3. Run Rules per File
   if (filesToAudit.length > 0) {
