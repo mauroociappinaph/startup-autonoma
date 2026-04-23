@@ -7,41 +7,43 @@ on:
     branches: ["main", "develop"]
 
 jobs:
-  validate-sacred-laws:
+  validate:
+    name: "Architectural Audit & Quality Check"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necesario para que Turbo y Git Diff funcionen correctamente
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci || npm install # Asume que el package.json estará en root o backend
-
-      - name: Run Sacred Laws Verification
-        run: node scripts/verify-sacred-laws.js
-
-      - name: Setup Python
+      - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install Python dependencies
+      - name: 📦 Install Node dependencies
+        run: npm ci
+
+      - name: 🏗️ Run Architectural Audit (Sacred Laws)
+        run: npm run check-laws
+        env:
+          CI: "true"
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+
+      - name: 🧪 Install Python Dependencies & Run Tests
+        working-directory: ai-engine
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pytest ruff
-          python3 -m pip install ./ai-engine
+          python3 -m pip install .
+          npm run test
+          npm run lint
 
-      - name: Debug Python Environment
-        run: |
-          which python3
-          python3 --version
-          python3 -m pytest --version
-          pytest --version || echo "pytest binary not in PATH"
-
-      - name: Run CI tasks in parallel (Turbo)
-        run: npx turbo run lint check test build
+      - name: 🚀 Run Monorepo Validation (Turbo-Differential)
+        run: npx turbo run lint check test build --filter="...[origin/${{ github.base_ref || 'develop' }}]" --concurrency=100%
