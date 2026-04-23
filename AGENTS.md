@@ -68,6 +68,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 
 ```text
 /
+├── .architecture-cache.json
 ├── /.atl
 ├── .env.example
 ├── /.github
@@ -181,6 +182,12 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── package.json
 ├── /protos
 ├── /scripts
+│   ├── /architecture-audit
+│   │   ├── cache-manager.ts
+│   │   ├── /rules
+│   │   ├── runner.ts
+│   │   ├── structural-checks.ts
+│   │   ├── types.ts
 ├── /skills
 ├── tsconfig.json
 ├── turbo.json

@@ -3,27 +3,11 @@ import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
 import { Rule, Violation } from "./types.js";
-import { NoAnyRule } from "./rules/no-any.rule.js";
-import { MaxLinesRule } from "./rules/max-lines.rule.js";
-import { NoDeepImportsRule } from "./rules/no-deep-imports.rule.js";
-import { ExportedTypesRule } from "./rules/exported-types.rule.js";
-import { FrontendExtensionsRule } from "./rules/frontend-extensions.rule.js";
-import { StrictXMLRule } from "./rules/strict-xml.rule.js";
-import { ReasoningFirstRule } from "./rules/reasoning-first.rule.js";
-import { NoConsoleRule } from "./rules/no-console.rule.js";
+import * as Rules from "./rules/index.js";
 import { checkBarrelFiles, checkStructuralIntegrity } from "./structural-checks.js";
 import { CacheManager } from "./cache-manager.js";
 
-const rules: Rule[] = [
-  NoAnyRule,
-  MaxLinesRule,
-  NoDeepImportsRule,
-  ExportedTypesRule,
-  FrontendExtensionsRule,
-  StrictXMLRule,
-  ReasoningFirstRule,
-  NoConsoleRule,
-];
+const rules: Rule[] = Object.values(Rules) as Rule[];
 
 const logger = {
   info: (msg: string) => console.log(`ℹ️  ${msg}`),
