@@ -73,3 +73,5 @@ yarn-error.log*
 # Workspaces de proyectos (Aislamiento Gap 2)
 backend/workspaces/
 .architecture-cache.json
+
+*.tsbuildinfo
