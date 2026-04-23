@@ -108,6 +108,34 @@ async function run() {
       filesToAudit = getAllFiles();
     }
   } else {
+    try {
+      // MODO LOCAL: Solo auditamos lo que está en el STAGE de Git
+      logger.info("Modo Local: Auditando solo archivos en STAGE (git diff --cached)");
+      const stagedOutput = execSync("git diff --cached --name-only --diff-filter=ACMR", {
+        encoding: "utf-8",
+        env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" }
+      });
+      
+      filesToAudit = stagedOutput.split("\n")
+        .filter(Boolean)
+        .map((f) => path.resolve(process.cwd(), f.trim()))
+        .filter(f => {
+          const isProductive = f.includes("/backend/src/") || f.includes("/frontend/src/");
+          const basename = path.basename(f);
+          const isTest = f.includes("/tests/") || f.includes("/__tests__/") || 
+                         f.includes(".test.") || f.includes(".spec.") ||
+                         basename.startsWith("test-") || basename.startsWith("jest-");
+          return isProductive && !isTest && (f.endsWith(".ts") || f.endsWith(".tsx"));
+        });
+
+      if (filesToAudit.length === 0) {
+        logger.info("No hay archivos productivos en stage. Saltando auditoría de archivos.");
+      }
+    } catch (e) {
+      logger.warn("No se pudo obtener archivos staged. Fallback a escaneo manual...");
+      filesToAudit = getAllFiles();
+    }
+  }
 
   // 3. Run Rules per File
   if (filesToAudit.length > 0) {
@@ -191,5 +219,4 @@ async function run() {
 run().catch((e) => {
   console.error("Error fatal en la auditoría:", e);
   process.exit(1);
-})
-}
+});
