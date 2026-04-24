@@ -1,6 +1,15 @@
 import { type AgentThought, type AgentActions } from "@/types/index";
 import { parseAgentThought } from "@/helpers";
 
+interface ExtendedAgentThought extends AgentThought {
+  type?: string;
+  metadata?: {
+    estimated_tokens?: number;
+    estimated_cost?: number;
+    node?: string;
+  };
+}
+
 /**
  * Servicio de dominio para procesar la lógica de los pensamientos de los agentes
  * y orquestar las actualizaciones del store.
@@ -10,7 +19,7 @@ export const agentProcessor = {
   /**
    * Procesa un evento individual del stream y actualiza el store.
    */
-  process(data: AgentThought, store: AgentActions): boolean {
+  process(data: ExtendedAgentThought, store: AgentActions): boolean {
     if (data.error) {
       this.handleError(data.error as string, store);
       return false;
@@ -43,6 +52,15 @@ export const agentProcessor = {
 
     // 4. Gestión de la lista de pensamientos (Streaming dinámico)
     this.updateThoughts(data, store);
+
+    // 5. Soporte para métricas parciales (Issue #128)
+    if (data.type === "METRIC_PARTIAL" && data.metadata) {
+      store.updateTelemetry({
+        tokens: data.metadata.estimated_tokens,
+        cost: data.metadata.estimated_cost,
+        // No incrementamos iteraciones aquí
+      });
+    }
 
     return true;
   },

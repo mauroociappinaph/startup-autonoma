@@ -31,7 +31,7 @@ export const ReasoningFeed: React.FC = () => {
 
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10"
+        className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scroll-smooth"
       >
         <AnimatePresence initial={false}>
           {thoughts.length === 0 && !isStreaming ? (
@@ -97,7 +97,7 @@ export const ReasoningFeed: React.FC = () => {
                 </p>
 
                 {/* Renderizado de Bloques Estructurados v2.1 (Pattern from Elite Leaks) */}
-                {(!thought.isPartial && (thought.thought || thought.plan_steps || thought.verification)) && (
+                {(thought.thought || thought.plan_steps || thought.verification) && (
                   <div className="mt-3 space-y-2 pt-3 border-t border-white/10">
                     {thought.thought && (
                       <div className="bg-blue-500/5 p-3 rounded-lg border border-blue-500/10">
