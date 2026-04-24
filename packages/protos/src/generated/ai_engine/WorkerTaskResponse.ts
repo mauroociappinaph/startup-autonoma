@@ -1,6 +1,6 @@
 // Original file: src/ai_engine.proto
 
-import type { Struct as _google_protobuf_Struct, Struct__Output as _google_protobuf_Struct__Output } from '../google/protobuf/Struct';
+import type { Struct as _google_protobuf_Struct, Struct__Output as _google_protobuf_Struct__Output } from '../google/protobuf/Struct.js';
 
 export interface WorkerTaskResponse {
   'success'?: (boolean);
