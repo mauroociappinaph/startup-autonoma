@@ -1,15 +1,6 @@
 import { type AgentThought, type AgentActions } from "@/types/index";
 import { parseAgentThought } from "@/helpers";
 
-interface ExtendedAgentThought extends AgentThought {
-  type?: string;
-  metadata?: {
-    estimated_tokens?: number;
-    estimated_cost?: number;
-    node?: string;
-  };
-}
-
 /**
  * Servicio de dominio para procesar la lógica de los pensamientos de los agentes
  * y orquestar las actualizaciones del store.
@@ -19,7 +10,7 @@ export const agentProcessor = {
   /**
    * Procesa un evento individual del stream y actualiza el store.
    */
-  process(data: ExtendedAgentThought, store: AgentActions): boolean {
+  process(data: AgentThought, store: AgentActions): boolean {
     if (data.error) {
       this.handleError(data.error as string, store);
       return false;
