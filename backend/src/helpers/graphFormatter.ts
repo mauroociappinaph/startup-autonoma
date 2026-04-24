@@ -5,7 +5,7 @@ import { StreamEvent } from "@/types/index.js";
  * Helper para formatear las actualizaciones de los nodos en eventos de stream para el frontend.
  */
 export class GraphFormatter {
-  static *formatUpdate(update: Record<string, unknown>, threadId: string): Generator<StreamEvent> {
+  static *formatUpdate(update: Record<string, unknown>, threadId: string, checkpointId?: string): Generator<StreamEvent> {
     const nodeName = Object.keys(update)[0];
     const nodeData = (update as Record<string, Partial<AgentStateType>>)[nodeName];
 
@@ -30,6 +30,7 @@ export class GraphFormatter {
           iteration_count: nodeData.iteration_count || undefined,
           total_cost_usd: nodeData.total_cost_usd || undefined,
           reasoning: nodeData.reasoning || undefined,
+          checkpointId,
           threadId
         } as StreamEvent;
       }

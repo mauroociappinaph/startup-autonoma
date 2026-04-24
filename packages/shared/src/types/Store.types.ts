@@ -29,4 +29,8 @@ export interface AgentState {
   updateTelemetry: (data: { tokens?: number; iterations?: number; cost?: number }) => void;
   populateState: (state: BackendAgentState) => void;
   resetSession: () => void;
+  
+  // Acciones de Persistencia
+  rewindTo: (checkpointId: string) => Promise<void>;
+  loadHistory: (threadId: string) => Promise<void>;
 }

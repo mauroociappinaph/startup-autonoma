@@ -7,6 +7,28 @@ import { GraphFormatter } from '@/helpers/graphFormatter.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { SacredLogger } from '@/helpers/logger.js';
 
+interface LangGraphStreamEvent {
+  event: string;
+  data: {
+    chunk?: {
+      content?: string | { content: string };
+      tool_call_chunks?: { args?: string }[];
+    };
+    output?: Record<string, unknown>;
+  };
+  metadata?: {
+    langgraph_node?: string;
+    model_name?: string;
+    [key: string]: unknown;
+  };
+  config?: {
+    configurable?: {
+      checkpoint_id?: string;
+      [key: string]: unknown;
+    };
+  };
+}
+
 /**
  * Servicio encargado de la orquestación y streaming del grafo.
  */
@@ -44,20 +66,23 @@ export class GraphService {
     const currentState = await graph.getState(config);
     const baselineState = currentState.values as AgentStateType;
 
-    for await (const event of eventStream) {
+    for await (const rawEvent of eventStream) {
+       const event = rawEvent as unknown as LangGraphStreamEvent;
        const eventType = event.event;
        
        // 1. Capturamos tokens de razonamiento (Streaming de LLM)
        if (eventType === "on_chat_model_stream") {
          const nodeName = event.metadata?.langgraph_node;
          if (nodeName && ["ceo", "software_chief", "business_chief"].includes(nodeName)) {
-           const chunk = event.data.chunk;
+           const chunk = event.data.chunk as { content?: string | { content: string }; tool_call_chunks?: { args?: string }[] };
            
            let delta = "";
-           if (typeof chunk.content === 'string') {
-             delta = chunk.content;
-           } else if (chunk.tool_call_chunks && chunk.tool_call_chunks.length > 0) {
-             delta = chunk.tool_call_chunks[0].args || "";
+           if (chunk) {
+             if (typeof chunk.content === 'string') {
+               delta = chunk.content;
+             } else if (chunk.tool_call_chunks && chunk.tool_call_chunks.length > 0) {
+               delta = chunk.tool_call_chunks[0].args || "";
+             }
            }
 
            if (delta) {
@@ -99,9 +124,9 @@ export class GraphService {
                  const cleaned = fullReasoning.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\t/g, "\t");
                  const newChunk = cleaned.substring(lastYieldedLength);
                  if (newChunk) {
-                   const ev = { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
-                   await EventBus.publish(threadId, ev);
-                   yield ev;
+                   const partialEv = { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
+                   await EventBus.publish(threadId, partialEv);
+                   yield partialEv;
                    lastYieldedLength = cleaned.length;
                  }
                }
@@ -116,9 +141,10 @@ export class GraphService {
        }
 
         if (eventType === "on_node_end") {
-          const updates = event.data.output;
+          const updates = event.data.output as Record<string, unknown>;
+          const checkpointId = event.config?.configurable?.checkpoint_id;
           if (updates) {
-             for (const updateEvent of GraphFormatter.formatUpdate(updates, threadId)) {
+             for (const updateEvent of GraphFormatter.formatUpdate(updates, threadId, checkpointId)) {
                await EventBus.publish(threadId, updateEvent);
                yield updateEvent;
              }
@@ -166,13 +192,15 @@ export class GraphService {
     do {
       const eventStream = graph.streamEvents(null, { ...config, version: "v2" });
       
-      for await (const event of eventStream) {
+      for await (const rawEvent of eventStream) {
+        const event = rawEvent as unknown as LangGraphStreamEvent;
         const eventType = event.event;
         
         if (eventType === "on_node_end") {
-          const updates = event.data.output;
+          const updates = event.data.output as Record<string, unknown>;
+          const checkpointId = event.config?.configurable?.checkpoint_id;
           if (updates) { 
-            for (const updateEvent of GraphFormatter.formatUpdate(updates, threadId)) {
+            for (const updateEvent of GraphFormatter.formatUpdate(updates, threadId, checkpointId)) {
               await EventBus.publish(threadId, updateEvent);
               yield updateEvent;
             }

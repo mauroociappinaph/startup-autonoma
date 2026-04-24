@@ -3,11 +3,19 @@
 import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAgentStore } from "@/store/useAgentStore";
+import { RotateCcw } from "lucide-react";
 
 export const ReasoningFeed: React.FC = () => {
-  const { thoughts, isStreaming } = useAgentStore();
+  const { thoughts, isStreaming, rewindTo } = useAgentStore();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleRewind = async (checkpointId: string) => {
+    if (window.confirm("¿Estás seguro de que querés retroceder el tiempo hasta este punto? Se perderán los pasos posteriores.")) {
+      await rewindTo(checkpointId);
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -78,9 +86,22 @@ export const ReasoningFeed: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <span className="text-[9px] font-mono text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity">
-                    [{thought.time}]
-                  </span>
+                  <div className="flex items-center gap-3">
+                    {thought.checkpointId && !isStreaming && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-colors"
+                        onClick={() => handleRewind(thought.checkpointId!)}
+                        title="Retroceder a este punto"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <span className="text-[9px] font-mono text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity">
+                      [{thought.time}]
+                    </span>
+                  </div>
                 </div>
                 
                 <p className={`text-[12px] leading-relaxed tracking-tight ${

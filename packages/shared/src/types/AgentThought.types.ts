@@ -29,6 +29,7 @@ export interface AgentThought {
     node?: string;
     [key: string]: any;
   };
+  checkpointId?: string; // ID único del estado en Redis para Time-Travel
 }
 
 /**

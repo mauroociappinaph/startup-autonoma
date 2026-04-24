@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { type AgentState, type BackendAgentState } from "@startup/shared";
+import { agentService } from "@/api/agents";
 
-export const useAgentStore = create<AgentState>((set) => ({
+export const useAgentStore = create<AgentState>((set, get) => ({
   thoughts: [],
   isStreaming: false,
   isWaiting: false,
@@ -51,4 +52,45 @@ export const useAgentStore = create<AgentState>((set) => ({
     iterations: 0,
     totalCost: 0,
   }),
+
+  loadHistory: async (threadId: string) => {
+    try {
+      const { history, currentState } = await agentService.getHistory(threadId);
+      
+      // Convertir el historial a pensamientos (formato simplificado para el feed)
+      // En una implementación real, el backend podría devolverlos ya formateados
+      // Por ahora, usamos el currentState para repoblar lo visual.
+      if (currentState) {
+        get().populateState(currentState);
+      }
+      
+      set({ threadId });
+    } catch (error) {
+      console.error("Error loading history:", error);
+    }
+  },
+
+  rewindTo: async (checkpointId: string) => {
+    const { threadId, thoughts } = get();
+    try {
+      set({ isWaiting: true });
+      await agentService.rewind(threadId, checkpointId);
+      
+      // Limpiar pensamientos que ocurrieron después de este checkpoint
+      const checkpointIndex = thoughts.findIndex(t => t.checkpointId === checkpointId);
+      if (checkpointIndex !== -1) {
+        set({ thoughts: thoughts.slice(0, checkpointIndex + 1) });
+      }
+
+      // Recargar el estado actual desde el backend para asegurar consistencia
+      const { currentState } = await agentService.getHistory(threadId);
+      if (currentState) {
+        get().populateState(currentState);
+      }
+    } catch (error) {
+      console.error("Error in rewind:", error);
+    } finally {
+      set({ isWaiting: false });
+    }
+  },
 }));
