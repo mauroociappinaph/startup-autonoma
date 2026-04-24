@@ -180,6 +180,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /openspec
 │   ├── /changes
 │   │   ├── /archive
+│   │   ├── /fix-streaming-telemetry-128
 │   ├── /specs
 │   │   ├── /core
 ├── package-lock.json

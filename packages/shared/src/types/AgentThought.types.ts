@@ -21,6 +21,14 @@ export interface AgentThought {
   thought?: string;
   plan_steps?: string;
   verification?: string;
+  // --- MEJORA #128: Eventos de Sistema y Telemetría ---
+  type?: string;
+  metadata?: {
+    estimated_tokens?: number;
+    estimated_cost?: number;
+    node?: string;
+    [key: string]: any;
+  };
 }
 
 /**
