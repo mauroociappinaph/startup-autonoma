@@ -2,13 +2,8 @@ import { AgentStateType } from "@startup/shared";
 import { aiEngineClient } from "@/services/aiEngineClient.js";
 import { AIMessage } from "@langchain/core/messages";
 import { incrementIteration } from "@/helpers/index.js";
+import { AIEngineTask } from "@/types/index.js";
 
-interface AIEngineTask {
-  worker_name: string;
-  task_description: string;
-  trace_id?: string;
-  payload?: object;
-}
 
 /**
  * Nodo AI Engine Worker: Interfaz con el motor de Python vía gRPC.

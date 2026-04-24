@@ -6,28 +6,8 @@ import { TelemetryService } from './telemetryService.js';
 import { GraphFormatter } from '@/helpers/graphFormatter.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { SacredLogger } from '@/helpers/logger.js';
+import { LangGraphStreamEvent } from '@/types/index.js';
 
-interface LangGraphStreamEvent {
-  event: string;
-  data: {
-    chunk?: {
-      content?: string | { content: string };
-      tool_call_chunks?: { args?: string }[];
-    };
-    output?: Record<string, unknown>;
-  };
-  metadata?: {
-    langgraph_node?: string;
-    model_name?: string;
-    [key: string]: unknown;
-  };
-  config?: {
-    configurable?: {
-      checkpoint_id?: string;
-      [key: string]: unknown;
-    };
-  };
-}
 
 /**
  * Servicio encargado de la orquestación y streaming del grafo.

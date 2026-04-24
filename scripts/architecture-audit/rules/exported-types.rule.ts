@@ -10,14 +10,14 @@ export const ExportedTypesRule: Rule = {
     const isTypesDir = filePath.includes("/types/") || filePath.includes("/contracts/") || filePath.includes("/state/");
     
     if (!isTypesDir) {
-      const hasExportedTypes = sourceFile.getInterfaces().some(i => i.isExported()) ||
-                               sourceFile.getTypeAliases().some(t => t.isExported());
+      const hasTypes = sourceFile.getInterfaces().length > 0 ||
+                       sourceFile.getTypeAliases().length > 0;
       
-      if (hasExportedTypes) {
+      if (hasTypes) {
         results.push({
           filePath,
           line: 1,
-          message: `Se detectó exportación de tipos. Deben ir en /types o /contracts.`,
+          message: `Se detectó definición de tipos/interfaces en un archivo de lógica. Por Ley de Granularidad, todos los tipos deben ir en /types, /contracts o /state.`,
           severity: "error",
         });
       }
