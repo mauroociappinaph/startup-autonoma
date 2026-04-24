@@ -1,9 +1,8 @@
 import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { TelemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
 import { DocumentationWorkerSchema } from "@startup/shared";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * DocumentationWorker: El Escriba de la Startup.
@@ -25,41 +24,27 @@ export async function documentation_worker_node(state: AgentStateType): Promise<
   `);
 
   try {
-    const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "flow", temperature: 0 },
       [system_prompt, ...state.messages],
       DocumentationWorkerSchema
     );
 
-    const projectId = state.project_context?.projectId || "unknown";
-
-    // 1. Telemetría
-    await TelemetryService.recordMetric(projectId, {
-      node: "Documentation Worker",
-      model: "gpt-4o",
-      latency,
-      usage
-    });
-
-    // 2. Auditoría
-    await AuditService.logDecision(projectId, {
-      agent: "Documentation Worker",
-      decision: "update_docs",
-      reasoning: response.reasoning,
-      metadata: {
-        files: response.files_updated,
-        summary: response.summary_of_changes
-      }
-    });
-
     console.log(`📝 Documentation Sync: ${response.summary_of_changes}`);
 
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Documentation Worker",
+      model: model || "unknown",
+      usage,
+      latency,
+      cost,
+      decision: "update_docs",
+      reasoning: response.reasoning
+    });
+
     const updates: Partial<AgentStateType> = {
+      ...metricsUpdate,
       executive_summary: response.reasoning,
-      reasoning: response.reasoning,
-      iteration_count: 1,
-      token_usage: usage,
-      total_cost_usd: cost,
       messages: state.messages.concat([new AIMessage({
         content: `[DOCUMENTATION_WORKER_RESULT] Updated: ${response.files_updated.join(", ")}
 Summary: ${response.summary_of_changes}`,

@@ -2,6 +2,7 @@ import { AgentStateType } from "@startup/shared";
 import { codeResearcher } from "./codeResearcher.js";
 import { AIMessage } from "@langchain/core/messages";
 import { CodeResearcherInput } from "@/types/code-researcher.types.js";
+import { incrementIteration } from "@/helpers/index.js";
 
 /**
  * Nodo CodeResearcherWorker: Agente especializado en explorar y leer el código fuente.
@@ -27,8 +28,8 @@ export async function code_researcher_node(state: AgentStateType) {
     if (result.success) {
       console.log(`✅ Investigación [${result.action}] completada.`);
       return {
+        ...incrementIteration(state),
         executive_summary: `Code Researcher ejecutó con éxito: ${result.action}.`,
-        iteration_count: 1,
         next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[RESEARCH_REPORT] Resultado de ${result.action}:\n${result.data}`,
@@ -38,8 +39,8 @@ export async function code_researcher_node(state: AgentStateType) {
     } else {
       console.error(`❌ Investigación [${result.action}] fallida: ${result.errorMessage}`);
       return {
+        ...incrementIteration(state),
         executive_summary: `Error en Code Researcher: ${result.errorMessage}`,
-        iteration_count: 1,
         next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[RESEARCH_ERROR] Falló ${result.action}: ${result.errorMessage}`,

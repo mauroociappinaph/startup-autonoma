@@ -2,6 +2,7 @@ import { AgentStateType } from "@startup/shared";
 import { AIMessage } from "@langchain/core/messages";
 import { write_file, patch_file } from "@/tools/fs.js";
 import { CodeWriterInstructionSchema } from "@/types/code-writer.types.js";
+import { incrementIteration } from "@/helpers/index.js";
 
 /**
  * Nodo CodeWriter: Ejecutor atómico "manos en la masa".
@@ -94,6 +95,7 @@ export async function code_writer_node(state: AgentStateType) {
 
     // 3. Resultado Exitoso
     return {
+      ...incrementIteration(state),
       messages: state.messages.concat([
         new AIMessage({
           content: `[WORKER_REPLY] Operación ${payload.action} en ${payload.file_path} completada exitosamente. \nResultado interno: ${toolResultStr}`
@@ -106,6 +108,7 @@ export async function code_writer_node(state: AgentStateType) {
   } catch (error) {
     console.error("❌ Falló la operación del Code Writer:", error);
     return {
+      ...incrementIteration(state),
       messages: state.messages.concat([
         new AIMessage({
           content: `[WORKER_ERROR] El Code Writer falló intentando mutar el código: ${error instanceof Error ? error.message : String(error)}`

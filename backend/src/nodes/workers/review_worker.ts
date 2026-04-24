@@ -1,9 +1,8 @@
 import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { TelemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
 import { ReviewWorkerSchema } from "@startup/shared";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * ReviewWorker: El Sensor de Calidad Técnica.
@@ -25,41 +24,27 @@ export async function review_worker_node(state: AgentStateType): Promise<Partial
   `);
 
   try {
-    const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       ReviewWorkerSchema
     );
 
-    const projectId = state.project_context?.projectId || "unknown";
-
-    // 1. Telemetría
-    await TelemetryService.recordMetric(projectId, {
-      node: "Review Worker",
-      model: "gpt-4o",
-      latency,
-      usage
-    });
-
-    // 2. Auditoría
-    await AuditService.logDecision(projectId, {
-      agent: "Review Worker",
-      decision: response.status,
-      reasoning: response.reasoning,
-      metadata: {
-        comments: response.review_comments,
-        suggestions: response.suggestions
-      }
-    });
-
     console.log(`🧐 Review Result: ${response.status} -> ${response.reasoning}`);
 
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Review Worker",
+      model: model || "unknown",
+      usage,
+      latency,
+      cost,
+      decision: response.status,
+      reasoning: response.reasoning
+    });
+
     const updates: Partial<AgentStateType> = {
+      ...metricsUpdate,
       executive_summary: response.reasoning,
-      reasoning: response.reasoning,
-      iteration_count: 1,
-      token_usage: usage,
-      total_cost_usd: cost,
       messages: state.messages.concat([new AIMessage({
         content: `[REVIEW_WORKER_RESULT] Status: ${response.status}
 Reasoning: ${response.reasoning}

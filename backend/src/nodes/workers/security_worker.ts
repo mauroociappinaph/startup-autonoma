@@ -1,9 +1,8 @@
 import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { TelemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
 import { SecurityWorkerSchema } from "@startup/shared";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * SecurityWorker: El Guardián de la Ciberseguridad.
@@ -26,41 +25,27 @@ export async function security_worker_node(state: AgentStateType): Promise<Parti
   `);
 
   try {
-    const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "reasoning", temperature: 0 },
       [system_prompt, ...state.messages],
       SecurityWorkerSchema
     );
 
-    const projectId = state.project_context?.projectId || "unknown";
-
-    // 1. Telemetría
-    await TelemetryService.recordMetric(projectId, {
-      node: "Security Worker",
-      model: "gpt-4o",
-      latency,
-      usage
-    });
-
-    // 2. Auditoría
-    await AuditService.logDecision(projectId, {
-      agent: "Security Worker",
-      decision: response.status,
-      reasoning: response.reasoning,
-      metadata: {
-        vulnerabilities: response.vulnerabilities,
-        should_block: response.should_block
-      }
-    });
-
     console.log(`🛡️ Security Audit: ${response.status} -> ${response.reasoning}`);
 
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Security Worker",
+      model: model || "unknown",
+      usage,
+      latency,
+      cost,
+      decision: response.status,
+      reasoning: response.reasoning
+    });
+
     const updates: Partial<AgentStateType> = {
+      ...metricsUpdate,
       executive_summary: response.reasoning,
-      reasoning: response.reasoning,
-      iteration_count: 1,
-      token_usage: usage,
-      total_cost_usd: cost,
       messages: state.messages.concat([new AIMessage({
         content: `[SECURITY_WORKER_RESULT] Status: ${response.status}
 Reasoning: ${response.reasoning}
