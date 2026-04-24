@@ -180,8 +180,8 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /openspec
 │   ├── /changes
 │   │   ├── /archive
-│   │   ├── /fix-iteration-count-telemetry-127
 │   ├── /specs
+│   │   ├── /core
 ├── package-lock.json
 ├── package.json
 ├── /packages
