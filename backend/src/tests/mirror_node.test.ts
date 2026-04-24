@@ -64,7 +64,7 @@ describe('MirrorAgent Node', () => {
       model: "glm-5.1"
     });
 
-    const result = await mirror_node(initialState);
+    const result: any = await mirror_node(initialState);
 
     expect(result.refined_prompt).toBe(mockRefined);
     expect(result.executive_summary).toContain('Mirror optimizó la petición');
