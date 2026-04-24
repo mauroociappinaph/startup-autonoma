@@ -5,6 +5,7 @@ import { list_dir, read_file } from "../tools/index.js";
 import { SystemMessage, AIMessage, ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { LLMFactory } from "../services/llmFactory.js";
 import { ChatOpenAI } from "@langchain/openai";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /** Lista de herramientas para binding del modelo. */
 const toolList = [list_dir, read_file];
@@ -77,7 +78,7 @@ export async function researcher_node(state: AgentStateType) {
   // SÍNTESIS FINAL
   console.log("📊 Sintetizando hallazgos de investigación...");
 
-  const { data: synthesisResponse, usage } = await LLMService.getStructuredData(
+  const { data: synthesisResponse, usage, cost, latency, model: modelName } = await LLMService.getStructuredData(
     { type: "flow", temperature: 0 },
     [
       new SystemMessage("Sintetiza los hallazgos de la investigación técnica en un reporte estructurado."),
@@ -86,11 +87,19 @@ export async function researcher_node(state: AgentStateType) {
     ResearcherResponseSchema
   );
 
+  const metricsUpdate = await prepareNodeUpdate(state, {
+    nodeName: "Researcher",
+    model: modelName || "unknown",
+    usage,
+    latency,
+    cost,
+    reasoning: synthesisResponse.findings
+  });
+
   return {
+    ...metricsUpdate,
     executive_summary: synthesisResponse.findings,
     completed_steps: ["research"],
-    iteration_count: 1,
-    token_usage: usage,
     next_node: state.active_chief || "ceo",
     messages: [new AIMessage({
       content: `[RESEARCH_REPORT] ${synthesisResponse.conclusion}`,

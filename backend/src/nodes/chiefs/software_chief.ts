@@ -3,9 +3,8 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { GitActionSchema } from "@/types/git-worker.types.js";
-import { TelemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
 import { TestRunnerInputSchema } from "@/types/software-tools.types.js";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * Esquema de decisión interna del Software Chief.
@@ -73,35 +72,23 @@ export async function software_chief_node(state: AgentStateType) {
       SoftwareChiefDecisionSchema
     );
 
-    const projectId = state.project_context?.projectId || "unknown";
-    const actualModel = model || "gpt-4o";
+    console.log(`🧠 Chief Reasoning: ${response.reasoning}`);
+    console.log(`🎯 Decision: ${response.decision}`);
+    console.log(`📊 [${model}] Costo: $${cost.toFixed(6)}`);
 
-    // 1. Telemetría
-    await TelemetryService.recordMetric(projectId, {
-      node: "Software Chief",
-      model: actualModel,
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Software Chief",
+      model: model || "unknown",
+      usage,
       latency,
-      usage
-    });
-
-    // 2. Auditoría
-    await AuditService.logDecision(projectId, {
-      agent: "Software Chief",
+      cost,
       decision: response.decision,
       reasoning: response.reasoning
     });
 
-    console.log(`🧠 Chief Reasoning: ${response.reasoning}`);
-    console.log(`🎯 Decision: ${response.decision}`);
-    console.log(`📊 Costo: $${cost.toFixed(6)}`);
-
     const updates: Partial<AgentStateType> = {
-      executive_summary: response.reasoning,
-      reasoning: response.reasoning,
+      ...metricsUpdate,
       active_chief: "software_chief",
-      iteration_count: 1,
-      token_usage: usage,
-      total_cost_usd: cost,
       messages: state.messages.concat([new AIMessage({
         content: `[SOFTWARE_CHIEF_THOUGHT] ${response.reasoning}
 [DECISION] ${response.decision}`,

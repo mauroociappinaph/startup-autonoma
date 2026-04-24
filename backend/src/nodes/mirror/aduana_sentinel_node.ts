@@ -2,6 +2,7 @@ import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * Esquema de respuesta para el Sentinel.
@@ -45,7 +46,7 @@ export async function aduana_sentinel_node(state: AgentStateType) {
   const humanMessage = new HumanMessage(`<user_data>${userInput}</user_data>`);
 
   try {
-    const { data: result } = await LLMService.getStructuredData(
+    const { data: result, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "reasoning", temperature: 0 },
       [system_prompt, humanMessage],
       AduanaSentinelSchema
@@ -53,7 +54,18 @@ export async function aduana_sentinel_node(state: AgentStateType) {
 
     console.log(`🛡️ Sentinel Report [${result.threat_level.toUpperCase()}]: ${result.reasoning}`);
 
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Aduana Sentinel",
+      model: model || "unknown",
+      usage,
+      latency,
+      cost,
+      decision: result.is_injection ? "block" : "pass",
+      reasoning: result.reasoning
+    });
+
     const updates: Partial<AgentStateType> = {
+      ...metricsUpdate,
       is_malicious: result.is_injection,
       security_report: result.reasoning,
       next_node: result.is_injection ? "security_blocked" : undefined 

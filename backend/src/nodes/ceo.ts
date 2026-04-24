@@ -1,9 +1,8 @@
 import { LLMService } from "@/services/llmService.js";
-import { TelemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
 import { CEOResponseSchema } from "@startup/shared";
 import { AgentStateType } from "@startup/shared";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * Nodo CEO: El Estratega de la Startup.
@@ -35,39 +34,29 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
   `);
 
   try {
-    const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "reasoning", temperature: 0 },
       [system_prompt, ...state.messages],
       CEOResponseSchema
     );
 
-    const projectId = state.project_context?.projectId || "unknown";
+    console.log(`✅ CEO Decision: ${response.next_step} -> ${response.reasoning}`);
+    console.log(`📊 [${model}] Costo de este paso: $${cost.toFixed(6)}`);
 
-    // 1. Telemetría
-    await TelemetryService.recordMetric(projectId, {
-      node: "CEO",
-      model: "gpt-4o",
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "CEO",
+      model: model || "unknown",
+      usage,
       latency,
-      usage
-    });
-
-    // 2. Auditoría
-    await AuditService.logDecision(projectId, {
-      agent: "CEO",
+      cost,
       decision: response.next_step,
       reasoning: response.reasoning
     });
 
-    console.log(`✅ CEO Decision: ${response.next_step} -> ${response.reasoning}`);
-    console.log(`📊 Costo de este paso: $${cost.toFixed(6)}`);
-
     const updates: Partial<AgentStateType> = {
-      executive_summary: response.analysis,
-      reasoning: response.reasoning,
+      ...metricsUpdate,
+      executive_summary: response.analysis, // El CEO usa 'analysis' para el resumen
       active_chief: (response.delegated_to as "software_chief" | "business_chief" | "operations_chief" | undefined),
-      iteration_count: 1,
-      token_usage: usage,
-      total_cost_usd: cost, // Se sumará vía reducer
       messages: state.messages.concat([new AIMessage({
         content: `[CEO_THOUGHT] ${response.reasoning}
 [CEO_DECISION] ${response.next_step} ${response.delegated_to ? `a ${response.delegated_to}` : ""}`,

@@ -1,9 +1,8 @@
 import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { TelemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
 import { z } from "zod";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * Esquema de decisión interna del Business Chief.
@@ -83,34 +82,22 @@ export async function business_chief_node(state: AgentStateType) {
       BusinessChiefDecisionSchema
     );
 
-    const projectId = state.project_context?.projectId || "unknown";
-    const actualModel = model || "gpt-4o";
+    console.log(`🧠 Business Chief Reasoning: ${response.reasoning}`);
+    console.log(`📊 [${model}] Costo: $${cost.toFixed(6)}`);
 
-    // 1. Telemetría
-    await TelemetryService.recordMetric(projectId, {
-      node: "Business Chief",
-      model: actualModel,
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Business Chief",
+      model: model || "unknown",
+      usage,
       latency,
-      usage
-    });
-
-    // 2. Auditoría
-    await AuditService.logDecision(projectId, {
-      agent: "Business Chief",
+      cost,
       decision: response.decision,
       reasoning: response.reasoning
     });
 
-    console.log(`🧠 Business Chief Reasoning: ${response.reasoning}`);
-    console.log(`📊 [${actualModel}] Costo: $${cost.toFixed(6)}`);
-
     const updates: Partial<AgentStateType> = {
-      executive_summary: response.reasoning,
-      reasoning: response.reasoning,
+      ...metricsUpdate,
       active_chief: "business_chief",
-      iteration_count: 1,
-      token_usage: usage,
-      total_cost_usd: cost,
       messages: state.messages.concat([new AIMessage({
         content: `[BUSINESS_CHIEF_THOUGHT] ${response.reasoning}
 [DECISION] ${response.decision}`,

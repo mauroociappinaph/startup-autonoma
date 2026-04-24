@@ -1,9 +1,8 @@
 import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { TelemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
 import { OperationsChiefSchema } from "@startup/shared";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * Nodo OperationsChief: El Guardián de la Infraestructura.
@@ -29,42 +28,28 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
   `);
 
   try {
-    const { data: response, usage, cost, latency } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       OperationsChiefSchema
     );
 
-    const projectId = state.project_context?.projectId || "unknown";
-
-    // 1. Telemetría
-    await TelemetryService.recordMetric(projectId, {
-      node: "Operations Chief",
-      model: "gpt-4o",
-      latency,
-      usage
-    });
-
-    // 2. Auditoría
-    await AuditService.logDecision(projectId, {
-      agent: "Operations Chief",
-      decision: response.action,
-      reasoning: response.reasoning,
-      metadata: {
-        priority: response.priority,
-        requires_approval: response.requires_approval
-      }
-    });
-
     console.log(`🚀 Operations Decision: ${response.action} -> ${response.reasoning}`);
 
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Operations Chief",
+      model: model || "unknown",
+      usage,
+      latency,
+      cost,
+      decision: response.action,
+      reasoning: response.reasoning
+    });
+
     const updates: Partial<AgentStateType> = {
+      ...metricsUpdate,
       executive_summary: response.reasoning,
-      reasoning: response.reasoning,
       active_chief: "operations_chief",
-      iteration_count: 1,
-      token_usage: usage,
-      total_cost_usd: cost,
       messages: state.messages.concat([new AIMessage({
         content: `[OPERATIONS_CHIEF_THOUGHT] ${response.reasoning}
 [ACTION] ${response.action} (Prioridad: ${response.priority})

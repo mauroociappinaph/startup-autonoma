@@ -3,6 +3,7 @@ import { LLMService } from "@/services/llmService.js";
 import { MirrorResponseSchema } from "@/types/mirror.types.js";
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { SacredLogger } from "@/helpers/logger.js";
+import { prepareNodeUpdate } from "@/helpers/index.js";
 
 /**
  * Nodo MirrorAgent: El Arquitecto de Intenciones.
@@ -34,7 +35,7 @@ export async function mirror_node(state: AgentStateType) {
   `);
 
   try {
-    const { data: response, usage } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "reasoning", temperature: 0 },
       [system_prompt, new HumanMessage(`Optimiza esta petición: "${originalPrompt}"`)],
       MirrorResponseSchema
@@ -44,11 +45,19 @@ export async function mirror_node(state: AgentStateType) {
     SacredLogger.info(`Prompt refinado: ${response.refined_prompt}`, "MIRROR");
     SacredLogger.info(`Tokens usandos en este paso: ${usage.total}`, "MIRROR");
 
+    const metricsUpdate = await prepareNodeUpdate(state, {
+      nodeName: "Mirror",
+      model: model || "unknown",
+      usage,
+      latency,
+      cost,
+      reasoning: `Intenciones: ${response.intentions.join(', ')}`
+    });
+
     // Preparamos la respuesta para el grafo
     return {
+      ...metricsUpdate,
       refined_prompt: response.refined_prompt, // Guardamos el prompt limpio en el estado
-      iteration_count: 1, // El reducer sumará +1
-      token_usage: usage, // El reducer sumará los tokens
       executive_summary: `Mirror optimizó la petición. Intenciones: ${response.intentions.length}.`,
       messages: [new AIMessage({
         content: `[MIRROR_REPORT] He analizado tu petición. \n\n**Propuesta Refinada:** ${response.refined_prompt}\n\n**Intenciones:** ${response.intentions.join(', ')}\n\n**Información Faltante:** ${response.missing_info.length > 0 ? response.missing_info.join(', ') : 'Ninguna.'}`,
