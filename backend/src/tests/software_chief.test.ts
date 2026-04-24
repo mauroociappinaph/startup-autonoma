@@ -135,7 +135,7 @@ describe('SoftwareChief Node Delegation', () => {
 
     const result = await software_chief_node(initialState);
 
-    expect(result.plan).toEqual([]);
+    expect(result.plan).toBeUndefined();
     expect(result.executive_summary).toBe('Todas las tareas técnicas han sido completadas con éxito.');
     expect(llmSpy).toHaveBeenCalled();
   });
