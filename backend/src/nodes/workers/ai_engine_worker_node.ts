@@ -1,6 +1,7 @@
 import { AgentStateType } from "@startup/shared";
 import { aiEngineClient } from "@/services/aiEngineClient.js";
 import { AIMessage } from "@langchain/core/messages";
+import { incrementIteration } from "@/helpers/index.js";
 
 interface AIEngineTask {
   worker_name: string;
@@ -25,7 +26,8 @@ export async function ai_engine_worker_node(state: AgentStateType) {
     return {
       messages: state.messages.concat([new AIMessage({
         content: "[WORKER_ERROR] No hay instrucciones para el AI Engine."
-      })])
+      })]),
+      ...incrementIteration(state)
     };
   }
 

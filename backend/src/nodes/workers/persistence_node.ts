@@ -2,6 +2,7 @@ import { AgentStateType } from "@startup/shared";
 import { save_to_engram } from "@/tools/platform/engram_tool.js";
 import { EngramToolArgs, EngramResult } from "@/types/engram.types.js";
 import { AIMessage } from "@langchain/core/messages";
+import { incrementIteration } from "@/helpers/index.js";
 
 /**
  * Nodo de Persistencia: Ejecuta el guardado de información en Engram.
@@ -21,7 +22,8 @@ export async function persistence_node(state: AgentStateType) {
     return {
       messages: state.messages.concat([new AIMessage({
         content: "[PERSISTENCE_ERROR] No hay datos para guardar en Engram."
-      })])
+      })]),
+      ...incrementIteration(state)
     };
   }
 
@@ -41,7 +43,7 @@ export async function persistence_node(state: AgentStateType) {
         additional_kwargs: { engram_result: result }
       })]),
       completed_steps: ["persist_memory"],
-      iteration_count: 1,
+      ...incrementIteration(state),
       next_node: state.active_chief || "ceo"
     };
   } catch (error) {

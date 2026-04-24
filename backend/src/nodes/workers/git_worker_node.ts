@@ -3,6 +3,7 @@ import { gitWorker } from "./gitWorker.js";
 import { AIMessage } from "@langchain/core/messages";
 import { GitCommandInput } from "@/types/git-worker.types.js";
 import { SacredLogger } from "@/helpers/logger.js";
+import { incrementIteration } from "@/helpers/index.js";
 
 /**
  * Nodo GitWorker: Brazo ejecutor de operaciones Git dentro del grafo.
@@ -19,6 +20,7 @@ export async function git_worker_node(state: AgentStateType) {
     SacredLogger.error("No se encontró una instrucción válida para el Git Worker.", "GIT_NODE");
     return {
       executive_summary: "Error: No se recibió una instrucción Git válida.",
+      ...incrementIteration(state)
     };
   }
 
@@ -34,7 +36,7 @@ export async function git_worker_node(state: AgentStateType) {
       return {
         executive_summary: `Git Worker ejecutó con éxito: ${result.action}. Stdout: ${result.stdout || 'N/A'}`,
         completed_steps: ["git_operation"],
-        iteration_count: 1,
+        ...incrementIteration(state),
         next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[GIT_REPORT] Operación ${result.action} completada.`,
@@ -45,7 +47,7 @@ export async function git_worker_node(state: AgentStateType) {
       SacredLogger.error(`Operación Git [${result.action}] fallida: ${result.errorMessage}`, "GIT_NODE");
       return {
         executive_summary: `Error en Git Worker: ${result.errorMessage}`,
-        iteration_count: 1,
+        ...incrementIteration(state),
         next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[GIT_ERROR] Falló ${result.action}: ${result.errorMessage}`,
@@ -58,6 +60,7 @@ export async function git_worker_node(state: AgentStateType) {
     SacredLogger.error(`Fallo crítico en el Nodo GitWorker: ${err.message}`, "GIT_NODE");
     return {
       executive_summary: `Fallo crítico en Git Worker: ${err.message}`,
+      ...incrementIteration(state)
     };
   }
 }
