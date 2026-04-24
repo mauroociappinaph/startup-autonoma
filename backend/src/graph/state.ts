@@ -58,7 +58,7 @@ export const AgentAnnotation = Annotation.Root({
    * Lista de tareas estratégicas.
    */
   plan: Annotation<string[]>({
-    reducer: (prev, next) => next || prev, // Asegura que 'plan' se mantenga si es necesario
+    reducer: (prev, next) => (next && next.length > 0) ? next : prev,
     default: () => [],
   }),
 
@@ -128,5 +128,61 @@ export const AgentAnnotation = Annotation.Root({
   next_node: Annotation<string | undefined>({
     reducer: (prev, next) => next ?? prev,
     default: () => undefined,
+  }),
+
+  /**
+   * Identificador de traza para observabilidad distribuida.
+   */
+  trace_id: Annotation<string | undefined>({
+    reducer: (prev, next) => next || prev,
+    default: () => undefined,
+  }),
+
+  /**
+   * Justificación del paso actual (Reasoning).
+   */
+  reasoning: Annotation<string | undefined>({
+    reducer: (prev, next) => next || prev,
+    default: () => undefined,
+  }),
+
+  /**
+   * Reporte detallado del Sentinel.
+   */
+  security_report: Annotation<string | undefined>({
+    reducer: (prev, next) => next || prev,
+    default: () => undefined,
+  }),
+
+  /**
+   * Payload específico para tareas de Lead Gen (Engine Python).
+   */
+  lead_gen_payload: Annotation<{ niche: string; location?: string; limit: number } | undefined>({
+    reducer: (prev, next) => next || prev,
+    default: () => undefined,
+  }),
+
+  /**
+   * Resultado de leads calificados obtenidos por el engine.
+   */
+  qualified_leads: Annotation<string | undefined>({
+    reducer: (prev, next) => next || prev,
+    default: () => undefined,
+  }),
+
+  /**
+   * Flag que indica si el input fue detectado como malicioso.
+   */
+  is_malicious: Annotation<boolean>({
+    reducer: (prev, next) => next ?? prev,
+    default: () => false,
+  }),
+
+  /**
+   * Flag de aprobación de misión por el humano (HITL).
+   */
+  is_mission_approved: Annotation<boolean>({
+    reducer: (prev, next) => next ?? prev,
+    default: () => false,
   }),
 });

@@ -56,7 +56,7 @@ export async function aduana_sentinel_node(state: AgentStateType) {
     const updates: Partial<AgentStateType> = {
       is_malicious: result.is_injection,
       security_report: result.reasoning,
-      next_node: result.is_injection ? "ceo" : undefined 
+      next_node: result.is_injection ? "security_blocked" : undefined 
     };
 
     if (result.is_injection) {
@@ -73,7 +73,7 @@ export async function aduana_sentinel_node(state: AgentStateType) {
     // En caso de fallo crítico del servicio de IA, por seguridad somos conservadores
     return {
       is_malicious: false,
-      next_node: "mirror_node"
+      next_node: "mirror"
     };
   }
 }

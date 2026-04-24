@@ -36,8 +36,7 @@ export async function circuit_breaker_node(state: AgentStateType) {
       executive_summary: "🚨 Emergencia: Límite de iteraciones alcanzado. Se ha detenido el proceso para evitar bucles.",
       messages: state.messages.concat([new AIMessage({
         content: `🚨 **CIRCUIT BREAKER**\nSe alcanzó el límite de ${maxIterations} iteraciones. Operación abortada por seguridad.`,
-      })]),
-      plan: []
+      })])
     };
   }
 
@@ -56,8 +55,7 @@ export async function circuit_breaker_node(state: AgentStateType) {
         executive_summary: "🚨 Emergencia: Presupuesto total de la startup agotado.",
         messages: state.messages.concat([new AIMessage({
           content: `🚨 **LÍMITE DE PROYECTO ALCANZADO**\n\nTu startup ha consumido ${status.totalUsage} tokens de un límite de ${status.limit}. No es posible continuar sin ampliar el presupuesto.`,
-        })]),
-        plan: []
+        })])
       };
     }
   }

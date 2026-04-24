@@ -25,8 +25,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
     return {
       messages: state.messages.concat([new AIMessage({
         content: "[WORKER_ERROR] No hay instrucciones para el AI Engine."
-      })]),
-      plan: [] // Detenemos la ejecución
+      })])
     };
   }
 
@@ -41,8 +40,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
   if (existingResult) {
     console.log(`ℹ️ [AI_ENGINE] Idempotencia disparada: Resultado ya existe para ${aiTask.worker_name}. Saltando gRPC...`);
     return {
-      next_node: state.active_chief || "ceo",
-      plan: [] 
+      next_node: state.active_chief || "ceo"
     };
   }
 
@@ -68,8 +66,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
         })]),
         completed_steps: ["ai_engine_task"],
         iteration_count: 1,
-        next_node: state.active_chief || "ceo",
-        plan: [] // Tarea terminada, vuelve al Chief via guardian
+        next_node: state.active_chief || "ceo"
       };
     } else {
       throw new Error(response.errorCode || response.message);
@@ -81,8 +78,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
         content: `[WORKER_ERROR] Falla en AI Engine (${aiTask.worker_name}): ${error instanceof Error ? error.message : String(error)}`
       })]),
       iteration_count: 1,
-      next_node: state.active_chief || "ceo",
-      plan: []
+      next_node: state.active_chief || "ceo"
     };
   }
 }

@@ -11,7 +11,7 @@ export interface AgentStateType {
   original_prompt: string; // El input crudo del humano
   refined_prompt: string;  // El input optimizado por el Mirror
   messages: BaseMessage[];
-  trace_id?: string | number; // Identificador de traza para observabilidad
+  trace_id?: string; // Identificador de traza para observabilidad
   reasoning?: string; // Justificación del paso actual
   executive_summary: string;
   iteration_count: number; // Contador de pasos en el grafo
@@ -39,5 +39,6 @@ export interface AgentStateType {
   next_node?: string; // Nodo al que el Circuit Breaker debería redirigir si todo está OK
   is_mission_approved?: boolean; // Flag para evitar bucles de aprobación
   is_malicious?: boolean; // Detectado por AduanaSentinel
+  security_report?: string; // Reporte detallado del Sentinel
   [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)
 }

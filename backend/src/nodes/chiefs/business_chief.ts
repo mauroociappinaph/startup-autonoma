@@ -185,13 +185,11 @@ export async function business_chief_node(state: AgentStateType) {
       }));
     }
     else if (response.decision === "complete") {
-      updates.plan = [];
       updates.next_node = "ceo";
       updates.completed_steps = ["business_chief"];
       updates.executive_summary = response.reasoning;
     }
     else if (response.decision === "need_strategic_clarification") {
-      updates.plan = [];
       updates.next_node = "ceo";
       updates.executive_summary = `Business Chief requiere aclaración estratégica: ${response.reasoning}`;
     }
@@ -200,7 +198,6 @@ export async function business_chief_node(state: AgentStateType) {
   } catch (error) {
     console.error("❌ Error en el Business Chief:", error);
     return {
-      plan: [],
       executive_summary: "Error crítico en Business Chief."
     };
   }

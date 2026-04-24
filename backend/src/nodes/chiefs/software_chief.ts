@@ -176,7 +176,6 @@ export async function software_chief_node(state: AgentStateType) {
       }));
     }
     else if (response.decision === "need_clarification") {
-      updates.plan = []; // Detenemos el plan hasta tener más info
       updates.next_node = "ceo"; // Volvemos al CEO vía guardian
       updates.executive_summary = `El Software Chief necesita aclaración: ${response.reasoning}`;
       updates.messages?.push(new AIMessage({
@@ -184,7 +183,6 @@ export async function software_chief_node(state: AgentStateType) {
       }));
     }
     else if (response.decision === "complete") {
-      updates.plan = [];
       updates.next_node = "ceo"; 
       updates.completed_steps = ["software_chief"];
       updates.executive_summary = response.reasoning;
@@ -197,7 +195,6 @@ export async function software_chief_node(state: AgentStateType) {
       messages: state.messages.concat([new AIMessage({
         content: `[CHIEF_ERROR] Error procesando la misión: ${error instanceof Error ? error.message : String(error)}`
       })]),
-      plan: [],
       executive_summary: `Error interno del Software Chief: ${error instanceof Error ? error.message : String(error)}`
     };
   }

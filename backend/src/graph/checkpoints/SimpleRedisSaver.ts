@@ -128,9 +128,17 @@ export class SimpleRedisSaver extends BaseCheckpointSaver {
   }
 
   async deleteThread(threadId: string): Promise<void> {
-    const keys = await this.client.keys(`checkpoint:${threadId}:*`);
-    if (keys.length > 0) await this.client.del(...keys);
-    const writeKeys = await this.client.keys(`writes:${threadId}:*`);
-    if (writeKeys.length > 0) await this.client.del(...writeKeys);
+    const patterns = [`checkpoint:${threadId}:*`, `writes:${threadId}:*`];
+    
+    for (const pattern of patterns) {
+      let cursor = "0";
+      do {
+        const [nextCursor, keys] = await this.client.scan(cursor, "MATCH", pattern, "COUNT", 100);
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await this.client.del(...keys);
+        }
+      } while (cursor !== "0");
+    }
   }
 }
