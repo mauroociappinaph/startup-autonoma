@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { gitWorker } from "./gitWorker.js";
 import { AIMessage } from "@langchain/core/messages";
 import { GitCommandInput } from "@/types/git-worker.types.js";

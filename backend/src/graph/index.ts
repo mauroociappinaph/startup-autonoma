@@ -2,7 +2,7 @@ import { StateGraph, START, END } from "@langchain/langgraph";
 import { SimpleRedisSaver } from "./checkpoints/SimpleRedisSaver.js";
 import { getRedisConnection } from "@/db/redis.js";
 import { AgentAnnotation } from "@/graph/state.js";
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { ceo_node } from "@/nodes/ceo.js";
 import { software_chief_node } from "@/nodes/chiefs/software_chief.js";
 import { business_chief_node } from "@/nodes/chiefs/business_chief.js";

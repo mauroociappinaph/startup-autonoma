@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { codeResearcher } from "./codeResearcher.js";
 import { AIMessage } from "@langchain/core/messages";
 import { CodeResearcherInput } from "@/types/code-researcher.types.js";

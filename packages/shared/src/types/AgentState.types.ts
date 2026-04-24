@@ -1,5 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { ProjectContext } from "./project.types.js";
+import { ProjectContext } from "./Project.types.js";
 
 /**
  * Interfaz pura del estado de los agentes.

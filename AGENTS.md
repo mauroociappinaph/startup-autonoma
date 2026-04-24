@@ -180,6 +180,9 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── package-lock.json
 ├── package.json
 ├── /packages
+│   ├── /protos
+│   │   ├── package.json
+│   │   ├── /src
 │   ├── /shared
 │   │   ├── package.json
 │   │   ├── /src
@@ -193,6 +196,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── runner.ts
 │   │   ├── structural-checks.ts
 │   │   ├── types.ts
+│   ├── quick-commit.ts
 ├── /skills
 ├── tsconfig.json
 ├── turbo.json

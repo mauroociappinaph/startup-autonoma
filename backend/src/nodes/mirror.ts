@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { MirrorResponseSchema } from "@/types/mirror.types.js";
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";

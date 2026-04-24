@@ -1,6 +1,6 @@
 import { getGraph } from '@/graph/index.js';
-import { AgentStateType } from '@/types/state.types.js';
-import { ProjectContext } from '@/types/project.types.js';
+import { AgentStateType } from '@startup/shared';
+import { ProjectContext } from '@startup/shared';
 import { EventBus } from './eventBus.js';
 import { GraphFormatter } from '@/helpers/graphFormatter.js';
 import { HumanMessage } from '@langchain/core/messages';

@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { save_to_engram } from "@/tools/platform/engram_tool.js";
 import { EngramToolArgs, EngramResult } from "@/types/engram.types.js";
 import { AIMessage } from "@langchain/core/messages";

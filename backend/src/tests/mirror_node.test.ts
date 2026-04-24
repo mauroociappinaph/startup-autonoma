@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { mirror_node } from '@/nodes/mirror.js';
 import { LLMService } from '@/services/llmService.js';
-import { AgentStateType } from '@/types/state.types.js';
+import { AgentStateType } from '@startup/shared';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
 

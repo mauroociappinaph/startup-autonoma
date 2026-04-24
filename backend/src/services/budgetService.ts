@@ -1,5 +1,5 @@
 import { getRedisConnection } from "../db/redis.js";
-import { ProjectContext } from "../types/project.types.js";
+import { ProjectContext } from "@startup/shared";
 import { EventBus } from "./eventBus.js";
 
 /**

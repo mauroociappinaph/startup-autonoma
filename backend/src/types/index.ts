@@ -26,7 +26,7 @@ export * from "./mirror.types.js";
 export * from "./researcher.types.js";
 export * from "./software-chief.types.js";
 export * from "./software-tools.types.js";
-export * from "./state.types.js";
+export * from "@startup/shared";
 export * from "./business-chief.types.js";
 export * from "./engram.types.js";
 export * from "./agent-job.types.js";

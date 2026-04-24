@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { LLMService } from "../services/llmService.js";
 import { ResearcherResponseSchema } from "@startup/shared";
 import { list_dir, read_file } from "../tools/index.js";

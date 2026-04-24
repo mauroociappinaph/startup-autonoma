@@ -4,7 +4,7 @@ import { business_chief_node } from '@/nodes/chiefs/business_chief.js';
 import { LLMService } from '@/services/llmService.js';
 import { TelemetryService } from '@/services/telemetryService.js';
 import { AuditService } from '@/services/auditService.js';
-import { AgentStateType } from '@/types/state.types.js';
+import { AgentStateType } from '@startup/shared';
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
 

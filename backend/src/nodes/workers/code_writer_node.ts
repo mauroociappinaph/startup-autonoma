@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { AIMessage } from "@langchain/core/messages";
 import { write_file, patch_file } from "@/tools/fs.js";
 import { CodeWriterInstructionSchema } from "@/types/code-writer.types.js";

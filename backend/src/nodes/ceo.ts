@@ -2,7 +2,7 @@ import { LLMService } from "@/services/llmService.js";
 import { TelemetryService } from "@/services/telemetryService.js";
 import { AuditService } from "@/services/auditService.js";
 import { CEOResponseSchema } from "@startup/shared";
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 
 /**

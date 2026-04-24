@@ -4,7 +4,7 @@ import { ceo_node } from '@/nodes/ceo.js';
 import { LLMService } from '@/services/llmService.js';
 import { TelemetryService } from '@/services/telemetryService.js';
 import { AuditService } from '@/services/auditService.js';
-import { AgentStateType } from '@/types/state.types.js';
+import { AgentStateType } from '@startup/shared';
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 
 // Mockeamos ioredis para evitar conexiones reales

@@ -1,5 +1,5 @@
 import { persistence_node } from "./nodes/workers/persistence_node.js";
-import { AgentStateType } from "./types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 /**

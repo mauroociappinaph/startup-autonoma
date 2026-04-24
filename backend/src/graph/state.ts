@@ -1,6 +1,6 @@
 import { Annotation, messagesStateReducer } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
-import { ProjectContext } from "@/types/project.types.js";
+import { ProjectContext } from "@startup/shared";
 
 /**
  * AgentAnnotation: Implementación del canal de estado para LangGraph.

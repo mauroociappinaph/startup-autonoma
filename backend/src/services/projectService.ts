@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { ProjectContext, ProjectContextSchema } from "../types/project.types.js";
+import { ProjectContext, ProjectContextSchema } from "@startup/shared";
 import { v4 as uuidv4 } from "uuid";
 
 /**

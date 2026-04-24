@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { test_runner } from "@/tools/domain/software/testRunner.js";
 import { AIMessage } from "@langchain/core/messages";
 import { TestRunnerInput } from "@/types/software-tools.types.js";

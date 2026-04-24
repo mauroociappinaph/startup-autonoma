@@ -1,4 +1,4 @@
-import { AgentStateType } from "@/types/state.types.js";
+import { AgentStateType } from "@startup/shared";
 import { AIMessage } from "@langchain/core/messages";
 import { BudgetService } from "@/services/budgetService.js";
 
