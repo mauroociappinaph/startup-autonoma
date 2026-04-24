@@ -1,0 +1,27 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Monorepo (NodeNext, TS, Python, Next.js).
+  Architecture: LangGraph based multi-agent systems (CEO -> Chiefs -> Workers).
+  Testing: Jest (Backend), Pytest (AI-Engine).
+  Style: ESLint, Prettier, Custom architectural audit (tsx).
+
+strict_tdd: true
+
+testing:
+  runner: npm run test --prefix backend
+  framework: Jest
+  coverage: npm run test -- --coverage --prefix backend
+  quality:
+    linter: npm run lint --prefix backend
+    typechecker: npm run check --prefix backend
+
+rules:
+  proposal:
+    - Include impact analysis for LangGraph state
+  specs:
+    - Use Given/When/Then for agentic behaviors
+  design:
+    - Document state transitions in the graph
+  tasks:
+    - Maintain SRP in node refactors

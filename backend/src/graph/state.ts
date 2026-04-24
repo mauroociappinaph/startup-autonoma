@@ -74,7 +74,7 @@ export const AgentAnnotation = Annotation.Root({
    * Contador de iteraciones globales del grafo.
    */
   iteration_count: Annotation<number>({
-    reducer: (prev, next) => prev + next,
+    reducer: (prev, next) => next || prev,
     default: () => 0,
   }),
 
@@ -82,11 +82,7 @@ export const AgentAnnotation = Annotation.Root({
    * Uso acumulado de tokens.
    */
   token_usage: Annotation<{ total: number; prompt: number; completion: number }>({
-    reducer: (prev, next) => ({
-      total: prev.total + next.total,
-      prompt: prev.prompt + next.prompt,
-      completion: prev.completion + next.completion,
-    }),
+    reducer: (prev, next) => next || prev,
     default: () => ({ total: 0, prompt: 0, completion: 0 }),
   }),
 
@@ -94,7 +90,7 @@ export const AgentAnnotation = Annotation.Root({
    * Costo acumulado en USD (Gap 6).
    */
   total_cost_usd: Annotation<number>({
-    reducer: (prev, next) => prev + next,
+    reducer: (prev, next) => next || prev,
     default: () => 0,
   }),
 

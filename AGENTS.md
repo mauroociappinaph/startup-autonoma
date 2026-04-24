@@ -107,6 +107,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /scripts
 │   ├── /tests
 │   │   ├── /__pycache__
+├── analisiscompleto.md
 ├── architecture.md
 ├── /backend
 │   ├── package.json
@@ -177,6 +178,11 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── tsconfig.json
 ├── full_validation.log
 ├── /infra
+├── /openspec
+│   ├── /changes
+│   │   ├── /archive
+│   │   ├── /fix-iteration-count-telemetry-127
+│   ├── /specs
 ├── package-lock.json
 ├── package.json
 ├── /packages
