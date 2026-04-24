@@ -2,6 +2,7 @@ import { getGraph } from '@/graph/index.js';
 import { AgentStateType } from '@startup/shared';
 import { ProjectContext } from '@startup/shared';
 import { EventBus } from './eventBus.js';
+import { TelemetryService } from './telemetryService.js';
 import { GraphFormatter } from '@/helpers/graphFormatter.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { SacredLogger } from '@/helpers/logger.js';
@@ -37,6 +38,11 @@ export class GraphService {
     // Acumulador para limpiar el stream de JSON del reasoning
     let reasoningBuffer = "";
     let lastYieldedLength = 0;
+    let chunkCounter = 0;
+
+    // Obtenemos el estado actual para tener el baseline de costos previos
+    const currentState = await graph.getState(config);
+    const baselineState = currentState.values as AgentStateType;
 
     for await (const event of eventStream) {
        const eventType = event.event;
@@ -57,32 +63,47 @@ export class GraphService {
            if (delta) {
              reasoningBuffer += delta;
 
-             // Extraer el valor del campo "reasoning" del JSON parcial acumulado
-             const match = reasoningBuffer.match(/"reasoning":\s*"(.*)/);
-             if (match) {
-               let fullReasoning = match[1];
-               
-               const closingQuoteIndex = fullReasoning.search(/[^\\]"/);
-               if (closingQuoteIndex !== -1) {
-                 fullReasoning = fullReasoning.substring(0, closingQuoteIndex + 1);
-               }
+             // --- MEJORA #128: Estimación de Métricas en Tiempo Real ---
+             chunkCounter++;
+             if (chunkCounter % 10 === 0) {
+               const estimatedCompletionTokens = Math.ceil(reasoningBuffer.length / 4);
+               const currentNodeCost = TelemetryService.calculateCost(
+                 { prompt: 0, completion: estimatedCompletionTokens },
+                 event.metadata?.model_name || "default"
+               );
 
-               const cleaned = fullReasoning
-                 .replace(/\\n/g, "\n")
-                 .replace(/\\"/g, '"')
-                 .replace(/\\t/g, "\t");
+               const totalEstimatedCost = (baselineState.total_cost_usd || 0) + currentNodeCost;
+               const totalEstimatedTokens = (baselineState.token_usage?.total || 0) + estimatedCompletionTokens;
 
-               const newChunk = cleaned.substring(lastYieldedLength);
-               if (newChunk) {
-                 const ev = {
-                   agent: nodeName.toUpperCase(),
-                   text: newChunk,
-                   isPartial: true,
-                   threadId
-                 };
-                 await EventBus.publish(threadId, ev);
-                 yield ev;
-                 lastYieldedLength = cleaned.length;
+               await EventBus.publish(threadId, {
+                 agent: "SYSTEM",
+                 type: "METRIC_PARTIAL",
+                 metadata: {
+                   estimated_tokens: totalEstimatedTokens,
+                   estimated_cost: totalEstimatedCost,
+                   node: nodeName
+                 },
+                 threadId
+               });
+             }
+
+             const startKey = '"reasoning":';
+             const startIndex = reasoningBuffer.indexOf(startKey);
+             if (startIndex !== -1) {
+               const afterKey = reasoningBuffer.substring(startIndex + startKey.length).trim();
+               if (afterKey.startsWith('"')) {
+                 const contentStart = afterKey.indexOf('"') + 1;
+                 let fullReasoning = afterKey.substring(contentStart);
+                 const closingQuoteIndex = fullReasoning.search(/[^\\]"/);
+                 if (closingQuoteIndex !== -1) fullReasoning = fullReasoning.substring(0, closingQuoteIndex + 1);
+                 const cleaned = fullReasoning.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\t/g, "\t");
+                 const newChunk = cleaned.substring(lastYieldedLength);
+                 if (newChunk) {
+                   const ev = { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
+                   await EventBus.publish(threadId, ev);
+                   yield ev;
+                   lastYieldedLength = cleaned.length;
+                 }
                }
              }
            }
