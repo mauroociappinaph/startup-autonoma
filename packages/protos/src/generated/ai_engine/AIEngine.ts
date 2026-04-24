@@ -2,9 +2,9 @@
 
 import type * as grpc from '@grpc/grpc-js'
 import type { MethodDefinition } from '@grpc/proto-loader'
-import type { WorkerProgressUpdate as _ai_engine_WorkerProgressUpdate, WorkerProgressUpdate__Output as _ai_engine_WorkerProgressUpdate__Output } from '../ai_engine/WorkerProgressUpdate.js';
-import type { WorkerTaskRequest as _ai_engine_WorkerTaskRequest, WorkerTaskRequest__Output as _ai_engine_WorkerTaskRequest__Output } from '../ai_engine/WorkerTaskRequest.js';
-import type { WorkerTaskResponse as _ai_engine_WorkerTaskResponse, WorkerTaskResponse__Output as _ai_engine_WorkerTaskResponse__Output } from '../ai_engine/WorkerTaskResponse.js';
+import type { WorkerProgressUpdate as _ai_engine_WorkerProgressUpdate, WorkerProgressUpdate__Output as _ai_engine_WorkerProgressUpdate__Output } from '../ai_engine/WorkerProgressUpdate';
+import type { WorkerTaskRequest as _ai_engine_WorkerTaskRequest, WorkerTaskRequest__Output as _ai_engine_WorkerTaskRequest__Output } from '../ai_engine/WorkerTaskRequest';
+import type { WorkerTaskResponse as _ai_engine_WorkerTaskResponse, WorkerTaskResponse__Output as _ai_engine_WorkerTaskResponse__Output } from '../ai_engine/WorkerTaskResponse';
 
 export interface AIEngineClient extends grpc.Client {
   ExecuteWorkerTask(argument: _ai_engine_WorkerTaskRequest, metadata: grpc.Metadata, options: grpc.CallOptions, callback: grpc.requestCallback<_ai_engine_WorkerTaskResponse__Output>): grpc.ClientUnaryCall;

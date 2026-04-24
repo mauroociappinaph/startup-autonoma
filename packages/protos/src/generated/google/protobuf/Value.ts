@@ -1,8 +1,8 @@
 // Original file: null
 
-import type { NullValue as _google_protobuf_NullValue, NullValue__Output as _google_protobuf_NullValue__Output } from '../../google/protobuf/NullValue.js';
-import type { Struct as _google_protobuf_Struct, Struct__Output as _google_protobuf_Struct__Output } from '../../google/protobuf/Struct.js';
-import type { ListValue as _google_protobuf_ListValue, ListValue__Output as _google_protobuf_ListValue__Output } from '../../google/protobuf/ListValue.js';
+import type { NullValue as _google_protobuf_NullValue, NullValue__Output as _google_protobuf_NullValue__Output } from '../../google/protobuf/NullValue';
+import type { Struct as _google_protobuf_Struct, Struct__Output as _google_protobuf_Struct__Output } from '../../google/protobuf/Struct';
+import type { ListValue as _google_protobuf_ListValue, ListValue__Output as _google_protobuf_ListValue__Output } from '../../google/protobuf/ListValue';
 
 export interface Value {
   'nullValue'?: (_google_protobuf_NullValue);
