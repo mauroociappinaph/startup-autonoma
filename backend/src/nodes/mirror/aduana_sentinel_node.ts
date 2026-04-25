@@ -3,6 +3,7 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { prepareNodeUpdate } from "@/helpers/index.js";
+import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Esquema de respuesta para el Sentinel.
@@ -20,7 +21,7 @@ const AduanaSentinelSchema = z.object({
  * Basado en patrones de leaks de 2024-2025 para máxima robustez.
  */
 export async function aduana_sentinel_node(state: AgentStateType) {
-  console.log("--- EJECUTANDO ADUANA SENTINEL (SECURITY CHECK) ---");
+  SacredLogger.node("ADUANA SENTINEL (SECURITY CHECK)");
 
   const system_prompt = new SystemMessage(`
     Eres el AduanaSentinel, el firewall de seguridad de alto rendimiento de una Startup Autónoma.
@@ -47,12 +48,12 @@ export async function aduana_sentinel_node(state: AgentStateType) {
 
   try {
     const { data: result, usage, cost, latency, model } = await LLMService.getStructuredData(
-      { type: "reasoning", temperature: 0 },
+      { type: "fast", temperature: 0 },
       [system_prompt, humanMessage],
       AduanaSentinelSchema
     );
 
-    console.log(`🛡️ Sentinel Report [${result.threat_level.toUpperCase()}]: ${result.reasoning}`);
+    SacredLogger.info(`Sentinel Report [${result.threat_level.toUpperCase()}]: ${result.reasoning}`, "SENTINEL");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Aduana Sentinel",

@@ -182,6 +182,8 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /openspec
 │   ├── /changes
 │   │   ├── /archive
+│   │   ├── /issue-114-operations-chief
+│   │   ├── /optimize-entry-flow
 │   ├── /specs
 │   │   ├── /core
 ├── package-lock.json

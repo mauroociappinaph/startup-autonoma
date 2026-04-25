@@ -3,13 +3,14 @@ import { CEOResponseSchema } from "@startup/shared";
 import { AgentStateType } from "@startup/shared";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { prepareNodeUpdate } from "@/helpers/index.js";
+import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Nodo CEO: El Estratega de la Startup.
  * Orquestador dinámico que elige el Chief adecuado.
  */
 export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStateType>> {
-  console.log("\n--- EJECUTANDO NODO CEO ---");
+  SacredLogger.node("CEO (ESTRATEGA)");
 
   const system_prompt = new SystemMessage(`
     Eres el CEO de una Startup Autónoma de alto rendimiento.
@@ -32,7 +33,7 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
     REGLS DE ORO:
     - Analiza el progreso actual en el historial de mensajes.
     - Elige el próximo paso racional: 'delegate' o 'finish'.
-    - Solo puedes responder con 'finish' si TODAS las intenciones y objetivos refinados por el Mirror Node han sido completados.
+    - Solo puedes responder con 'finish' si TODAS las intenciones y objetivos del usuario han sido completados.
     - Si el Business Chief terminó una investigación pero todavía falta crear una rama de Git (Software), NO termines; delega al Software Chief.
     - Si el Software Chief terminó el código pero falta investigar el mercado, NO termines; delega al Business Chief.
     - Sé obsesivo con el cumplimiento del plan total.
@@ -45,8 +46,8 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
       CEOResponseSchema
     );
 
-    console.log(`✅ CEO Decision: ${response.next_step} -> ${response.reasoning}`);
-    console.log(`📊 [${model}] Costo de este paso: $${cost.toFixed(6)}`);
+    SacredLogger.info(`CEO Decision: ${response.next_step} -> ${response.reasoning}`, "CEO");
+    SacredLogger.info(`[${model}] Costo de este paso: $${cost.toFixed(6)}`, "CEO");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "CEO",
@@ -70,7 +71,7 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
 
     return updates;
   } catch (error) {
-    console.error("❌ Error en el Nodo CEO:", error);
+    SacredLogger.error("Error en el Nodo CEO: " + error, "CEO");
     return {
       executive_summary: "Error crítico en el orquestador CEO.",
     };
