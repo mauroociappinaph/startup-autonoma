@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@langchain/anthropic": "^1.3.26",
-    "@langchain/core": "latest",
+    "@langchain/core": "^1.1.41",
     "@langchain/google-genai": "^2.1.26",
     "@langchain/groq": "^1.2.0",
-    "@langchain/langgraph": "latest",
+    "@langchain/langgraph": "*",
     "@langchain/openai": "^1.4.4",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
