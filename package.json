@@ -22,7 +22,7 @@
     "sync-docs": "node scripts/sync-project-structure.js"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.3.0",
+    "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^19.2.2",
     "husky": "^9.0.11",
     "turbo": "^2.1.2"
