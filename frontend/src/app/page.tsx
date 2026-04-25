@@ -49,20 +49,21 @@ export default function Dashboard() {
           </div>
 
           {/* Panel Derecho: Estrategia y Métricas (1/4) */}
-          <div className="hidden lg:flex flex-col gap-6 min-h-0">
+          <div className="hidden lg:flex flex-col gap-4 min-h-0">
             <div className="glass rounded-2xl p-4 border border-white/5">
               <SystemHealth />
             </div>
 
-            <div className="flex-1 flex flex-col min-h-0 gap-6">
-              <div className="h-[45%]">
+            <div className="flex-1 flex flex-col min-h-0 gap-4">
+              <div className="flex-[0.45] min-h-[180px]">
                 <StrategyCard />
               </div>
-              <div className="flex-1">
+              <div className="flex-[0.55] min-h-[250px]">
                 <ReasoningFeed />
               </div>
             </div>
           </div>
+
         </div>
 
         {/* Barra de Comandos (Fixed/Bottom) */}

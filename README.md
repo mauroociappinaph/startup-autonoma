@@ -181,11 +181,10 @@ Este repositorio opera bajo una constitución técnica estricta. Las leyes funda
 | Fase | Estado | Descripción |
 |------|--------|-------------|
 | **Fase A** | ✅ Completa | Business Chief, Lead Gen Worker (gRPC), Persistence Loop |
-| **Fase B.1** | ✅ Completa | Mission Control UI (Next.js 15 + shadcn/ui + React Flow) |
-| **Fase B.2** | ✅ Completa | Resiliencia (Circuit Breaker) + Telemetría Real-Time |
-| **Fase B.3** | 🚧 Próxima | Live Reasoning Stream robusto (parser dedicado) |
-| **Fase B.4** | 🚧 Próxima | HITL Gateways dinámicos (alertas de presupuesto al 80%) |
-| **Fase C** | 🔜 Planeada | Persistencia de Proyectos + Multi-tenant |
+| **Fase B** | ✅ Completa | Mission Control UI, Circuit Breaker, Live Streaming & **State Rewind (Time-Travel)** |
+| **Fase C** | 🚧 En Proceso | **Infraestructura y Operaciones**: Dockerization, Operations Chief e Inmortalidad del Grafo |
+| **Fase D** | 🔜 Planeada | Persistencia de Proyectos + Multi-tenant |
+
 
 ---
 

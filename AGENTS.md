@@ -26,12 +26,14 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 ---
 
-## --- Fase C: Infraestructura y Resiliencia ---
+## --- Fase C: Infraestructura, Operaciones y Resiliencia ---
 - **Resiliencia:** Rewind de estado y persistencia de checkpoints. ✅
-- **Dockerization:** Ecosistema completo en contenedores con validación automática via Husky. ✅
-- **Escalabilidad:** Orquestación gRPC entre Node.js y Python optimizada. ✅
+- **Dockerization:** Ecosistema completo en contenedores con validación automática via Husky. 🚧
+- **Operations Chief:** Nuevo agente para mantenimiento de infraestructura y despliegues. 🔜
+- **Graph Visibility:** Visualización avanzada de la topología y trazas del grafo. 🚧
 
 ---
+
 
 ## --- Convenciones de Ingeniería (Leyes Sagradas) ---
 
