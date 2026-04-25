@@ -11,7 +11,9 @@
     "lint": "eslint 'src/**/*.ts' --max-warnings=0",
     "format": "prettier --write 'src/**/*.ts'",
     "test:business": "tsx src/test-business-workflow.ts",
+    "test:autonomy": "tsx src/test-full-autonomy.ts",
     "check": "tsc --noEmit"
+
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.0",

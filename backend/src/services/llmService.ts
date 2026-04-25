@@ -12,7 +12,7 @@ import { SacredLogger } from "@/helpers/logger.js";
 /**
  * Helper interno para Timeouts.
  */
-function withTimeout<T>(promise: Promise<T>, ms: number = 45000): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, ms: number = 60000): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`LLM Timeout después de ${ms}ms`)), ms))
@@ -55,7 +55,7 @@ export class LLMService {
 
     try {
       const modelWithStructuredOutput = rawModel.withStructuredOutput(schema, { includeRaw: true });
-      const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), 45000)) as { 
+      const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), 60000)) as { 
         parsed: z.infer<T>, 
         raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } 
       };
@@ -111,7 +111,7 @@ export class LLMService {
     const modelWithName = rawModel as BaseChatModel & { modelName?: string; model?: string };
     const modelName = modelWithName.modelName || modelWithName.model || "unknown";
 
-    const response = await withTimeout(rawModel.invoke(trimmedMessages), 45000);
+    const response = await withTimeout(rawModel.invoke(trimmedMessages), 60000);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
     const responseWithMetadata = response as { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } };
@@ -164,7 +164,7 @@ export class LLMService {
       return { role, content };
     });
 
-    const response = await withTimeout(model.invoke(formattedMessages), 45000);
+    const response = await withTimeout(model.invoke(formattedMessages), 60000);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
     // Cast seguro para evitar eslint error de no-explicit-any

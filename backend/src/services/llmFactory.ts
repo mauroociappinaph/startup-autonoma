@@ -85,10 +85,12 @@ export class LLMFactory {
         openai: "gpt-4o",
         anthropic: "claude-3-5-sonnet-20240620",
         nvidia: process.env.NVIDIA_REASONING_MODEL || "z-ai/glm-5.1",
+        groq: "llama-3.3-70b-versatile",
       },
       ultra: {
         openai: "gpt-4o",
         nvidia: "meta/llama-3.1-70b-instruct",
+        groq: "llama-3.3-70b-versatile",
       },
       flow: {
         openai: "gpt-4o-mini",
@@ -100,6 +102,7 @@ export class LLMFactory {
         anthropic: "claude-3-5-sonnet-20240620",
         google: "gemini-1.5-pro",
         nvidia: process.env.NVIDIA_SMART_MODEL || "meta/llama-3.1-70b-instruct",
+        groq: "llama-3.3-70b-versatile",
       },
       fast: {
         groq: "llama-3.3-70b-versatile",
@@ -109,6 +112,15 @@ export class LLMFactory {
       }
     };
 
-    return selection[type]?.[provider] || "gpt-4o-mini";
+    const providerDefaults: Record<string, string> = {
+      openai: "gpt-4o-mini",
+      groq: "llama-3.3-70b-versatile",
+      nvidia: "nvidia/llama-3.1-8b-instruct",
+      anthropic: "claude-3-haiku-20240307",
+      google: "gemini-1.5-flash"
+    };
+
+    return selection[type]?.[provider] || providerDefaults[provider] || "gpt-4o-mini";
+
   }
 }
