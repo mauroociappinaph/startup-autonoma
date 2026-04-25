@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { TelemetryService } from "@/services/telemetryService.js";
-import { getRedisConnection } from "@/db/redis.js";
+import { getRedisConnection, closeRedisConnections } from "@/db/redis.js";
 
 describe("TelemetryService Integration Tests", () => {
   const projectId = "test-project-" + Date.now();
@@ -15,6 +15,7 @@ describe("TelemetryService Integration Tests", () => {
   afterAll(async () => {
     const statsKey = `project:telemetry:stats:${projectId}`;
     await redis.del(statsKey);
+    await closeRedisConnections();
   });
 
   it("should calculate cost correctly for a given model", () => {

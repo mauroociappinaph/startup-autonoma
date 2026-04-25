@@ -1,5 +1,6 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, afterAll } from '@jest/globals';
 import { graph } from './index.js';
+import { closeRedisConnections } from '../db/redis.js';
 
 describe('Graph Topology', () => {
   it('debería tener el nodo operations_worker registrado', () => {
@@ -11,5 +12,9 @@ describe('Graph Topology', () => {
     const config = (graph as any).config; // Depende de la versión de LangGraph
     // Alternativamente, podemos verificar la compilación
     expect(graph).toBeDefined();
+  });
+  
+  afterAll(async () => {
+    await closeRedisConnections();
   });
 });
