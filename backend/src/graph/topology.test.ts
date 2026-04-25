@@ -1,6 +1,25 @@
-import { describe, it, expect, afterAll } from '@jest/globals';
+import { describe, it, expect, afterAll, jest } from '@jest/globals';
 import { graph } from './index.js';
 import { closeRedisConnections } from '../db/redis.js';
+
+// Mockeamos ioredis para evitar conexiones reales
+jest.mock('ioredis', () => {
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    pipeline: (jest.fn() as any).mockReturnThis(),
+    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
+    hincrby: (jest.fn() as any).mockReturnThis(),
+    exec: (jest.fn() as any).mockResolvedValue([]),
+    hgetall: (jest.fn() as any).mockResolvedValue({}),
+    set: (jest.fn() as any).mockResolvedValue("OK"),
+    get: (jest.fn() as any).mockResolvedValue(null),
+    on: jest.fn() as any,
+    quit: (jest.fn() as any).mockResolvedValue("OK")
+  }));
+  return {
+    Redis: MockRedis,
+    default: MockRedis
+  };
+});
 
 describe('Graph Topology', () => {
   it('debería tener el nodo operations_worker registrado', () => {
