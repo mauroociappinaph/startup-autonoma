@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from '@jest/globals';
-import { safeExec } from './operationsHelper.js';
+import { safeExec } from '@/nodes/workers/operationsHelper.js';
 
 describe('safeExec', () => {
   it('debería retornar el comando docker ps para docker_ps', () => {
@@ -24,6 +23,7 @@ describe('safeExec', () => {
   });
 
   it('debería fallar para comandos no permitidos', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(() => safeExec('rm_rf' as any)).toThrow('Comando no permitido');
   });
 });

@@ -1,8 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, describe, it, expect, afterEach } from '@jest/globals';
 import child_process from 'child_process';
-import { operations_worker_node } from './operations_worker.js';
+import { operations_worker_node } from '@/nodes/workers/operations_worker.js';
 import { AIMessage } from '@langchain/core/messages';
+import { AgentStateType } from '@startup/shared';
+
+jest.mock('@/helpers/logger.js', () => ({
+  SacredLogger: {
+    node: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn(),
+    success: jest.fn(),
+    warn: jest.fn()
+  }
+}));
 
 describe('Operations Worker Node', () => {
   afterEach(() => {
@@ -10,7 +20,7 @@ describe('Operations Worker Node', () => {
   });
 
   it('debería ejecutar un comando de monitoreo exitosamente', async () => {
-    const mockState: any = {
+    const mockState = {
       messages: [
         new AIMessage({
           content: 'Delegando al worker',
@@ -22,14 +32,18 @@ describe('Operations Worker Node', () => {
           }
         })
       ],
-      active_chief: 'operations_chief'
-    };
+      active_chief: 'operations_chief',
+      iteration: 0
+    } as unknown as AgentStateType;
 
-    jest.spyOn(child_process, 'exec').mockImplementation((_cmd: string, _opts: any, callback: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.spyOn(child_process, 'exec').mockImplementation(((_cmd: string, _opts: unknown, callback?: (error: Error | null, stdout: string, stderr: string) => void) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
-      cb(null, 'backend: Up 2 hours', '');
-      return {} as any;
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (cb) (cb as any)(null, 'backend: Up 2 hours', '');
+      return {} as child_process.ChildProcess;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any);
 
     const result = await operations_worker_node(mockState);
 
@@ -38,7 +52,7 @@ describe('Operations Worker Node', () => {
   });
 
   it('debería manejar errores de ejecución', async () => {
-    const mockState: any = {
+    const mockState = {
       messages: [
         new AIMessage({
           content: 'Delegando al worker',
@@ -50,14 +64,18 @@ describe('Operations Worker Node', () => {
             }
           }
         })
-      ]
-    };
+      ],
+      iteration: 0
+    } as unknown as AgentStateType;
 
-    jest.spyOn(child_process, 'exec').mockImplementation((_cmd: string, _opts: any, callback: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.spyOn(child_process, 'exec').mockImplementation(((_cmd: string, _opts: unknown, callback?: (error: Error | null, stdout: string, stderr: string) => void) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
-      cb(new Error('No such container'), '', 'Error de docker');
-      return {} as any;
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (cb) (cb as any)(new Error('No such container'), '', 'Error de docker');
+      return {} as child_process.ChildProcess;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any);
 
     const result = await operations_worker_node(mockState);
 
