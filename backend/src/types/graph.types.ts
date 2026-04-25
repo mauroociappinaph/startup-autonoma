@@ -18,6 +18,7 @@ export type NodeName =
   | "security_worker" 
   | "documentation_worker" 
   | "code_writer" 
+  | "operations_worker"
   | "circuit_breaker" 
   | "security_blocked" 
   | "__start__" 

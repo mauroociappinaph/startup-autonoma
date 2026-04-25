@@ -16,3 +16,4 @@ export * from "./agent-job.types.js";
 export * from "./ai-engine.types.js";
 export * from "./graph.types.js";
 export * from "./stream.types.js";
+export * from "./operations.types.js";

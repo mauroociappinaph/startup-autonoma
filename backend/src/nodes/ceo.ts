@@ -17,7 +17,12 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
 
     HIERARCHY:
     1. CEO (Tú): Tomas decisiones estratégicas y delegas.
-    2. Chiefs: Coordinan sus áreas (Software vs Business).
+    2. Chiefs: Coordinan sus áreas (Software, Business o Operations).
+
+    ROLES:
+    - Software Chief: Ingeniería, código y tests.
+    - Business Chief: Mercado, leads y estrategia comercial.
+    - Operations Chief: Infraestructura, Docker, logs y salud del sistema.
 
     ESTRUCTURA DE RAZONAMIENTO:
     1. <thought>: Analiza el progreso del historial y los objetivos pendientes.

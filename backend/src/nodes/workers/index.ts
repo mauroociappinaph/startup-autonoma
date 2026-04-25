@@ -7,3 +7,4 @@ export * from './documentation_worker.js';
 export * from './git_worker_node.js';
 export * from './test_runner_node.js';
 export * from './code_writer_node.js';
+export * from './operations_worker.js';

@@ -22,6 +22,7 @@ import { NodeName } from "@/types/index.js";
 
 import { documentation_worker_node } from "@/nodes/workers/documentation_worker.js";
 import { code_writer_node } from "@/nodes/workers/code_writer_node.js";
+import { operations_worker_node } from "@/nodes/workers/operations_worker.js";
 import { security_blocked_node } from "@/nodes/security_blocked.js";
 
 /**
@@ -46,6 +47,7 @@ const workflow = new StateGraph(AgentAnnotation)
     .addNode("security_worker", security_worker_node)
     .addNode("documentation_worker", documentation_worker_node)
     .addNode("code_writer", code_writer_node)
+    .addNode("operations_worker", operations_worker_node)
     .addNode("security_blocked", security_blocked_node)
 
     .addEdge(START, "aduana_sentinel")
@@ -78,6 +80,7 @@ workflow.addConditionalEdges(
         security_worker: "security_worker",
         documentation_worker: "documentation_worker",
         code_writer: "code_writer",
+        operations_worker: "operations_worker",
         security_blocked: "security_blocked",
         end: END
     } as Record<string, NodeName | typeof END>
@@ -86,9 +89,8 @@ workflow.addConditionalEdges(
 workflow.addConditionalEdges(
     "ceo",
     (state: AgentStateType) => {
-        if (!state.plan || state.plan.length === 0) return "end";
-        if (state.plan.includes("software_chief")) return "circuit_breaker";
-        if (state.plan.includes("business_chief")) return "circuit_breaker";
+        if (!state.active_chief && (!state.plan || state.plan.length === 0)) return "end";
+        if (state.active_chief || state.plan?.length > 0) return "circuit_breaker";
         return "end";
     },
     {
@@ -99,7 +101,13 @@ workflow.addConditionalEdges(
 
 workflow.addConditionalEdges("software_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
 workflow.addConditionalEdges("business_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
-workflow.addConditionalEdges("operations_chief", (_state: AgentStateType) => "circuit_breaker", { circuit_breaker: "circuit_breaker" });
+workflow.addConditionalEdges("operations_chief", (state: AgentStateType) => {
+    if (state.next_node === "operations_worker") return "operations_worker";
+    return "circuit_breaker";
+}, { 
+    operations_worker: "operations_worker",
+    circuit_breaker: "circuit_breaker" 
+});
 
 const workerReturnRouter = () => "circuit_breaker" as const;
 const workerReturnMappings: Record<string, NodeName> = { circuit_breaker: "circuit_breaker" };
@@ -114,6 +122,7 @@ workflow.addConditionalEdges("review_worker", workerReturnRouter, workerReturnMa
 workflow.addConditionalEdges("security_worker", workerReturnRouter, workerReturnMappings);
 workflow.addConditionalEdges("documentation_worker", workerReturnRouter, workerReturnMappings);
 workflow.addConditionalEdges("code_writer", workerReturnRouter, workerReturnMappings);
+workflow.addConditionalEdges("operations_worker", workerReturnRouter, workerReturnMappings);
 
 // Checkpointer compatible con Redis estándar
 const checkpointer = new SimpleRedisSaver(getRedisConnection());

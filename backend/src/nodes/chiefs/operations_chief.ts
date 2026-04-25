@@ -3,13 +3,14 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { OperationsChiefSchema } from "@startup/shared";
 import { prepareNodeUpdate } from "@/helpers/index.js";
+import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Nodo OperationsChief: El Guardián de la Infraestructura.
  * Se encarga de despliegues, monitoreo y mantenimiento del sistema.
  */
 export async function operations_chief_node(state: AgentStateType): Promise<Partial<AgentStateType>> {
-  console.log("\n--- EJECUTANDO NODO OPERATIONS CHIEF ---");
+  SacredLogger.node("OPERATIONS CHIEF");
 
   const system_prompt = new SystemMessage(`
     Eres el OperationsChief de una Startup Autónoma.
@@ -34,7 +35,7 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
       OperationsChiefSchema
     );
 
-    console.log(`🚀 Operations Decision: ${response.action} -> ${response.reasoning}`);
+    SacredLogger.info(`Operations Decision: ${response.action} -> ${response.reasoning}`, "OPS_CHIEF");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Operations Chief",
@@ -54,14 +55,20 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
         content: `[OPERATIONS_CHIEF_THOUGHT] ${response.reasoning}
 [ACTION] ${response.action} (Prioridad: ${response.priority})
 [DETAILS] ${response.details}`,
+        additional_kwargs: {
+          operations_instruction: {
+            command: response.details, // Usamos details como el comando a ejecutar
+            reasoning: response.reasoning
+          }
+        }
       })])
     };
 
-    // Lógica de ruteo interno (placeholder para futuros workers de infra)
+    // Lógica de ruteo interno
     if (response.requires_approval) {
       updates.next_node = "ceo"; // Volvemos al CEO para que el Mirror/Humano valide
     } else {
-      updates.next_node = "ceo"; // Por ahora siempre vuelve al CEO
+      updates.next_node = "operations_worker"; // Delegamos al worker de infra
     }
 
     return updates;
