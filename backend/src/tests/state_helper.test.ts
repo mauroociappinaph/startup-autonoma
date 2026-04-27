@@ -1,27 +1,45 @@
-import { prepareNodeUpdate, incrementIteration } from "../helpers/stateHelper.js";
-import { AgentStateType } from "@startup/shared";
-import { TelemetryService } from "../services/telemetryService.js";
-import { AuditService } from "../services/auditService.js";
-import { jest, describe, it, expect, beforeEach } from "@jest/globals";
+import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from "@jest/globals";
 
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    pipeline: (jest.fn() as any).mockReturnThis(),
+    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
+    hincrby: (jest.fn() as any).mockReturnThis(),
+    exec: (jest.fn() as any).mockResolvedValue([]),
+    hgetall: (jest.fn() as any).mockResolvedValue({}),
+    publish: (jest.fn() as any).mockResolvedValue(1),
+    on: jest.fn() as any,
+    quit: (jest.fn() as any).mockResolvedValue("OK")
+  }));
   return {
-    Redis: jest.fn().mockImplementation(() => ({
-      pipeline: (jest.fn() as any).mockReturnThis(),
-      hincrbyfloat: (jest.fn() as any).mockReturnThis(),
-      hincrby: (jest.fn() as any).mockReturnThis(),
-      exec: (jest.fn() as any).mockResolvedValue([]),
-      hgetall: (jest.fn() as any).mockResolvedValue({}),
-      on: jest.fn() as any,
-      quit: (jest.fn() as any).mockResolvedValue("OK")
-    })),
-    default: jest.fn()
+    Redis: MockRedis,
+    default: MockRedis
   };
 });
 
 describe("stateHelper", () => {
-  let initialState: AgentStateType;
+  let prepareNodeUpdate: any;
+  let incrementIteration: any;
+  let TelemetryService: any;
+  let AuditService: any;
+  let initialState: any;
+
+  beforeAll(async () => {
+    const module = await import("../helpers/stateHelper.js");
+    const telemetryModule = await import("../services/telemetryService.js");
+    const auditModule = await import("../services/auditService.js");
+    
+    prepareNodeUpdate = module.prepareNodeUpdate;
+    incrementIteration = module.incrementIteration;
+    TelemetryService = telemetryModule.TelemetryService;
+    AuditService = auditModule.AuditService;
+  });
+
+  afterAll(async () => {
+    const { closeRedisConnections } = await import("../db/redis.js");
+    await closeRedisConnections();
+  });
 
   beforeEach(() => {
     initialState = {

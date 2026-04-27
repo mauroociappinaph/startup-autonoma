@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { mirror_node } from '@/nodes/mirror.js';
-import { LLMService } from '@/services/llmService.js';
-import { AgentStateType } from '@startup/shared';
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
 
 // Mockeamos ioredis para evitar conexiones reales
@@ -15,6 +11,7 @@ jest.mock('ioredis', () => {
     hgetall: (jest.fn() as any).mockResolvedValue({}),
     set: (jest.fn() as any).mockResolvedValue("OK"),
     get: (jest.fn() as any).mockResolvedValue(null),
+    publish: (jest.fn() as any).mockResolvedValue(1),
     on: jest.fn() as any,
     quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
@@ -25,7 +22,21 @@ jest.mock('ioredis', () => {
 });
 
 describe('MirrorAgent Node', () => {
-  let initialState: AgentStateType;
+  let mirror_node: any;
+  let LLMService: any;
+  let initialState: any;
+
+  beforeAll(async () => {
+    const mirrorModule = await import('@/nodes/mirror.js');
+    const llmModule = await import('@/services/llmService.js');
+    mirror_node = mirrorModule.mirror_node;
+    LLMService = llmModule.LLMService;
+  });
+
+  afterAll(async () => {
+    const { closeRedisConnections } = await import('@/db/redis.js');
+    await closeRedisConnections();
+  });
 
   beforeEach(() => {
     initialState = {

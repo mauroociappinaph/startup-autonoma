@@ -113,6 +113,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /backend
 │   ├── package.json
 │   ├── /scratch
+│   │   ├── debug_tests.ts
 │   ├── /scripts
 │   │   ├── check-grpc-sync.ts
 │   │   ├── stress-test.ts

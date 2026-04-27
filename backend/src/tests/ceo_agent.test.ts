@@ -1,11 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { ceo_node } from '@/nodes/ceo.js';
-import { LLMService } from '@/services/llmService.js';
-import { TelemetryService } from '@/services/telemetryService.js';
-import { AuditService } from '@/services/auditService.js';
-import { AgentStateType } from '@startup/shared';
-import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import { jest, describe, beforeEach, it, expect, beforeAll, afterAll } from '@jest/globals';
 
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
@@ -17,6 +10,7 @@ jest.mock('ioredis', () => {
     hgetall: (jest.fn() as any).mockResolvedValue({}),
     set: (jest.fn() as any).mockResolvedValue("OK"),
     get: (jest.fn() as any).mockResolvedValue(null),
+    publish: (jest.fn() as any).mockResolvedValue(1),
     on: jest.fn() as any,
     quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
@@ -27,7 +21,30 @@ jest.mock('ioredis', () => {
 });
 
 describe('CEO Agent Node', () => {
-  let initialState: AgentStateType;
+  let ceo_node: any;
+  let LLMService: any;
+  let TelemetryService: any;
+  let AuditService: any;
+  let initialState: any;
+
+  beforeAll(async () => {
+    const ceoModule = await import('@/nodes/ceo.js');
+    const llmModule = await import('@/services/llmService.js');
+    const telemetryModule = await import('@/services/telemetryService.js');
+    const auditModule = await import('@/services/auditService.js');
+
+    ceo_node = ceoModule.ceo_node;
+    LLMService = llmModule.LLMService;
+    TelemetryService = telemetryModule.TelemetryService;
+    AuditService = auditModule.AuditService;
+  });
+
+  afterAll(async () => {
+    const { closeRedisConnections } = await import('@/db/redis.js');
+    const { aiEngineClient } = await import('@/services/aiEngineClient.js');
+    await closeRedisConnections();
+    aiEngineClient.close();
+  });
 
   beforeEach(() => {
     initialState = {

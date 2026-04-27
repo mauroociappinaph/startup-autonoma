@@ -1,6 +1,4 @@
-import { describe, it, expect, afterAll, jest } from '@jest/globals';
-import { graph } from './index.js';
-import { closeRedisConnections } from '../db/redis.js';
+import { describe, it, expect, afterAll, beforeAll, jest } from '@jest/globals';
 
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
@@ -12,6 +10,7 @@ jest.mock('ioredis', () => {
     hgetall: (jest.fn() as any).mockResolvedValue({}),
     set: (jest.fn() as any).mockResolvedValue("OK"),
     get: (jest.fn() as any).mockResolvedValue(null),
+    publish: (jest.fn() as any).mockResolvedValue(1),
     on: jest.fn() as any,
     quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
@@ -22,18 +21,26 @@ jest.mock('ioredis', () => {
 });
 
 describe('Graph Topology', () => {
+  let graph: any;
+
+  beforeAll(async () => {
+    const module = await import('./index.js');
+    graph = module.graph;
+  });
+
   it('debería tener el nodo operations_worker registrado', () => {
-    const nodes = (graph as any).nodes;
+    const nodes = graph.nodes;
     expect(nodes).toHaveProperty('operations_worker');
   });
 
   it('debería tener operations_chief en interruptAfter', () => {
-    const config = (graph as any).config; // Depende de la versión de LangGraph
-    // Alternativamente, podemos verificar la compilación
     expect(graph).toBeDefined();
   });
   
   afterAll(async () => {
+    const { closeRedisConnections } = await import('../db/redis.js');
+    const { aiEngineClient } = await import('../services/aiEngineClient.js');
     await closeRedisConnections();
+    aiEngineClient.close();
   });
 });

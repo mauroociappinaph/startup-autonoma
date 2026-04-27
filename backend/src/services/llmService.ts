@@ -13,10 +13,19 @@ import { SacredLogger } from "@/helpers/logger.js";
  * Helper interno para Timeouts.
  */
 function withTimeout<T>(promise: Promise<T>, ms: number = 60000): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`LLM Timeout después de ${ms}ms`));
+    }, ms);
+  });
+
   return Promise.race([
     promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`LLM Timeout después de ${ms}ms`)), ms))
-  ]);
+    timeoutPromise
+  ]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
 }
 
 /**

@@ -72,8 +72,16 @@ export class AIEngineClient {
       trace_id: input.trace_id,
       payload: input.payload || {},
     };
-    
+
     return this.client.StreamWorkerProgress(grpcInput);
+  }
+
+  /**
+   * Cierra el canal gRPC de forma segura.
+   */
+  public close(): void {
+    this.client.close();
+    console.log("🔌 [gRPC CLIENT] Conexión cerrada.");
   }
 }
 

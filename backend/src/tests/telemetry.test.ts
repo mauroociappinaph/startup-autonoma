@@ -1,21 +1,43 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { TelemetryService } from "@/services/telemetryService.js";
-import { getRedisConnection, closeRedisConnections } from "@/db/redis.js";
-import { jest } from '@jest/globals';
+import { describe, it, expect, afterAll, beforeAll, jest } from '@jest/globals';
+import type { TelemetryService as TelemetryServiceType } from '../services/telemetryService.js';
+import type { Redis } from 'ioredis';
 
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
+  const storage: Record<string, Record<string, string>> = {};
+  
   const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: (jest.fn() as any).mockReturnThis(),
-    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
-    hincrby: (jest.fn() as any).mockReturnThis(),
-    exec: (jest.fn() as any).mockResolvedValue([]),
-    hgetall: (jest.fn() as any).mockResolvedValue({}),
-    set: (jest.fn() as any).mockResolvedValue("OK"),
-    get: (jest.fn() as any).mockResolvedValue(null),
-    on: jest.fn() as any,
-    quit: (jest.fn() as any).mockResolvedValue("OK")
+    pipeline: jest.fn().mockReturnThis(),
+    hincrbyfloat: jest.fn().mockImplementation((key: any, field: any, value: any) => {
+      if (!storage[key]) storage[key] = {};
+      const current = parseFloat(storage[key][field] || "0");
+      storage[key][field] = (current + value).toString();
+      return Promise.resolve(current + value);
+    }),
+    hincrby: jest.fn().mockImplementation((key: any, field: any, value: any) => {
+      if (!storage[key]) storage[key] = {};
+      const current = parseInt(storage[key][field] || "0", 10);
+      storage[key][field] = (current + value).toString();
+      return Promise.resolve(current + value);
+    }),
+    exec: jest.fn().mockImplementation(() => Promise.resolve([])),
+    hgetall: jest.fn().mockImplementation((key: any) => {
+      return Promise.resolve(storage[key] || {});
+    }),
+    set: jest.fn().mockImplementation((key: any, value: any) => {
+      storage[key] = { value }; // Simplificado para el mock
+      return Promise.resolve("OK");
+    }),
+    get: jest.fn().mockImplementation((key: any) => {
+      return Promise.resolve(storage[key]?.value || null);
+    }),
+    publish: jest.fn().mockImplementation(() => Promise.resolve(1)),
+    on: jest.fn(),
+    quit: jest.fn().mockImplementation(() => Promise.resolve("OK")),
+    del: jest.fn().mockImplementation((key: any) => {
+      delete storage[key];
+      return Promise.resolve(1);
+    })
   }));
   return {
     Redis: MockRedis,
@@ -25,29 +47,39 @@ jest.mock('ioredis', () => {
 
 describe("TelemetryService Integration Tests", () => {
   const projectId = "test-project-" + Date.now();
-  const redis = getRedisConnection();
+  let TelemetryService: typeof TelemetryServiceType;
+  let getRedisConnection: () => Redis;
+  let closeRedisConnections: () => Promise<void>;
+  let redis: Redis;
 
   beforeAll(async () => {
+    // Usamos rutas relativas para evitar problemas de resolución del alias @/ en tsc
+    const redisModule = await import("../db/redis.js");
+    const telemetryModule = await import("../services/telemetryService.js");
+    
+    TelemetryService = telemetryModule.TelemetryService;
+    getRedisConnection = redisModule.getRedisConnection;
+    closeRedisConnections = redisModule.closeRedisConnections;
+    
+    redis = getRedisConnection();
+    
     const statsKey = `project:telemetry:stats:${projectId}`;
     await redis.del(statsKey);
   });
 
   afterAll(async () => {
     const statsKey = `project:telemetry:stats:${projectId}`;
-    await redis.del(statsKey);
-    await closeRedisConnections();
+    if (redis) await redis.del(statsKey);
+    if (closeRedisConnections) await closeRedisConnections();
   });
 
   it("should calculate cost correctly for a given model", () => {
     const usage = { prompt: 1000, completion: 500 };
-    const model = "gpt-4o"; // Assuming price is $5/$15 per 1M tokens
+    const model = "gpt-4o"; 
     const cost = TelemetryService.calculateCost(usage, model);
     
-    // Cost calculation logic:
-    // input: (1000 / 1,000,000) * 5 = 0.005
-    // output: (500 / 1,000,000) * 15 = 0.0075
-    // total: 0.0125
     expect(cost).toBeGreaterThan(0);
+    expect(cost).toBeCloseTo(0.0125, 6);
   });
 
   it("should persist and aggregate metrics in Redis", async () => {
@@ -81,3 +113,4 @@ describe("TelemetryService Integration Tests", () => {
     expect(stats2.avg_latency_ms).toBe(750); // (500 + 1000) / 2
   });
 });
+

@@ -1,8 +1,27 @@
 import { jest, describe, it, expect, afterEach } from '@jest/globals';
 import child_process from 'child_process';
-import { operations_worker_node } from '@/nodes/workers/operations_worker.js';
 import { AIMessage } from '@langchain/core/messages';
 import { AgentStateType } from '@startup/shared';
+
+// Mockeamos ioredis para evitar conexiones reales
+jest.mock('ioredis', () => {
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    pipeline: (jest.fn() as any).mockReturnThis(),
+    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
+    hincrby: (jest.fn() as any).mockReturnThis(),
+    exec: (jest.fn() as any).mockResolvedValue([]),
+    hgetall: (jest.fn() as any).mockResolvedValue({}),
+    set: (jest.fn() as any).mockResolvedValue("OK"),
+    get: (jest.fn() as any).mockResolvedValue(null),
+    publish: (jest.fn() as any).mockResolvedValue(1),
+    on: jest.fn() as any,
+    quit: (jest.fn() as any).mockResolvedValue("OK")
+  }));
+  return {
+    Redis: MockRedis,
+    default: MockRedis
+  };
+});
 
 jest.mock('@/helpers/logger.js', () => ({
   SacredLogger: {
@@ -15,6 +34,18 @@ jest.mock('@/helpers/logger.js', () => ({
 }));
 
 describe('Operations Worker Node', () => {
+  let operations_worker_node: any;
+
+  beforeAll(async () => {
+    const workerModule = await import('./operations_worker.js');
+    operations_worker_node = workerModule.operations_worker_node;
+  });
+
+  afterAll(async () => {
+    const { closeRedisConnections } = await import('@/db/redis.js');
+    await closeRedisConnections();
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });

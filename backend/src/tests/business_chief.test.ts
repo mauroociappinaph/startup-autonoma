@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { business_chief_node } from '@/nodes/chiefs/business_chief.js';
-import { LLMService } from '@/services/llmService.js';
+import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { TelemetryService } from '@/services/telemetryService.js';
 import { AuditService } from '@/services/auditService.js';
-import { AgentStateType } from '@startup/shared';
-import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
 
 // Mockeamos los servicios que dejan handles abiertos
@@ -18,6 +15,7 @@ jest.mock('ioredis', () => {
     hgetall: (jest.fn() as any).mockResolvedValue({}),
     set: (jest.fn() as any).mockResolvedValue("OK"),
     get: (jest.fn() as any).mockResolvedValue(null),
+    publish: (jest.fn() as any).mockResolvedValue(1),
     on: jest.fn() as any,
     quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
@@ -28,7 +26,23 @@ jest.mock('ioredis', () => {
 });
 
 describe('Business Chief Node', () => {
-  let initialState: AgentStateType;
+  let business_chief_node: any;
+  let LLMService: any;
+  let initialState: any;
+
+  beforeAll(async () => {
+    const chiefModule = await import('@/nodes/chiefs/business_chief.js');
+    const llmModule = await import('@/services/llmService.js');
+    business_chief_node = chiefModule.business_chief_node;
+    LLMService = llmModule.LLMService;
+  });
+
+  afterAll(async () => {
+    const { closeRedisConnections } = await import('@/db/redis.js');
+    const { aiEngineClient } = await import('@/services/aiEngineClient.js');
+    await closeRedisConnections();
+    aiEngineClient.close();
+  });
 
   beforeEach(() => {
     initialState = {

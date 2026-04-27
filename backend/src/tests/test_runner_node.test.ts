@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import { test_runner_node } from '@/nodes/workers/test_runner_node.js';
+import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { test_runner } from '@/tools/domain/software/testRunner.js';
 
 // Mockeamos ioredis para evitar conexiones reales
@@ -13,6 +12,7 @@ jest.mock('ioredis', () => {
     hgetall: (jest.fn() as any).mockResolvedValue({}),
     set: (jest.fn() as any).mockResolvedValue("OK"),
     get: (jest.fn() as any).mockResolvedValue(null),
+    publish: (jest.fn() as any).mockResolvedValue(1),
     on: jest.fn() as any,
     quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
@@ -23,6 +23,18 @@ jest.mock('ioredis', () => {
 });
 
 describe('Test Runner Node', () => {
+  let test_runner_node: any;
+
+  beforeAll(async () => {
+    const module = await import('@/nodes/workers/test_runner_node.js');
+    test_runner_node = module.test_runner_node;
+  });
+
+  afterAll(async () => {
+    const { closeRedisConnections } = await import('@/db/redis.js');
+    await closeRedisConnections();
+  });
+
   beforeEach(() => {
     jest.restoreAllMocks();
   });
