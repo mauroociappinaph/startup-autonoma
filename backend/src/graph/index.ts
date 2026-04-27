@@ -22,7 +22,7 @@ import { NodeName } from "@/types/index.js";
 
 import { documentation_worker_node } from "@/nodes/workers/documentation_worker.js";
 import { code_writer_node } from "@/nodes/workers/code_writer_node.js";
-import { operations_worker_node } from "@/nodes/workers/operations_worker.js";
+import { operations_worker_node } from "@/nodes/workers/operations_worker_node.js";
 import { security_blocked_node } from "@/nodes/security_blocked.js";
 
 /**

@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { safeExec } from '@/nodes/workers/operationsHelper.js';
+import { safeExec } from '@/helpers/operationsHelper.js';
 
 describe('safeExec', () => {
   it('debería retornar el comando docker ps para docker_ps', () => {

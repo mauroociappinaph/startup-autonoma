@@ -55,49 +55,82 @@ export class LLMService {
     const modelWithName = rawModel as BaseChatModel & { modelName?: string; model?: string };
     const modelName = modelWithName.modelName || modelWithName.model || "unknown";
 
-    if (provider === "nvidia") {
-      const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
-      const latency = performance.now() - startTime;
-      const cost = TelemetryService.calculateCost(result.usage, modelName);
-      return { ...result, cost, latency, model: modelName };
+    let lastError: Error | null = null;
+    let currentConfig = { ...config };
+    let currentModel = rawModel;
+
+    // BUCLE DE RESILIENCIA (Máximo 3 intentos con rotación de estrategia/provider)
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        SacredLogger.info(`Intento ${attempt}/3 para ${config.type} (${modelName})`, "LLM_SERVICE");
+        
+        // Intento de salida estructurada nativa (o manual si es nvidia)
+        const currentProvider = LLMFactory.getProviderForType(currentConfig.type);
+        if (currentProvider === "nvidia") {
+          const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema);
+          const latency = performance.now() - startTime;
+          const cost = TelemetryService.calculateCost(result.usage, modelName);
+          return { ...result, cost, latency, model: modelName };
+        }
+
+        const modelWithStructuredOutput = currentModel.withStructuredOutput(schema, { includeRaw: true });
+        const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), 60000)) as { 
+          parsed: z.infer<T>, 
+          raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } 
+        };
+        
+        const usage = response.raw.usage_metadata || {
+          input_tokens: 0,
+          output_tokens: 0,
+          total_tokens: 0
+        };
+
+        const latency = performance.now() - startTime;
+        const usageData = {
+          total: usage.total_tokens || 0,
+          prompt: usage.input_tokens || 0,
+          completion: usage.output_tokens || 0
+        };
+
+        const cost = TelemetryService.calculateCost(usageData, modelName);
+
+        return {
+          data: response.parsed as z.infer<T>,
+          usage: usageData,
+          cost,
+          latency,
+          model: modelName
+        };
+      } catch (error: unknown) {
+        lastError = error as Error;
+        SacredLogger.warn(`Fallo en intento ${attempt}: ${lastError.message}`, "LLM_SERVICE");
+
+        if (attempt === 1) {
+          // Segundo intento: Mismo modelo pero forzamos modo manual
+          SacredLogger.info("Reintentando con modo manual...", "LLM_SERVICE");
+          try {
+             const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema);
+             const latency = performance.now() - startTime;
+             const cost = TelemetryService.calculateCost(result.usage, modelName);
+             return { ...result, cost, latency, model: modelName };
+          } catch (manualError: unknown) {
+             lastError = manualError as Error;
+          }
+        } else if (attempt === 2) {
+          // Tercer intento: Cambiamos de provider (Fallback a Groq si falló NVIDIA, o viceversa)
+          const fallbackProvider = provider === "nvidia" ? "groq" : "nvidia";
+          SacredLogger.warn(`Cambiando de proveedor a ${fallbackProvider} para el último intento...`, "LLM_SERVICE");
+          
+          // Actualizamos la config ANTES de crear el modelo
+          currentConfig = { ...currentConfig, type: fallbackProvider === "nvidia" ? "ultra" : "flow" }; 
+          // Nota: Forzamos un tipo que sabemos que mapea al provider deseado
+          currentModel = LLMFactory.createModel({ ...config, type: fallbackProvider === "nvidia" ? "ultra" : "flow" });
+        }
+      }
     }
 
-    try {
-      const modelWithStructuredOutput = rawModel.withStructuredOutput(schema, { includeRaw: true });
-      const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), 60000)) as { 
-        parsed: z.infer<T>, 
-        raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } 
-      };
-      
-      const usage = response.raw.usage_metadata || {
-        input_tokens: 0,
-        output_tokens: 0,
-        total_tokens: 0
-      };
-
-      const latency = performance.now() - startTime;
-      const usageData = {
-        total: usage.total_tokens || 0,
-        prompt: usage.input_tokens || 0,
-        completion: usage.output_tokens || 0
-      };
-
-      const cost = TelemetryService.calculateCost(usageData, modelName);
-
-      return {
-        data: response.parsed as z.infer<T>,
-        usage: usageData,
-        cost,
-        latency,
-        model: modelName
-      };
-    } catch (error) {
-       SacredLogger.warn("Falló formato nativo, intentando fallback manual...", "LLM_SERVICE");
-       const result = await this._getManualStructuredData(rawModel, trimmedMessages, schema);
-       const latency = performance.now() - startTime;
-       const cost = TelemetryService.calculateCost(result.usage, modelName);
-       return { ...result, cost, latency, model: modelName };
-    }
+    SacredLogger.error("Agotados todos los intentos de resiliencia.", "LLM_SERVICE");
+    throw lastError || new Error("Error desconocido en LLMService");
   }
   
   /**

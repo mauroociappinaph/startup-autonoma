@@ -31,7 +31,7 @@ describe('Operations Chief Node', () => {
   let LLMService: any;
 
   beforeAll(async () => {
-    const chiefModule = await import('./operations_chief.js');
+    const chiefModule = await import('../nodes/chiefs/operations_chief.js');
     const llmModule = await import('@/services/llmService.js');
     operations_chief_node = chiefModule.operations_chief_node;
     LLMService = llmModule.LLMService;

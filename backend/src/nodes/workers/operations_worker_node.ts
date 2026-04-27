@@ -1,7 +1,7 @@
 import { AgentStateType } from "@startup/shared";
 import { AIMessage } from "@langchain/core/messages";
 import child_process from "child_process";
-import { safeExec } from "./operationsHelper.js";
+import { safeExec } from "@/helpers/operationsHelper.js";
 import { OperationsWorkerInput, OperationsWorkerResult, ExecError } from "@/types/operations.types.js";
 import { SacredLogger } from "@/helpers/logger.js";
 import { incrementIteration } from "@/helpers/index.js";

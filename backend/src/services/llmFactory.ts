@@ -51,7 +51,7 @@ export class LLMFactory {
 
       case "nvidia":
         return new ChatOpenAI({
-          modelName,
+          model: modelName,
           temperature: options.temperature ?? 0,
           maxRetries: 0,
           apiKey: process.env.NVIDIA_API_KEY,

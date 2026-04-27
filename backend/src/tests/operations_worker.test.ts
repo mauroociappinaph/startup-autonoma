@@ -41,7 +41,7 @@ describe('Operations Worker Node', () => {
   let operations_worker_node: any;
 
   beforeAll(async () => {
-    const workerModule = await import('./operations_worker.js');
+    const workerModule = await import('../nodes/workers/operations_worker_node.js');
     operations_worker_node = workerModule.operations_worker_node;
   });
 
