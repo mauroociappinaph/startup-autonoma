@@ -145,6 +145,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /tools
 │   │   ├── /types
 │   │   ├── /workers
+│   ├── test-results.json
 │   ├── tsconfig.json
 │   ├── /workspaces
 │   │   ├── /e2e-audit-002

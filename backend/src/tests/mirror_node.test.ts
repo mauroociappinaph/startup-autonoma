@@ -90,12 +90,15 @@ describe('MirrorAgent Node', () => {
 
   it('debería fallar si no hay mensaje humano en el historial', async () => {
     initialState.messages = []; // Limpiamos mensajes
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    
+    // Importamos el logger para espiarlo correctamente ahora que usa Winston
+    const loggerModule = await import('@/helpers/logger.js');
+    const errorSpy = jest.spyOn(loggerModule.SacredLogger, 'error').mockImplementation(() => {});
 
     const result = await mirror_node(initialState);
 
     expect(result.executive_summary).toContain('Error: No hay una instrucción humana');
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });
