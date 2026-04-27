@@ -7,7 +7,24 @@ jest.mock('ioredis', () => {
   const storage: Record<string, Record<string, string>> = {};
   
   const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: jest.fn().mockReturnThis(),
+    pipeline: jest.fn().mockImplementation(function(this: any) {
+      const self = this;
+      return {
+        rpush: jest.fn().mockReturnThis(),
+        lpush: jest.fn().mockReturnThis(),
+        ltrim: jest.fn().mockReturnThis(),
+        expire: jest.fn().mockReturnThis(),
+        hincrbyfloat: jest.fn().mockImplementation((k, f, v) => {
+          self.hincrbyfloat(k, f, v);
+          return this;
+        }),
+        hincrby: jest.fn().mockImplementation((k, f, v) => {
+          self.hincrby(k, f, v);
+          return this;
+        }),
+        exec: (jest.fn() as any).mockResolvedValue([]),
+      };
+    }),
     hincrbyfloat: jest.fn().mockImplementation((key: any, field: any, value: any) => {
       if (!storage[key]) storage[key] = {};
       const current = parseFloat(storage[key][field] || "0");
@@ -32,9 +49,11 @@ jest.mock('ioredis', () => {
       return Promise.resolve(storage[key]?.value || null);
     }),
     publish: jest.fn().mockImplementation(() => Promise.resolve(1)),
+    rpush: jest.fn().mockReturnThis(),
     lpush: jest.fn().mockImplementation(() => Promise.resolve(1)),
     ltrim: jest.fn().mockImplementation(() => Promise.resolve("OK")),
     lrange: jest.fn().mockImplementation(() => Promise.resolve([])),
+    expire: jest.fn().mockReturnThis(),
     on: jest.fn(),
     quit: jest.fn().mockImplementation(() => Promise.resolve("OK")),
     del: jest.fn().mockImplementation((key: any) => {

@@ -4,9 +4,13 @@ import { HumanMessage } from '@langchain/core/messages';
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
   const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: (jest.fn() as any).mockReturnThis(),
+    pipeline: (jest.fn() as any).mockImplementation(() => ({ rpush: (jest.fn() as any).mockReturnThis(), ltrim: (jest.fn() as any).mockReturnThis(), expire: (jest.fn() as any).mockReturnThis(), hincrbyfloat: (jest.fn() as any).mockReturnThis(), hincrby: (jest.fn() as any).mockReturnThis(), exec: (jest.fn() as any).mockResolvedValue([]) })),
     hincrbyfloat: (jest.fn() as any).mockReturnThis(),
     hincrby: (jest.fn() as any).mockReturnThis(),
+    rpush: (jest.fn() as any).mockReturnThis(),
+    ltrim: (jest.fn() as any).mockReturnThis(),
+    expire: (jest.fn() as any).mockReturnThis(),
+    lrange: (jest.fn() as any).mockResolvedValue([]),
     exec: (jest.fn() as any).mockResolvedValue([]),
     hgetall: (jest.fn() as any).mockResolvedValue({}),
     set: (jest.fn() as any).mockResolvedValue("OK"),
