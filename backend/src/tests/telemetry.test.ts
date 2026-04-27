@@ -32,6 +32,9 @@ jest.mock('ioredis', () => {
       return Promise.resolve(storage[key]?.value || null);
     }),
     publish: jest.fn().mockImplementation(() => Promise.resolve(1)),
+    lpush: jest.fn().mockImplementation(() => Promise.resolve(1)),
+    ltrim: jest.fn().mockImplementation(() => Promise.resolve("OK")),
+    lrange: jest.fn().mockImplementation(() => Promise.resolve([])),
     on: jest.fn(),
     quit: jest.fn().mockImplementation(() => Promise.resolve("OK")),
     del: jest.fn().mockImplementation((key: any) => {

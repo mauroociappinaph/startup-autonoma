@@ -12,6 +12,9 @@ jest.mock('ioredis', () => {
     set: (jest.fn() as any).mockResolvedValue("OK"),
     get: (jest.fn() as any).mockResolvedValue(null),
     publish: (jest.fn() as any).mockResolvedValue(1),
+    lpush: (jest.fn() as any).mockResolvedValue(1),
+    ltrim: (jest.fn() as any).mockResolvedValue("OK"),
+    lrange: (jest.fn() as any).mockResolvedValue([]),
     on: jest.fn() as any,
     quit: (jest.fn() as any).mockResolvedValue("OK")
   }));
