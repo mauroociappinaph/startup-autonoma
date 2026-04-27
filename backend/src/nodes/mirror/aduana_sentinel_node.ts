@@ -68,9 +68,24 @@ export async function aduana_sentinel_node(state: AgentStateType) {
     const updates: Partial<AgentStateType> = {
       ...metricsUpdate,
       is_malicious: result.is_injection,
+      threat_level: result.threat_level,
       security_report: result.reasoning,
       next_node: result.is_injection ? "security_blocked" : undefined 
     };
+
+    // Emitimos el evento de seguridad estructurado (Gap 143)
+    const { EventBus } = await import("@/services/eventBus.js");
+    const securityEvent = {
+      type: "SECURITY_ANALYSIS" as const,
+      agent: "ADUANA_SENTINEL" as const,
+      threat_level: result.threat_level,
+      decision: result.is_injection ? "block" : "pass",
+      reasoning: result.reasoning,
+      latency_ms: latency,
+      threadId: state.trace_id || "unknown"
+    };
+
+    await EventBus.publish(securityEvent.threadId, securityEvent);
 
     if (result.is_injection) {
       updates.executive_summary = `🛡️ BLOQUEO DE SEGURIDAD: ${result.reasoning}`;

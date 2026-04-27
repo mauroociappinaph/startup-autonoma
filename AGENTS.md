@@ -185,6 +185,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /openspec
 │   ├── /changes
 │   │   ├── /archive
+│   │   ├── /feat-143-sentinel-sse
 │   │   ├── /issue-114-operations-chief
 │   │   ├── /optimize-entry-flow
 │   ├── /specs

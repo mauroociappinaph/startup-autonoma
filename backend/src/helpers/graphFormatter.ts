@@ -35,5 +35,17 @@ export class GraphFormatter {
         } as StreamEvent;
       }
     }
+
+    // Fallback: Si el update contiene campos de seguridad, emitimos un evento de sistema
+    if (nodeData && (nodeData.is_malicious !== undefined || nodeData.security_report)) {
+      yield {
+        agent: "ADUANA_SENTINEL",
+        text: nodeData.security_report || (nodeData.is_malicious ? "Intento de inyección bloqueado" : "Análisis de seguridad completado"),
+        time: new Date().toLocaleTimeString(),
+        activeNode: nodeName,
+        threadId,
+        checkpointId
+      } as StreamEvent;
+    }
   }
 }
