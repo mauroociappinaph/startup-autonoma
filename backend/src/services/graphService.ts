@@ -157,12 +157,23 @@ export class GraphService {
       configurable: { thread_id: threadId }
     };
 
+    const currentState = await graph.getState(config);
+    const stateValues = currentState.values as AgentStateType;
+
+    // Si falta el project_context (modo legacy), inyectamos uno por defecto (Fix #147)
+    const projectContext = stateValues.project_context 
+      ?? await (await import('./projectService.js')).projectService.getOrCreateProject('default-startup');
+
     if (status === 'approved') {
-      await graph.updateState(config, { is_mission_approved: true });
+      await graph.updateState(config, { 
+        is_mission_approved: true,
+        project_context: projectContext
+      });
     } else if (status === 'rejected' && feedback) {
       // Si el humano rechaza, inyectamos su feedback como un nuevo mensaje y reseteamos la aprobación
       await graph.updateState(config, { 
         is_mission_approved: false,
+        project_context: projectContext,
         messages: [new HumanMessage(`[HUMAN_FEEDBACK]: ${feedback}`)]
       });
     }

@@ -77,7 +77,10 @@ export class AgentController {
       // Si hay prompt directo (modo legacy), ejecutamos el grafo aquí.
       // Notese que los eventos también se publicarán en el bus si el worker está activo.
       if (resolvedPrompt) {
-        const generator = GraphService.runAgentStream(resolvedPrompt, resolvedSessionId);
+        const { projectService } = await import('@/services/projectService.js');
+        const defaultContext = await projectService.getOrCreateProject('default-startup');
+        
+        const generator = GraphService.runAgentStream(resolvedPrompt, resolvedSessionId, defaultContext);
         for await (const event of generator) {
           // Publicamos manualmente para modo legacy para que otros suscriptores vean lo mismo
           await EventBus.publish(resolvedSessionId, event);

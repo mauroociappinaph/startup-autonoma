@@ -105,7 +105,7 @@ export class LLMFactory {
         groq: "llama-3.3-70b-versatile",
       },
       fast: {
-        groq: "llama-3.3-70b-versatile",
+        groq: "llama-3.1-8b-instant",
         openai: "gpt-4o-mini",
         google: "gemini-1.5-flash",
         nvidia: "nvidia/llama-3.1-8b-instruct",

@@ -29,13 +29,13 @@ async function runFullAutonomyTest() {
 
     while (!finished) {
       const stream = await graph.stream(currentInput, config);
-      
+
       for await (const step of stream) {
         const nodeName = Object.keys(step as object)[0];
         const output = (step as unknown as Record<string, unknown>)[nodeName] as Record<string, unknown>;
 
         console.log(`\n>>> [NODO: ${nodeName.toUpperCase()}]`);
-        
+
         // Extraer y mostrar razonamiento XML
         if (output && output.reasoning) {
             console.log("\n--- RAZONAMIENTO (CoT) ---");
@@ -59,13 +59,13 @@ async function runFullAutonomyTest() {
 
       // Verificar si el grafo está esperando aprobación (Interrupt)
       const state = await graph.getState(config);
-      
+
       if (state.next && state.next.length > 0) {
         console.log(`\n⚠️  INTERRUPCIÓN DETECTADA EN: ${state.next.join(", ")}`);
         console.log("🤖 AUTO-APROBANDO TRANSICIÓN (SIMULANDO HUMANO)...");
-        
+
         // Simplemente volvemos a correr el stream con null para continuar desde el checkpoint
-        currentInput = null; 
+        currentInput = null;
       } else {
         finished = true;
       }
