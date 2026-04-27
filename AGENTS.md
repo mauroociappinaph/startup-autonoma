@@ -114,6 +114,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── package.json
 │   ├── /scratch
 │   │   ├── debug_tests.ts
+│   │   ├── test_mcp_integration.ts
 │   ├── /scripts
 │   │   ├── check-grpc-sync.ts
 │   │   ├── stress-test.ts
@@ -187,6 +188,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /openspec
 │   ├── /changes
 │   │   ├── /archive
+│   │   ├── /feat-124-mcp-tool-standardization
 │   │   ├── /feat-143-sentinel-sse
 │   │   ├── /issue-114-operations-chief
 │   │   ├── /issue-144-redis-janitor

@@ -1,6 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { EngramToolArgs } from "@/types/engram.types.js";
+import { EngramPort } from "@/mcp_ports/engramPort.js";
 
 /**
  * Tool: save_to_engram
@@ -8,15 +9,7 @@ import { EngramToolArgs } from "@/types/engram.types.js";
  */
 export const save_to_engram = tool(
   async (args: EngramToolArgs) => {
-    console.log(`--- [ENGRAM TOOL] Guardando memoria: ${args.title} ---`);
-    
-    // Aquí iría la llamada real al MCP de Engram. 
-    
-    return {
-      success: true,
-      message: `Memoria persistida en topic: ${args.topic_key}`,
-      id: `mem-${Date.now()}`
-    };
+    return await EngramPort.save(args);
   },
   {
     name: "save_to_engram",
