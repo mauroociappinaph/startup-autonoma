@@ -1,36 +1,40 @@
 # Skill Registry
 
-## Project Standards (auto-resolved)
+## Compact Rules
 
-### Global Standards
-- **SRP & DRY**: Every component must have a single responsibility.
-- **Strict Typing**: No `any` allowed.
-- **Barrel Files**: Use `index.ts` for exports.
-- **Structured Outputs**: Use `llm.withStructuredOutput(schema)`.
-- **UI Standards**: Use Tailwind CSS and shadcn/ui.
-- **Permanent Memory**: Persist strategic decisions to Engram.
+### Architecture & Engineering (from AGENTS.md)
+- **SRP & DRY**: Every component does one thing.
+- **Barrel Files**: Mandatory `index.ts` for exports.
+- **Strict Typing**: No `any` allowed. Use Zod/Pydantic.
+- **Structured Outputs**: Mandatory `llm.withStructuredOutput()`.
+- **Reasoning-First**: Action must be preceded by `<thought>`.
+- **Idempotency**: Workers must be idempotent.
+- **Path Aliases**: Use `@/*`.
+- **Strict XML**: Follow `<thought>`, `<plan>`, `<action>`, `<verification>`.
 
-### SDD Standards
-- **Spec-Driven Development**: Follow the proposal -> specs -> design -> tasks -> apply -> verify -> archive flow.
-- **Strict TDD Mode**: Enabled if test runner is available.
+### Design System
+- **Tailwind & shadcn/ui**: Mandatory for frontend. No inline CSS.
+
+### Process
+- **Conventional Commits**: `type(scope): message`.
+- **Pipeline Local**: Pre-commit and pre-push validation mandatory.
 
 ## User Skills
 
-| Skill | Trigger |
-|-------|---------|
-| branch-pr | Creating a pull request, opening a PR, or preparing changes for review. |
-| go-testing | Writing Go tests, using teatest, or adding test coverage. |
-| issue-creation | Creating a GitHub issue, reporting a bug, or requesting a feature. |
-| judgment-day | User says "judgment day", "review adversarial", "juzgar", etc. |
-| sdd-apply | Orchestrator launches implementation. |
-| sdd-archive | Orchestrator launches archive. |
-| sdd-design | Orchestrator launches design. |
-| sdd-explore | Orchestrator launches exploration. |
-| sdd-init | Initializing SDD context. |
-| sdd-onboard | Guided end-to-end walkthrough. |
-| sdd-propose | Creating/updating a proposal. |
-| sdd-spec | Writing/updating specs. |
-| sdd-tasks | Creating/updating task breakdown. |
-| sdd-verify | Validating implementation. |
-| skill-creator | Creating a new skill or documenting patterns. |
-| skill-registry | Updating the skill registry. |
+| Skill | Trigger | Source |
+|-------|---------|--------|
+| `branch-pr` | Creating pull requests | Global |
+| `issue-creation` | Creating GitHub issues | Global |
+| `judgment-day` | Peer review request | Global |
+| `sdd-apply` | Implementation phase | Global |
+| `sdd-design` | Design phase | Global |
+| `sdd-spec` | Specification phase | Global |
+| `sdd-tasks` | Task breakdown phase | Global |
+| `sdd-verify` | Verification phase | Global |
+| `skill-creator` | Creating new skills | Global |
+| `skill-registry` | Updating skill registry | Global |
+
+## Project Context
+- **Name**: Startup Autónoma
+- **Stack**: NodeNext, TS, Python, Next.js 15, gRPC, LangGraph, Redis.
+- **Primary Agents**: CEO, Software Chief, Business Chief.

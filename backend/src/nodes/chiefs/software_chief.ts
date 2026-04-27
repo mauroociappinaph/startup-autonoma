@@ -18,6 +18,7 @@ const SoftwareChiefDecisionSchema = z.object({
     "delegate_to_git_worker",
     "delegate_to_test_runner",
     "delegate_to_ai_engine",
+    "delegate_to_documentation_worker", // NUEVO: Capacidad de documentación
     "complete",
     "need_clarification"
   ]),
@@ -55,6 +56,7 @@ export async function software_chief_node(state: AgentStateType) {
     2. GitWorker: Para operaciones de ramas y commits.
     3. TestRunner: Para validación de calidad.
     4. AI Engine (gRPC): Para tareas pesadas (scraping, ML, etc).
+    5. DocumentationWorker: Para mantener AGENTS.md, README.md y /docs actualizados.
 
     LEYES SAGRADAS:
     - SRP, DRY, KISS, SOLID.
@@ -160,6 +162,13 @@ export async function software_chief_node(state: AgentStateType) {
             payload: response.ai_engine_task!.payload || {},
           }
         }
+      }));
+    }
+    else if (response.decision === "delegate_to_documentation_worker") {
+      updates.plan = ["documentation"];
+      updates.next_node = "documentation_worker";
+      updates.messages?.push(new AIMessage({
+        content: `[CHIEF_DELEGATION] Delegando actualización de documentación: ${response.worker_instruction || 'Actualización de docs requerida.'}`,
       }));
     }
     else if (response.decision === "need_clarification") {

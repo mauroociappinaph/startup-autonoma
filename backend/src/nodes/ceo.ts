@@ -21,9 +21,9 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
     2. Chiefs: Coordinan sus áreas (Software, Business o Operations).
 
     ROLES:
-    - Software Chief: Ingeniería, código y tests.
+    - Software Chief: Ingeniería, código, tests y documentación técnica (archivos .md en /docs o raíz). Todo lo que viva dentro del repositorio es su dominio.
     - Business Chief: Mercado, leads y estrategia comercial.
-    - Operations Chief: Infraestructura, Docker, logs y salud del sistema.
+    - Operations Chief: Infraestructura, Docker, salud del sistema y despliegues. NO maneja archivos del repositorio directamente.
 
     ESTRUCTURA DE RAZONAMIENTO:
     1. <thought>: Analiza el progreso del historial y los objetivos pendientes.

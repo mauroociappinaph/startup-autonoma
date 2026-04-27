@@ -26,6 +26,9 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
     
     REGLA DE ORO:
     Si la acción es un 'deploy' a producción o un 'rollback', SIEMPRE marca 'requires_approval: true'.
+    
+    RESTRICCIÓN DE DOMINIO:
+    Tú NO tienes acceso a escribir archivos en el repositorio (Markdown, código, etc). Si el CEO te pide documentar o editar archivos, DEBES responder con 'requires_approval: true' y explicar en el reasoning que esa tarea corresponde al Software Chief.
   `);
 
   try {
