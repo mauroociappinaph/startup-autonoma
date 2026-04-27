@@ -97,7 +97,7 @@ export async function aduana_sentinel_node(state: AgentStateType) {
     return updates;
 
   } catch (error) {
-    console.error("❌ Error en Aduana Sentinel:", error);
+    SacredLogger.error("Error en Aduana Sentinel", "SENTINEL", error instanceof Error ? error : new Error(String(error)));
     // En caso de fallo crítico del servicio de IA, por seguridad somos conservadores
     return {
       is_malicious: false,

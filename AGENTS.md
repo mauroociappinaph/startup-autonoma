@@ -194,6 +194,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /specs
 │   │   ├── /core
 │   │   ├── /observability
+│   │   ├── /security
 ├── package-lock.json
 ├── package.json
 ├── /packages

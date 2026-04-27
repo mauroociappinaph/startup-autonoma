@@ -139,4 +139,19 @@ describe('AduanaSentinel Node', () => {
       threadId: "unknown"
     }));
   });
+
+  it('debería loguear via SacredLogger.error (no console.error) cuando el LLM falla', async () => {
+    jest.spyOn(LLMService, 'getStructuredData').mockRejectedValue(new Error('LLM timeout'));
+    const loggerModule = await import('@/helpers/logger.js');
+    const errorSpy = jest.spyOn(loggerModule.SacredLogger, 'error').mockImplementation(() => {});
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await aduana_sentinel_node(initialState);
+
+    expect(errorSpy).toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalled();
+    expect(result.is_malicious).toBe(false); // Conservador ante fallos
+    errorSpy.mockRestore();
+    consoleSpy.mockRestore();
+  });
 });

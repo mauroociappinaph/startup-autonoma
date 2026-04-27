@@ -25,6 +25,7 @@ export class GraphService {
     const initialInput: Partial<AgentStateType> = {
       project_context: projectContext, // Gap 2: Inyección de aislamiento
       messages: [new HumanMessage(prompt)],
+      trace_id: threadId,              // Fix #143: threadId como canal SSE unificado
       plan: [],
       executive_summary: "",
       retry_count: 0,
