@@ -63,7 +63,7 @@ workflow.addConditionalEdges(
     "circuit_breaker",
     (state: AgentStateType) => {
         if (state.max_budget_reached) return END;
-        return (state.next_node as NodeName) || "ceo";
+        return (state.next_node as NodeName) || (state.active_chief as NodeName) || "ceo";
     }
 );
 
