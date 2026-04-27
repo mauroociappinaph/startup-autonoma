@@ -1,4 +1,5 @@
 import winston from "winston";
+import { TraceContext } from "./traceContext.js";
 
 /**
  * LoggerService: Motor de observabilidad basado en Winston.
@@ -8,7 +9,9 @@ const { combine, timestamp, printf, colorize } = winston.format;
 
 const customFormat = printf(({ level, message, timestamp, context }) => {
   const ctx = context ? `[${context}]` : "";
-  return `${timestamp} ${level} ${ctx}: ${message}`;
+  const traceId = TraceContext.getTraceId();
+  const traceStr = traceId ? ` [${traceId}]` : "";
+  return `${timestamp} ${level}${traceStr} ${ctx}: ${message}`;
 });
 
 export const logger = winston.createLogger({

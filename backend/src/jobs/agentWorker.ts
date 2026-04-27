@@ -8,6 +8,7 @@ import { gitWorker } from "@/nodes/workers/gitWorker.js";
 import { EventBus } from "@/services/eventBus.js"; // Nuevo sistema nervioso
 import fs from "fs/promises";
 import path from "path";
+import { TraceContext } from "@/services/traceContext.js";
 
 /**
  * Worker de BullMQ que consume la cola de agentes.
@@ -69,66 +70,64 @@ export class AgentWorker {
    * Consume el stream del grafo y emite eventos al EventBus para el SSE.
    */
   private async processJob(job: Job<AgentJobData, AgentJobResult>): Promise<AgentJobResult> {
-    const { prompt, sessionId, projectId, repoUrl } = job.data;
+    const { prompt, sessionId, projectId, repoUrl, traceId } = job.data;
 
-    console.log(`🧠 Procesando job ${job.id} | prompt: "${prompt.substring(0, 60)}..."`);
+    return TraceContext.run(traceId, async () => {
+      console.log(`🧠 Procesando job ${job.id} | trace: ${TraceContext.getTraceId()} | prompt: "${prompt.substring(0, 60)}..."`);
 
-    try {
-      // Resolvemos el contexto de proyecto (Gap 2)
-      // Si no hay projectId, usamos uno genérico para mantener retrocompatibilidad
-      const projectName = projectId || "default-startup";
-      const projectContext = await projectService.getOrCreateProject(projectName, repoUrl);
+      try {
+        // Resolvemos el contexto de proyecto (Gap 2)
+        const projectName = projectId || "default-startup";
+        const projectContext = await projectService.getOrCreateProject(projectName, repoUrl);
 
-      // Lógica de Auto-Clone robusta (Gap 3)
-      // Si no existe la carpeta .git y tenemos una URL de repo, clonamos
-      const hasGit = await fs.stat(path.join(projectContext.workDir, ".git"))
-        .then(() => true)
-        .catch(() => false);
+        // Lógica de Auto-Clone robusta (Gap 3)
+        const hasGit = await fs.stat(path.join(projectContext.workDir, ".git"))
+          .then(() => true)
+          .catch(() => false);
 
-      if (!hasGit && projectContext.repoUrl) {
-        console.log(`🚚 Workspace de [${projectName}] sin .git. Clonando: ${projectContext.repoUrl}`);
-        await gitWorker({
-          payload: {
-            action: 'clone',
-            repoUrl: projectContext.repoUrl
-          },
-          repoPath: projectContext.workDir
+        if (!hasGit && projectContext.repoUrl) {
+          console.log(`🚚 Workspace de [${projectName}] sin .git. Clonando: ${projectContext.repoUrl}`);
+          await gitWorker({
+            payload: {
+              action: 'clone',
+              repoUrl: projectContext.repoUrl
+            },
+            repoPath: projectContext.workDir
+          });
+        }
+
+        // Consumimos el stream del grafo
+        const stream = GraphService.runAgentStream(prompt, sessionId, projectContext);
+
+        for await (const event of stream) {
+          await EventBus.publish(sessionId, event);
+        }
+
+        // Notificamos finalización exitosa
+        await EventBus.publish(sessionId, { type: "end", status: "completed" });
+
+        return {
+          sessionId,
+          completedAt: new Date().toISOString(),
+          success: true,
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`❌ Error en job ${job.id}:`, errorMessage);
+
+        await EventBus.publish(sessionId, {
+          type: "error",
+          error: errorMessage,
         });
+
+        return {
+          sessionId,
+          completedAt: new Date().toISOString(),
+          success: false,
+          errorMessage,
+        };
       }
-
-      // Consumimos el stream del grafo inyectando el contexto de aislamiento
-      // y publicamos cada evento en el EventBus para el streaming SSE (Gap 4)
-      const stream = GraphService.runAgentStream(prompt, sessionId, projectContext);
-
-      for await (const event of stream) {
-        await EventBus.publish(sessionId, event);
-      }
-
-      // Notificamos finalización exitosa al stream (Gap 4)
-      await EventBus.publish(sessionId, { type: "end", status: "completed" });
-
-      return {
-        sessionId,
-        completedAt: new Date().toISOString(),
-        success: true,
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`❌ Error en job ${job.id}:`, errorMessage);
-
-      // Publicamos el error para que el SSE no quede colgado (Gap 1)
-      await EventBus.publish(sessionId, {
-        type: "error",
-        error: errorMessage,
-      });
-
-      return {
-        sessionId,
-        completedAt: new Date().toISOString(),
-        success: false,
-        errorMessage,
-      };
-    }
+    });
   }
 }
 

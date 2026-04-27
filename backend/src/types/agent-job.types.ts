@@ -13,6 +13,8 @@ export const AgentJobDataSchema = z.object({
   projectId: z.string().optional(),
   /** URL del repositorio asociado (Gap 3: Auto-Clone) */
   repoUrl: z.string().url().optional(),
+  /** ID de traza para observabilidad */
+  traceId: z.string().optional(),
   /** Timestamp de cuando se recibió el request */
   enqueuedAt: z.string().datetime(),
 });

@@ -7,6 +7,7 @@ import { GraphFormatter } from '@/helpers/graphFormatter.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { SacredLogger } from '@/helpers/logger.js';
 import { LangGraphStreamEvent } from '@/types/index.js';
+import { TraceContext } from './traceContext.js';
 
 
 /**
@@ -117,11 +118,15 @@ export class GraphService {
        }
        
        if (eventType === "on_node_start") {
+         const nodeName = event.metadata?.langgraph_node;
+         EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_START", metadata: { node: nodeName, trace_id: TraceContext.getTraceId() }, threadId });
          reasoningBuffer = "";
          lastYieldedLength = 0;
        }
 
         if (eventType === "on_node_end") {
+          const nodeName = event.metadata?.langgraph_node;
+          EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: nodeName, trace_id: TraceContext.getTraceId() }, threadId });
           const updates = event.data.output as Record<string, unknown>;
           const checkpointId = event.config?.configurable?.checkpoint_id;
           if (updates) {
@@ -189,6 +194,8 @@ export class GraphService {
         const eventType = event.event;
         
         if (eventType === "on_node_end") {
+          const nodeName = event.metadata?.langgraph_node;
+          EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: nodeName, trace_id: TraceContext.getTraceId() }, threadId });
           const updates = event.data.output as Record<string, unknown>;
           const checkpointId = event.config?.configurable?.checkpoint_id;
           if (updates) { 

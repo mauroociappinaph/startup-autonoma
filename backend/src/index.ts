@@ -7,10 +7,13 @@ import { agentWorker, setupRedisJanitor, systemWorker } from '@/jobs/index.js';
 import { closeRedisConnections } from '@/db/redis.js';
 import { SacredLogger } from '@/helpers/logger.js';
 
+import { tracingMiddleware } from '@/middleware/tracingMiddleware.js';
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares Globales
+app.use(tracingMiddleware);
 app.use(cors());
 app.use(express.json());
 

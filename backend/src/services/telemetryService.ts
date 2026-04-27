@@ -29,6 +29,7 @@ export class TelemetryService {
     model: string;
     latency: number;
     usage: { total: number; prompt: number; completion: number };
+    trace_id?: string;
   }) {
     const cost = this.calculateCost(data.usage, data.model);
     const redis = getRedisConnection();
@@ -55,6 +56,7 @@ export class TelemetryService {
         latency: data.latency,
         usage: data.usage,
         cost: cost,
+        trace_id: data.trace_id,
         timestamp: Date.now()
       }
     });
