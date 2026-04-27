@@ -130,6 +130,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /middleware
 │   │   ├── /nodes
 │   │   ├── /routes
+│   │   ├── /scripts
 │   │   ├── /services
 │   │   ├── /skills
 │   │   ├── /state
@@ -187,6 +188,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /archive
 │   │   ├── /feat-143-sentinel-sse
 │   │   ├── /issue-114-operations-chief
+│   │   ├── /issue-144-redis-janitor
 │   │   ├── /optimize-entry-flow
 │   ├── /specs
 │   │   ├── /core

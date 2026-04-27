@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import agentRoutes from '@/routes/agentRoutes.js';
 import { SystemController } from '@/controllers/systemController.js';
-import { agentWorker } from '@/jobs/index.js';
+import { agentWorker, setupRedisJanitor, systemWorker } from '@/jobs/index.js';
 import { closeRedisConnections } from '@/db/redis.js';
 import { SacredLogger } from '@/helpers/logger.js';
 
@@ -31,6 +31,9 @@ app.listen(PORT, () => {
   // Iniciamos el worker de BullMQ al arrancar el servidor
   const concurrency = parseInt(process.env.AGENT_CONCURRENCY || '2', 10);
   agentWorker.start(concurrency);
+
+  // Iniciamos el Janitor de Redis (Gap 144)
+  setupRedisJanitor().catch(err => SacredLogger.error(`Error al programar Janitor: ${err.message}`, "INFRA"));
 });
 
 /**
@@ -40,6 +43,7 @@ const shutdown = async (signal: string): Promise<void> => {
   SacredLogger.warn(`Señal ${signal} recibida. Apagando worker y cerrando conexiones...`, "SYSTEM");
   try {
     await agentWorker.stop();
+    await systemWorker.close();
     await closeRedisConnections();
     SacredLogger.success("Apagado completado con éxito.", "SYSTEM");
     process.exit(0);

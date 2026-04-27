@@ -64,7 +64,16 @@ Un **monorepo (Turborepo)** que implementa una startup operada por agentes de IA
 
 - **Node.js** v20+
 - **Python** 3.10+
+- **Redis** v6.2+ (Requerido para persistencia de checkpoints y colas de BullMQ)
 - Clave de API del proveedor LLM configurada en `.env`
+
+#### Configuración de Redis
+Para despliegues fuera de Docker, se recomienda configurar:
+```conf
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+```
+El backend intentará configurar estos límites automáticamente al arrancar.
 
 ### Instalación
 

@@ -1,0 +1,7 @@
+{
+  "change": "issue-144-redis-janitor",
+  "status": "completed",
+  "current_phase": "archived",
+  "branch": "chore/redis-maxmemory-janitor-144",
+  "issue": 144
+}
