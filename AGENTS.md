@@ -146,8 +146,10 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /workers
 │   ├── tsconfig.json
 │   ├── /workspaces
+│   │   ├── /e2e-audit-002
 │   │   ├── /stress-test-1776895876969
 │   │   ├── /stress-test-1776895990115
+│   │   ├── /test-project-001
 ├── commitlint.config.js
 ├── docker-compose.yml
 ├── /docs

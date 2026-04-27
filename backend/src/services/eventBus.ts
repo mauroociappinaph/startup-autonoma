@@ -6,6 +6,9 @@ import { getRedisConnection, getRedisSubscriber } from "../db/redis.js";
  */
 export class EventBus {
   private static readonly CHANNEL_PREFIX = "agent:stream:";
+  private static readonly BUFFER_PREFIX = "sse:buffer:";
+  private static readonly BUFFER_TTL_SECONDS = 300; // 5 minutos
+  private static readonly BUFFER_MAX_EVENTS = 500;
 
   /**
    * Publica un evento para una sesión específica.
@@ -16,6 +19,11 @@ export class EventBus {
     
     // Serializamos la data asegurando que sea un JSON válido
     const payload = JSON.stringify(data);
+
+    // 1. Guardar en el buffer (replay support)
+    await this.writeToBuffer(sessionId, payload);
+
+    // 2. Publicar en tiempo real (Pub/Sub)
     await redis.publish(channel, payload);
   }
 
@@ -26,6 +34,9 @@ export class EventBus {
   static async subscribe(sessionId: string, onMessage: (data: unknown) => void): Promise<() => void> {
     const subscriber = getRedisSubscriber();
     const channel = `${this.CHANNEL_PREFIX}${sessionId}`;
+
+    // 1. Replay de eventos históricos si existen
+    await this.replayBuffer(sessionId, onMessage);
 
     const handler = (chan: string, message: string) => {
       if (chan === channel) {
@@ -46,5 +57,39 @@ export class EventBus {
       subscriber.off("message", handler);
       await subscriber.unsubscribe(channel);
     };
+  }
+
+  /**
+   * Escribe un evento en el buffer de Redis con TTL y límite de tamaño.
+   */
+  private static async writeToBuffer(sessionId: string, payload: string): Promise<void> {
+    const redis = getRedisConnection();
+    const key = `${this.BUFFER_PREFIX}${sessionId}`;
+
+    await redis
+      .pipeline()
+      .rpush(key, payload)
+      .ltrim(key, -this.BUFFER_MAX_EVENTS, -1)
+      .expire(key, this.BUFFER_TTL_SECONDS)
+      .exec();
+  }
+
+  /**
+   * Recupera los eventos del buffer y los envía al callback.
+   */
+  private static async replayBuffer(sessionId: string, onMessage: (data: unknown) => void): Promise<void> {
+    const redis = getRedisConnection();
+    const key = `${this.BUFFER_PREFIX}${sessionId}`;
+
+    const events = await redis.lrange(key, 0, -1);
+    
+    for (const event of events) {
+      try {
+        const data = JSON.parse(event);
+        onMessage(data);
+      } catch (e) {
+        console.error("❌ EventBus: Error parseando evento histórico", e);
+      }
+    }
   }
 }
