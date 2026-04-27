@@ -129,7 +129,7 @@ export class LLMService {
       }
     }
 
-    SacredLogger.error("Agotados todos los intentos de resiliencia.", "LLM_SERVICE");
+    SacredLogger.error("Agotados todos los intentos de resiliencia.", "LLM_SERVICE", lastError || undefined);
     throw lastError || new Error("Error desconocido en LLMService");
   }
   

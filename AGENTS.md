@@ -192,6 +192,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /optimize-entry-flow
 │   ├── /specs
 │   │   ├── /core
+│   │   ├── /observability
 ├── package-lock.json
 ├── package.json
 ├── /packages
