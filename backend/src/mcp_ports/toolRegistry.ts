@@ -5,7 +5,8 @@ import {
   write_file, 
   patch_file, 
   test_runner, 
-  save_to_engram 
+  save_to_engram,
+  sequential_thinking
 } from "@/tools/index.js";
 
 import { 
@@ -111,6 +112,14 @@ export const defaultRegistry = ToolRegistry.create([
       name: "save_to_engram",
       description: "Persiste conocimiento en la memoria organizacional.",
       category: "platform"
+    }
+  },
+  {
+    tool: sequential_thinking,
+    descriptor: {
+      name: "sequential_thinking",
+      description: "Desglosa problemas complejos en pasos de pensamiento secuencial.",
+      category: "reasoning"
     }
   }
 ]);

@@ -51,4 +51,10 @@ describe('ToolRegistry', () => {
     expect(customRegistry.getTool("mock_tool")).toBe(mockTool);
     expect(customRegistry.listTools()).toHaveLength(1);
   });
+
+  it('RF-1.5: debería incluir la herramienta de razonamiento secuencial', () => {
+    const reasoningTools = defaultRegistry.getToolsByCategory("reasoning");
+    expect(reasoningTools).toHaveLength(1);
+    expect(reasoningTools[0].name).toBe("sequential_thinking");
+  });
 });

@@ -15,6 +15,15 @@ async function testIntegration() {
   const fsTools = defaultRegistry.getToolsByCategory("filesystem");
   console.log(`✅ Categoría 'filesystem' tiene ${fsTools.length} herramientas.`);
 
+  const reasoningTools = defaultRegistry.getToolsByCategory("reasoning");
+  console.log(`✅ Categoría 'reasoning' tiene ${reasoningTools.length} herramientas.`);
+  
+  if (reasoningTools.length > 0 && reasoningTools[0].name === "sequential_thinking") {
+    console.log("✅ Herramienta 'sequential_thinking' detectada en categoría correcta.");
+  } else {
+    console.error("❌ Herramienta 'sequential_thinking' NO encontrada en categoría 'reasoning'.");
+  }
+
   // 2. Probar obtención e invocación de una tool real (read_file)
   console.log("\n2. Probando invocación vía Registry (read_file)...");
   try {
