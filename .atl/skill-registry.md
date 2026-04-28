@@ -1,40 +1,38 @@
 # Skill Registry
 
-## Compact Rules
-
-### Architecture & Engineering (from AGENTS.md)
-- **SRP & DRY**: Every component does one thing.
-- **Barrel Files**: Mandatory `index.ts` for exports.
-- **Strict Typing**: No `any` allowed. Use Zod/Pydantic.
-- **Structured Outputs**: Mandatory `llm.withStructuredOutput()`.
-- **Reasoning-First**: Action must be preceded by `<thought>`.
-- **Idempotency**: Workers must be idempotent.
-- **Path Aliases**: Use `@/*`.
-- **Strict XML**: Follow `<thought>`, `<plan>`, `<action>`, `<verification>`.
-
-### Design System
-- **Tailwind & shadcn/ui**: Mandatory for frontend. No inline CSS.
-
-### Process
-- **Conventional Commits**: `type(scope): message`.
-- **Pipeline Local**: Pre-commit and pre-push validation mandatory.
-
 ## User Skills
+- branch-pr: PR creation workflow
+- judgment-day: Parallel adversarial review
+- sdd-apply: Implementation phase
+- sdd-archive: Archiving phase
+- sdd-design: Technical design
+- sdd-explore: Exploration phase
+- sdd-init: Initialization phase
+- sdd-propose: Proposal phase
+- sdd-spec: Specification phase
+- sdd-tasks: Task breakdown
+- sdd-verify: Verification phase
+- skill-creator: New skill creation
+- skill-registry: Registry maintenance
 
-| Skill | Trigger | Source |
-|-------|---------|--------|
-| `branch-pr` | Creating pull requests | Global |
-| `issue-creation` | Creating GitHub issues | Global |
-| `judgment-day` | Peer review request | Global |
-| `sdd-apply` | Implementation phase | Global |
-| `sdd-design` | Design phase | Global |
-| `sdd-spec` | Specification phase | Global |
-| `sdd-tasks` | Task breakdown phase | Global |
-| `sdd-verify` | Verification phase | Global |
-| `skill-creator` | Creating new skills | Global |
-| `skill-registry` | Updating skill registry | Global |
+## Project Standards
+- AGENTS.md: The Startup Source of Truth (Hierarchies, Laws, Structure)
+- GEMINI.md: Project Overview and Development Conventions
+- architecture.md: Technical Architecture Details
 
-## Project Context
-- **Name**: Startup Autónoma
-- **Stack**: NodeNext, TS, Python, Next.js 15, gRPC, LangGraph, Redis.
-- **Primary Agents**: CEO, Software Chief, Business Chief.
+## Compact Rules
+### General Engineering
+- SRP & DRY: One component, one responsibility.
+- Barrel Files: Use index.ts/index.py for clean exports.
+- Strict Typing: NO `any`. Use Zod/Pydantic.
+- gRPC: Use versioned contracts in /packages/protos.
+
+### Agentic Patterns
+- CoT XML: Use `<thought>`, `<plan>`, `<action>`, `<verification>`.
+- Reasoning-First: Always save `reasoning` before actions.
+- Idempotency: Workers must be safe to re-run.
+
+### UI/Frontend
+- Next.js 15 App Router.
+- Tailwind CSS + shadcn/ui.
+- NO deep relative imports.

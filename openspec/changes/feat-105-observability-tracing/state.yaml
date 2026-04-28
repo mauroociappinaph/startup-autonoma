@@ -1,0 +1,19 @@
+change_name: feat-105-observability-tracing
+status: active
+current_phase: tasks
+history:
+  - phase: exploration
+    status: completed
+    completed_at: "2026-04-28T16:45:30Z"
+  - phase: proposal
+    status: completed
+    completed_at: "2026-04-28T16:45:49Z"
+  - phase: spec
+    status: completed
+    completed_at: "2026-04-28T16:48:19Z"
+  - phase: design
+    status: completed
+    completed_at: "2026-04-28T20:49:05Z"
+  - phase: tasks
+    status: completed
+    completed_at: "2026-04-28T20:49:29Z"
