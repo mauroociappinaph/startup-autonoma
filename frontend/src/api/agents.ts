@@ -34,5 +34,12 @@ export const agentService = {
   async getHistory(threadId: string) {
     const response = await apiClient.get(`/agents/history/${threadId}`);
     return response.data;
+  },
+
+  /**
+   * Actualiza el presupuesto de un proyecto.
+   */
+  async updateProjectBudget(projectId: string, maxUsdBudget: number) {
+    return apiClient.patch(`/projects/${projectId}/budget`, { maxUsdBudget });
   }
 };

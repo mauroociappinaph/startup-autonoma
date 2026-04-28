@@ -13,7 +13,8 @@ import {
   SystemHealth,
   FinancialTicker,
   HITLPanel,
-  StatusIndicators
+  StatusIndicators,
+  BudgetControl
 } from "@/components/dashboard";
 import { useAgentStore } from "@/store/useAgentStore";
 
@@ -53,6 +54,8 @@ export default function Dashboard() {
             <div className="glass rounded-2xl p-4 border border-white/5">
               <SystemHealth />
             </div>
+
+            <BudgetControl />
 
             <div className="flex-1 flex flex-col min-h-0 gap-4">
               <div className="flex-[0.45] min-h-[180px]">

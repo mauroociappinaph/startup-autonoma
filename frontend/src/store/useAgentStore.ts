@@ -11,9 +11,11 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   completedSteps: [],
   executiveSummary: null,
   threadId: "default-thread",
+  projectId: null,
   totalTokens: 0,
   iterations: 0,
   totalCost: 0,
+  maxUsdBudget: 10.0,
 
   setThoughts: (updater) => set((state) => ({ thoughts: updater(state.thoughts) })),
   setIsStreaming: (isStreaming) => set({ isStreaming }),
@@ -23,6 +25,14 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   setCompletedSteps: (updater) => set((state) => ({ completedSteps: updater(state.completedSteps) })),
   setExecutiveSummary: (executiveSummary) => set({ executiveSummary }),
   setThreadId: (threadId) => set({ threadId }),
+  
+  setMaxUsdBudget: async (maxUsdBudget) => {
+    const { projectId } = get();
+    if (projectId) {
+      await agentService.updateProjectBudget(projectId, maxUsdBudget);
+    }
+    set({ maxUsdBudget });
+  },
 
   updateTelemetry: (data: { tokens?: number; iterations?: number; cost?: number }) => set((state: AgentState) => ({
     totalTokens: state.totalTokens + (data.tokens || 0),
@@ -38,6 +48,8 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     totalTokens: state.token_usage?.total || 0,
     iterations: state.iteration_count || 0,
     totalCost: state.total_cost_usd || 0,
+    maxUsdBudget: state.project_context?.maxUsdBudget || 10.0,
+    projectId: state.project_context?.projectId || null,
   }),
 
   resetSession: () => set({
@@ -51,6 +63,8 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     totalTokens: 0,
     iterations: 0,
     totalCost: 0,
+    maxUsdBudget: 10.0,
+    projectId: null,
   }),
 
   loadHistory: async (threadId: string) => {

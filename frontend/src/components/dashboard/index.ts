@@ -7,3 +7,4 @@ export * from "./ReasoningFeed";
 export * from "./StrategyCard";
 export * from "./SystemHealth";
 export * from "./StatusIndicators";
+export * from "./BudgetControl";
