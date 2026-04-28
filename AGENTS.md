@@ -153,6 +153,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── test-results.json
 │   ├── tsconfig.json
 │   ├── /workspaces
+│   │   ├── /default-startup
 │   │   ├── /e2e-audit-002
 │   │   ├── /stress-test-1776895876969
 │   │   ├── /stress-test-1776895990115
