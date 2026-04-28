@@ -1,10 +1,13 @@
 import { AgentStateType } from "@startup/shared";
 import { AIMessage } from "@langchain/core/messages";
 import child_process from "child_process";
+import fs from "fs";
+import path from "path";
 import { safeExec } from "@/helpers/operationsHelper.js";
 import { OperationsWorkerInput, OperationsWorkerResult, ExecError } from "@/types/operations.types.js";
 import { SacredLogger } from "@/helpers/logger.js";
 import { incrementIteration } from "@/helpers/index.js";
+import { generateSequenceDiagram } from "@/helpers/diagramHelper.js";
 
 /**
  * Nodo OperationsWorker: Ejecutor de comandos de infraestructura.
@@ -25,6 +28,38 @@ export async function operations_worker_node(state: AgentStateType) {
   const instruction = lastMessage.additional_kwargs.operations_instruction as OperationsWorkerInput;
 
   try {
+    // --- NUEVO: Manejo de acciones integradas (Internal Operations) ---
+    if (instruction.command === "generate_sequence_diagram") {
+      SacredLogger.info("Generando diagrama de secuencia automático...", "OPS_NODE");
+      const diagram = generateSequenceDiagram(state.messages);
+      
+      const docsDir = path.join(process.cwd(), "docs/architecture/sequences");
+      if (!fs.existsSync(docsDir)) {
+        fs.mkdirSync(docsDir, { recursive: true });
+      }
+
+      const fileName = `sequence_${Date.now()}.mmd`;
+      const filePath = path.join(docsDir, fileName);
+      fs.writeFileSync(filePath, diagram);
+
+      SacredLogger.success(`Diagrama generado exitosamente en ${filePath}`, "OPS_NODE");
+
+      return {
+        executive_summary: `Se ha generado un diagrama de secuencia de la ejecución actual en: ${filePath}`,
+        completed_steps: (state.completed_steps || []).concat(["generate_sequence_diagram"]),
+        ...incrementIteration(state),
+        next_node: state.active_chief || "ceo",
+        messages: [new AIMessage({
+          content: `[OPS_REPORT] Diagrama de secuencia generado: ${fileName}`,
+          additional_kwargs: { 
+            node: "operations_worker",
+            operations_result: { success: true, action: "generate_sequence_diagram", stdout: filePath } 
+          }
+        })]
+      };
+    }
+
+    // --- Ejecución de comandos de Shell (Legacy / External Ops) ---
     const command = safeExec(instruction.command, instruction.args);
     SacredLogger.info(`Ejecutando comando: ${command}`, "OPS_NODE");
 
@@ -52,12 +87,15 @@ export async function operations_worker_node(state: AgentStateType) {
 
     return {
       executive_summary: `Operations Worker ejecutó ${instruction.command}:\n${stdout || stderr || 'Sin salida'}`,
-      completed_steps: ["infrastructure_operation"],
+      completed_steps: (state.completed_steps || []).concat(["infrastructure_operation"]),
       ...incrementIteration(state),
       next_node: state.active_chief || "ceo",
       messages: [new AIMessage({
         content: `[OPS_REPORT] Comando ${instruction.command} completado.`,
-        additional_kwargs: { operations_result: result }
+        additional_kwargs: { 
+          node: "operations_worker",
+          operations_result: result 
+        }
       })]
     };
   } catch (error: unknown) {
@@ -77,7 +115,10 @@ export async function operations_worker_node(state: AgentStateType) {
       next_node: state.active_chief || "ceo",
       messages: [new AIMessage({
         content: `[OPS_ERROR] Falló ${instruction.command}: ${err.message}`,
-        additional_kwargs: { operations_result: result }
+        additional_kwargs: { 
+          node: "operations_worker",
+          operations_result: result 
+        }
       })]
     };
   }

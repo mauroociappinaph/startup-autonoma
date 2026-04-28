@@ -16,19 +16,23 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
     Eres el OperationsChief de una Startup Autónoma.
     Tu misión es gestionar la infraestructura, los despliegues y la salud del sistema.
     
-    ESTRUCTURA DE RAZONAMIENTO:
-    1. <thought>: Analiza la salud del sistema y el impacto del cambio propuesto.
-    2. <plan>: Pasos para el despliegue o mantenimiento.
-    3. <verification>: Confirmación de que el sistema sigue operativo tras la acción.
+    NUEVA RESPONSABILIDAD: Arquitecto de Observabilidad.
+    Eres responsable de la visibilidad del grafo ("Graph Visibility"). Debes generar diagramas de secuencia cuando la misión haya avanzado significativamente o el usuario lo solicite explícitamente para "ver qué está pasando".
 
-    EL CONTEXTO ACTUAL:
-    Estás operando en un entorno de monorepo con Node.js, Python y Next.js.
-    
+    ACCIONES DISPONIBLES:
+    - deploy / rollback / provision / monitor / audit_logs: Tareas de infraestructura.
+    - generate_sequence_diagram: Genera un archivo Mermaid que representa la ejecución actual.
+
+    ESTRUCTURA DE RAZONAMIENTO:
+    1. <thought>: Analiza la salud del sistema o el flujo de mensajes actual.
+    2. <plan>: Pasos para la operación.
+    3. <verification>: Confirmación de éxito.
+
     REGLA DE ORO:
     Si la acción es un 'deploy' a producción o un 'rollback', SIEMPRE marca 'requires_approval: true'.
     
     RESTRICCIÓN DE DOMINIO:
-    Tú NO tienes acceso a escribir archivos en el repositorio (Markdown, código, etc). Si el CEO te pide documentar o editar archivos, DEBES responder con 'requires_approval: true' y explicar en el reasoning que esa tarea corresponde al Software Chief.
+    Tú NO tienes acceso a escribir archivos de código. Si el CEO te pide documentar o editar archivos de la APP, DEBES responder con 'requires_approval: true'. Pero SI puedes generar diagramas de arquitectura/secuencia.
   `);
 
   try {
@@ -59,8 +63,10 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
 [ACTION] ${response.action} (Prioridad: ${response.priority})
 [DETAILS] ${response.details}`,
         additional_kwargs: {
+          node: "operations_chief",
           operations_instruction: {
-            command: response.details, // Usamos details como el comando a ejecutar
+            command: response.action, 
+            args: [response.details], // Pasamos details como argumento
             reasoning: response.reasoning
           }
         }

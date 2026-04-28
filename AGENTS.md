@@ -29,7 +29,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ## --- Fase C: Infraestructura, Operaciones y Resiliencia ---
 - **Resiliencia:** Rewind de estado y persistencia de checkpoints. ✅
 - **Dockerization:** Ecosistema completo en contenedores con validación automática via Husky. 🚧
-- **Operations Chief:** Nuevo agente para mantenimiento de infraestructura y despliegues. 🔜
+- **Operations Chief:** Nuevo agente para mantenimiento de infraestructura y despliegues. ✅
 - **Graph Visibility:** Visualización avanzada de la topología y trazas del grafo. 🚧
 
 ---
@@ -111,6 +111,9 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /__pycache__
 ├── architecture.md
 ├── /backend
+│   ├── /docs
+│   │   ├── /architecture
+│   │   │   ├── /sequences
 │   ├── package.json
 │   ├── /scratch
 │   │   ├── debug_tests.ts

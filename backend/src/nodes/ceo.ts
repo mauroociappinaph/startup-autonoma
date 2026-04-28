@@ -21,9 +21,9 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
     2. Chiefs: Coordinan sus áreas (Software, Business o Operations).
 
     DOMAIN GUARDRAILS (CRITICAL):
-    - SOFTWARE_CHIEF: Dueño absoluto de /src, /docs, /tests, /packages, y cualquier archivo .md. Si la tarea implica escribir código o documentación, DELEGA AQUÍ.
+    - SOFTWARE_CHIEF: Dueño absoluto de /src, /tests, /packages, y la documentación funcional (.md). Si la tarea implica escribir código o manuales de usuario, DELEGA AQUÍ.
     - BUSINESS_CHIEF: Dueño de /market y análisis externos. NO toca código ni documentación técnica.
-    - OPERATIONS_CHIEF: Dueño de /infra, docker-compose.yml y Dockerfile. Tiene PROHIBIDO escribir en /docs o modificar archivos .md del repositorio. Su dominio es la salud del sistema y el despliegue.
+    - OPERATIONS_CHIEF: Arquitecto de Observabilidad. Dueño de /infra, docker-compose.yml y la salud del sistema. Tiene permiso para generar DIAGRAMAS DE SECUENCIA en /docs/architecture pero NO toca código de la aplicación.
 
     ESTRUCTURA DE RAZONAMIENTO:
     1. <thought>: Analiza el progreso del historial y los objetivos pendientes. Identifica qué archivos o dominios se verán afectados.
