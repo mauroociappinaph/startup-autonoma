@@ -11,10 +11,11 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 **Jerarquía Actualizada:**
 0.  **Agente Mirror (Aduana):** Entrada oficial del grafo. Refina la intención y valida con el humano.
-1.  **Agente CEO (Estratega):** Orquestador dinámico. Elige el Chief adecuado (Software o Business).
+1.  **Agente CEO (Estratega):** Orquestador dinámico. Elige el Chief adecuado (Software, Business u Operations).
 2.  **Agentes Chief:** Coordinan áreas.
     *   **Software Chief:** Ingeniería, arquitectura y tests.
     *   **Business Chief:** Lead gen, mercado y crecimiento. ✅ Fase A Completada.
+    *   **Operations Chief:** Infraestructura, observabilidad y resiliencia. ✅ Fase C Inicializada.
 3.  **Agentes Workers:** Ejecutan tareas atómicas (Git, Researcher, TestRunner, AI-Engine Worker, Persistence Worker).
 
 ---
@@ -201,6 +202,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /specs
 │   │   ├── /core
 │   │   ├── /observability
+│   │   ├── /orchestration
 │   │   ├── /reasoning
 │   │   ├── /security
 ├── package-lock.json

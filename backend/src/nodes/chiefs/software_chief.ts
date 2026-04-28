@@ -180,6 +180,7 @@ export async function software_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "complete") {
       updates.next_node = "ceo"; 
+      updates.active_chief = undefined; // Limpiamos para evitar bucles de retorno
       updates.completed_steps = ["software_chief"];
       updates.executive_summary = response.reasoning;
     }

@@ -11,9 +11,10 @@
 
 Un **monorepo (Turborepo)** que implementa una startup operada por agentes de IA en producción. El sistema puede:
 
-- 🧠 **Razonar y delegar** — El CEO analiza la misión y elige el Chief correcto (Software o Business)
+- 🧠 **Razonar y delegar** — El CEO analiza la misión y elige el Chief correcto (Software, Business u Operations)
 - 💻 **Crear software** — El Software Chief dirige a workers de Git, Tests y Research
 - 📈 **Hacer negocio** — El Business Chief genera leads, analiza mercados y persiste aprendizajes
+- ⚙️ **Gestionar Infra** — El Operations Chief maneja deploys, monitoreo y visibilidad del grafo
 - 🛡️ **Protegerse solo** — El Circuit Breaker monitorea tokens e iteraciones en tiempo real
 - 👁️ **Mostrarte todo** — La Mission Control (Next.js) visualiza el razonamiento en vivo
 
@@ -36,12 +37,15 @@ Un **monorepo (Turborepo)** que implementa una startup operada por agentes de IA
    ├─── [ Software Chief ]
    │         ├── Git Worker       (branches, commits, PRs)
    │         ├── Test Runner      (jest, validación de calidad)
-   │         ├── Researcher       (exploración del codebase)
-   │         └── Code Researcher  (análisis semántico de código)
+   │         └── Researcher       (exploración y análisis semántico)
    │
-   └─── [ Business Chief ]
-             ├── AI Engine Worker  (gRPC → Python → Lead Gen, scraping)
-             └── Persistence Node  (memoria semántica en Engram)
+   ├─── [ Business Chief ]
+   │         ├── AI Engine Worker  (gRPC → Python → Lead Gen, scraping)
+   │         └── Persistence Node  (memoria semántica en Engram)
+   │
+   └─── [ Operations Chief ]
+             ├── Infra Worker     (Docker, healthchecks, deploys)
+             └── Observability    (Mermaid sequence diagrams)
 ```
 
 ### Stack Tecnológico
@@ -191,7 +195,7 @@ Este repositorio opera bajo una constitución técnica estricta. Las leyes funda
 |------|--------|-------------|
 | **Fase A** | ✅ Completa | Business Chief, Lead Gen Worker (gRPC), Persistence Loop |
 | **Fase B** | ✅ Completa | Mission Control UI, Circuit Breaker, Live Streaming & **State Rewind (Time-Travel)** |
-| **Fase C** | 🚧 En Proceso | **Infraestructura y Operaciones**: Dockerization, Operations Chief e Inmortalidad del Grafo |
+| **Fase C** | 🚧 En Proceso | **Infraestructura y Operaciones**: Operations Chief (✅), Dockerization (🚧) e Inmortalidad |
 | **Fase D** | 🔜 Planeada | Persistencia de Proyectos + Multi-tenant |
 
 

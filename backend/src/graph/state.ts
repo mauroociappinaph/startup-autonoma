@@ -106,7 +106,7 @@ export const AgentAnnotation = Annotation.Root({
    * Indica el nodo activo del Chief.
    */
   active_chief: Annotation<string | undefined>({
-    reducer: (prev, next) => next ?? prev,
+    reducer: (prev, next) => next,
     default: () => undefined,
   }),
 
@@ -122,7 +122,7 @@ export const AgentAnnotation = Annotation.Root({
    * Nodo de destino tras pasar el Circuit Breaker.
    */
   next_node: Annotation<string | undefined>({
-    reducer: (prev, next) => next ?? prev,
+    reducer: (prev, next) => next,
     default: () => undefined,
   }),
 

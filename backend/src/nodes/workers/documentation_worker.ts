@@ -46,7 +46,8 @@ export async function documentation_worker_node(state: AgentStateType): Promise<
       ...metricsUpdate,
       executive_summary: response.reasoning,
       messages: state.messages.concat([new AIMessage({
-        content: `[DOCUMENTATION_WORKER_RESULT] Updated: ${response.files_updated.join(", ")}
+        content: `[DOCUMENTATION_WORKER_RESULT] [TASK_COMPLETED]
+Updated: ${response.files_updated.join(", ")}
 Summary: ${response.summary_of_changes}`,
       })])
     };

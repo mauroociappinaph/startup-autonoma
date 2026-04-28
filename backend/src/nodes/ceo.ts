@@ -34,7 +34,8 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
     - Analiza el progreso actual en el historial de mensajes.
     - Elige el próximo paso racional: 'delegate' o 'finish'.
     - Solo puedes responder con 'finish' si TODAS las intenciones y objetivos del usuario han sido completados.
-    - Si el usuario pide "documentar" o "crear un reporte" en el repositorio, SIEMPRE delega al Software Chief.
+    - Antes de delegar, VERIFICA si la tarea ya fue realizada por un Worker o Chief en el historial. Si ya existe evidencia de éxito, NO vuelvas a delegar lo mismo.
+    - Si el usuario pide "documentar" o "crear un reporte" en el repositorio, delega al Software Chief SOLO si no ha sido documentado aún.
     - Sé obsesivo con el cumplimiento del plan total.
   `);
 

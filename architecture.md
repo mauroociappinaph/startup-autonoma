@@ -5,6 +5,7 @@
 2. **Jerarquía Estricta:** CEO -> Chiefs -> Workers.
 3. **Persistencia Semántica:** Memoria de largo plazo vía Engram (PARA Method).
 4. **Calidad de Elite:** Tipado estricto, Leyes Sagradas y Validación en CI/CD.
+5. **Observability Architect:** Visibilidad total del flujo vía diagramas de secuencia y trazabilidad gRPC.
 
 ## 🗺️ Estructura del Repositorio (Actualizada Automáticamente)
 
@@ -14,11 +15,11 @@
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml
-│   │   └── feature_request.yml
+│   │   ├── feature_request.yml
+│   │   └── refactor_request.yml
 │   ├── workflows/
 │   │   ├── _dependabot-issue.yml
-│   │   ├── ci.yml
-│   │   └── test.yml
+│   │   └── ci.yml
 │   ├── dependabot.yml
 │   └── pull_request_template.md
 ├── .husky/
@@ -107,9 +108,15 @@
 │   ├── package.json
 │   └── pyproject.toml
 ├── backend/
+│   ├── docs/
+│   │   └── architecture/
+│   │       └── sequences/
+│   │           └── sequence_1777389244400.mmd
 │   ├── scratch/
 │   │   ├── debug_regex.js
-│   │   └── git_debug_stdout.txt
+│   │   ├── debug_tests.ts
+│   │   ├── git_debug_stdout.txt
+│   │   └── test_mcp_integration.ts
 │   ├── scripts/
 │   │   ├── check-grpc-sync.ts
 │   │   └── stress-test.ts
@@ -118,16 +125,10 @@
 │   │   │   └── .gitkeep
 │   │   ├── config/
 │   │   │   └── pricing.ts
-│   │   ├── contracts/
-│   │   │   ├── ceo.ts
-│   │   │   ├── documentation_worker.ts
-│   │   │   ├── operations_chief.ts
-│   │   │   ├── researcher.ts
-│   │   │   ├── review_worker.ts
-│   │   │   └── security_worker.ts
 │   │   ├── controllers/
 │   │   │   ├── .gitkeep
 │   │   │   ├── agentController.ts
+│   │   │   ├── index.ts
 │   │   │   └── systemController.ts
 │   │   ├── db/
 │   │   │   ├── .gitkeep
@@ -141,16 +142,26 @@
 │   │   ├── helpers/
 │   │   │   ├── .gitkeep
 │   │   │   ├── contextManager.ts
-│   │   │   └── graphFormatter.ts
+│   │   │   ├── diagramHelper.ts
+│   │   │   ├── graphFormatter.ts
+│   │   │   ├── index.ts
+│   │   │   ├── logger.ts
+│   │   │   ├── operationsHelper.ts
+│   │   │   └── stateHelper.ts
 │   │   ├── jobs/
 │   │   │   ├── .gitkeep
 │   │   │   ├── agentQueue.ts
 │   │   │   ├── agentWorker.ts
-│   │   │   └── index.ts
+│   │   │   ├── index.ts
+│   │   │   └── janitorWorker.ts
 │   │   ├── mcp_ports/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   ├── engramPort.ts
+│   │   │   ├── index.ts
+│   │   │   └── toolRegistry.ts
 │   │   ├── middleware/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   └── tracingMiddleware.ts
 │   │   ├── nodes/
 │   │   │   ├── chiefs/
 │   │   │   │   ├── business_chief.ts
@@ -158,7 +169,8 @@
 │   │   │   │   ├── operations_chief.ts
 │   │   │   │   └── software_chief.ts
 │   │   │   ├── mirror/
-│   │   │   │   └── aduana_sentinel_node.ts
+│   │   │   │   ├── aduana_sentinel_node.ts
+│   │   │   │   └── index.ts
 │   │   │   ├── workers/
 │   │   │   │   ├── ai_engine_worker_node.ts
 │   │   │   │   ├── code_researcher_node.ts
@@ -168,6 +180,7 @@
 │   │   │   │   ├── git_worker_node.ts
 │   │   │   │   ├── gitWorker.ts
 │   │   │   │   ├── index.ts
+│   │   │   │   ├── operations_worker_node.ts
 │   │   │   │   ├── persistence_node.ts
 │   │   │   │   ├── review_worker.ts
 │   │   │   │   ├── security_worker.ts
@@ -175,49 +188,80 @@
 │   │   │   ├── .gitkeep
 │   │   │   ├── ceo.ts
 │   │   │   ├── circuit_breaker.ts
+│   │   │   ├── index.ts
 │   │   │   ├── mirror.ts
-│   │   │   └── researcher.ts
+│   │   │   ├── researcher.ts
+│   │   │   └── security_blocked.ts
 │   │   ├── routes/
 │   │   │   ├── .gitkeep
-│   │   │   └── agentRoutes.ts
+│   │   │   ├── agentRoutes.ts
+│   │   │   └── index.ts
+│   │   ├── scripts/
+│   │   │   ├── audit-e2e.ts
+│   │   │   └── test-janitor.ts
 │   │   ├── services/
 │   │   │   ├── aiEngineClient.ts
 │   │   │   ├── auditService.ts
 │   │   │   ├── budgetService.ts
 │   │   │   ├── eventBus.ts
 │   │   │   ├── graphService.ts
+│   │   │   ├── index.ts
 │   │   │   ├── llmFactory.ts
 │   │   │   ├── llmService.ts
+│   │   │   ├── loggerService.ts
 │   │   │   ├── projectService.ts
-│   │   │   └── telemetryService.ts
+│   │   │   ├── sandboxService.ts
+│   │   │   ├── telemetryService.ts
+│   │   │   └── traceContext.ts
 │   │   ├── skills/
 │   │   │   └── .gitkeep
 │   │   ├── state/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   └── index.ts
 │   │   ├── tests/
 │   │   │   ├── .gitkeep
+│   │   │   ├── aduana_sentinel_node.test.ts
+│   │   │   ├── budget_usd.test.ts
 │   │   │   ├── business_chief.test.ts
 │   │   │   ├── ceo_agent.test.ts
+│   │   │   ├── ceo_routing.test.ts
 │   │   │   ├── code_researcher.test.ts
 │   │   │   ├── context_manager.test.ts
+│   │   │   ├── diagram_helper.test.ts
+│   │   │   ├── engramPort.test.ts
+│   │   │   ├── eventBus.test.ts
 │   │   │   ├── fs_tools.test.ts
 │   │   │   ├── git_worker.test.ts
+│   │   │   ├── graphFormatter.test.ts
+│   │   │   ├── graphService_hitl.test.ts
+│   │   │   ├── health.test.ts
 │   │   │   ├── llm_factory.test.ts
 │   │   │   ├── mirror_node.test.ts
+│   │   │   ├── operations_chief.test.ts
+│   │   │   ├── operations_contract.test.ts
+│   │   │   ├── operations_integration.test.ts
+│   │   │   ├── operations_worker.test.ts
+│   │   │   ├── operationsHelper.test.ts
+│   │   │   ├── sequential_thinking.test.ts
 │   │   │   ├── software_chief.test.ts
+│   │   │   ├── state_helper.test.ts
 │   │   │   ├── telemetry.test.ts
-│   │   │   └── test_runner_node.test.ts
+│   │   │   ├── test_runner_node.test.ts
+│   │   │   ├── toolRegistry.test.ts
+│   │   │   └── traceContext.test.ts
 │   │   ├── tools/
 │   │   │   ├── domain/
 │   │   │   │   └── software/
 │   │   │   │       └── testRunner.ts
 │   │   │   ├── platform/
-│   │   │   │   └── engram_tool.ts
+│   │   │   │   ├── engram_tool.ts
+│   │   │   │   └── sequential_thinking_tool.ts
 │   │   │   ├── .gitkeep
 │   │   │   ├── fs.ts
 │   │   │   └── index.ts
 │   │   ├── types/
 │   │   │   ├── agent-job.types.ts
+│   │   │   ├── ai-engine.types.ts
 │   │   │   ├── business-chief.types.ts
 │   │   │   ├── ceo.types.ts
 │   │   │   ├── chief.types.ts
@@ -225,15 +269,20 @@
 │   │   │   ├── code-writer.types.ts
 │   │   │   ├── engram.types.ts
 │   │   │   ├── git-worker.types.ts
+│   │   │   ├── graph.types.ts
 │   │   │   ├── index.ts
 │   │   │   ├── jest-helpers.types.ts
+│   │   │   ├── langgraph.types.ts
 │   │   │   ├── llm.types.ts
+│   │   │   ├── mcp.types.ts
 │   │   │   ├── mirror.types.ts
-│   │   │   ├── project.types.ts
+│   │   │   ├── operations.types.ts
 │   │   │   ├── researcher.types.ts
 │   │   │   ├── software-chief.types.ts
 │   │   │   ├── software-tools.types.ts
-│   │   │   └── state.types.ts
+│   │   │   ├── state-helper.types.ts
+│   │   │   ├── stream.types.ts
+│   │   │   └── telemetry.ts
 │   │   ├── workers/
 │   │   │   └── .gitkeep
 │   │   ├── index.ts
@@ -244,15 +293,25 @@
 │   │   ├── test-rewind-logic.ts
 │   │   ├── test-run.ts
 │   │   └── test-workflow.ts
+│   ├── workspaces/
+│   │   ├── e2e-audit-002/
+│   │   ├── stress-test-1776895876969/
+│   │   ├── stress-test-1776895990115/
+│   │   └── test-project-001/
 │   ├── .env
 │   ├── .prettierrc
 │   ├── debug_tests.log
 │   ├── Dockerfile
+│   ├── e2e_test_output.log
+│   ├── e2e_test_unique.log
 │   ├── eslint.config.js
 │   ├── jest.config.js
 │   ├── package.json
+│   ├── test_output.log
+│   ├── test-results.json
 │   ├── test-run.log
-│   └── tsconfig.json
+│   ├── tsconfig.json
+│   └── tsconfig.tsbuildinfo
 ├── docs/
 │   ├── agents/
 │   │   ├── chiefs/
@@ -287,7 +346,11 @@
 │   │   └── .gitkeep
 │   ├── src/
 │   │   ├── api/
-│   │   │   └── .gitkeep
+│   │   │   ├── .gitkeep
+│   │   │   ├── agents.ts
+│   │   │   ├── client.ts
+│   │   │   ├── index.ts
+│   │   │   └── sse.ts
 │   │   ├── app/
 │   │   │   ├── logs/
 │   │   │   │   └── page.tsx
@@ -328,20 +391,19 @@
 │   │   │   ├── .gitkeep
 │   │   │   ├── index.ts
 │   │   │   └── useAgentStream.ts
+│   │   ├── services/
+│   │   │   ├── agentProcessor.ts
+│   │   │   └── index.ts
 │   │   ├── store/
 │   │   │   ├── .gitkeep
+│   │   │   ├── index.ts
 │   │   │   └── useAgentStore.ts
 │   │   ├── types/
 │   │   │   ├── local/
 │   │   │   │   ├── CommandBar.types.ts
 │   │   │   │   ├── HITLPanel.types.ts
 │   │   │   │   ├── index.ts
-│   │   │   │   └── SystemHealth.types.ts
-│   │   │   ├── shared/
-│   │   │   │   ├── AgentNode.types.ts
-│   │   │   │   ├── AgentThought.types.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── Store.types.ts
+│   │   │   │   ├── SystemHealth.types.ts
 │   │   │   │   └── UI.types.ts
 │   │   │   ├── .gitkeep
 │   │   │   └── index.ts
@@ -359,14 +421,211 @@
 │   └── tsconfig.tsbuildinfo
 ├── infra/
 │   └── .gitkeep
+├── openspec/
+│   ├── changes/
+│   │   ├── archive/
+│   │   │   ├── 2026-04-24-fix-iteration-count-telemetry-127/
+│   │   │   │   ├── design.md
+│   │   │   │   ├── exploration.md
+│   │   │   │   ├── proposal.md
+│   │   │   │   ├── spec.md
+│   │   │   │   └── tasks.md
+│   │   │   ├── 2026-04-24-fix-state-rewind-ui-37/
+│   │   │   │   ├── design.md
+│   │   │   │   ├── exploration.md
+│   │   │   │   ├── proposal.md
+│   │   │   │   ├── spec.md
+│   │   │   │   ├── tasks.md
+│   │   │   │   └── walkthrough.md
+│   │   │   ├── 2026-04-27-feat-124-mcp-tool-standardization/
+│   │   │   │   └── specs/
+│   │   │   │       └── mcp/
+│   │   │   │           └── tool-registry/
+│   │   │   ├── 2026-04-27-feat-125-sequential-thinking-tool/
+│   │   │   │   ├── specs/
+│   │   │   │   │   └── reasoning/
+│   │   │   │   │       └── sequential-thinking/
+│   │   │   │   ├── design.md
+│   │   │   │   ├── exploration.md
+│   │   │   │   ├── proposal.md
+│   │   │   │   ├── tasks.md
+│   │   │   │   └── verify-report.md
+│   │   │   ├── 2026-04-27-feat-143-sse-security-streaming/
+│   │   │   │   ├── specs/
+│   │   │   │   │   └── security/
+│   │   │   │   │       └── sse-event/
+│   │   │   │   │           └── spec.md
+│   │   │   │   ├── design.md
+│   │   │   │   ├── proposal.md
+│   │   │   │   └── tasks.md
+│   │   │   ├── 2026-04-27-feat-150-observability-logger/
+│   │   │   │   ├── specs/
+│   │   │   │   │   └── observability/
+│   │   │   │   │       └── logging/
+│   │   │   │   │           └── spec.md
+│   │   │   │   ├── design.md
+│   │   │   │   ├── proposal.md
+│   │   │   │   └── tasks.md
+│   │   │   └── 2026-04-27-issue-114-operations-chief/
+│   │   │       └── specs/
+│   │   │           ├── core/
+│   │   │           └── operations-chief/
+│   │   ├── feat/
+│   │   │   ├── budget-monitoring-35/
+│   │   │   │   ├── specs/
+│   │   │   │   │   └── observability/
+│   │   │   │   │       └── logging/
+│   │   │   │   │           └── spec.md
+│   │   │   │   ├── design.md
+│   │   │   │   ├── exploration.md
+│   │   │   │   ├── proposal.md
+│   │   │   │   └── tasks.md
+│   │   │   ├── healthchecks-145/
+│   │   │   │   ├── design.md
+│   │   │   │   ├── proposal.md
+│   │   │   │   ├── spec.md
+│   │   │   │   └── tasks.md
+│   │   │   └── operations-chief-114/
+│   │   │       ├── design.md
+│   │   │       ├── proposal.md
+│   │   │       ├── spec.md
+│   │   │       └── tasks.md
+│   │   ├── feat-124-mcp-tool-standardization/
+│   │   │   ├── specs/
+│   │   │   │   └── mcp/
+│   │   │   │       └── tool-registry/
+│   │   │   │           └── spec.md
+│   │   │   ├── design.md
+│   │   │   ├── proposal.md
+│   │   │   └── tasks.md
+│   │   ├── feat-143-sentinel-sse/
+│   │   │   ├── specs/
+│   │   │   │   └── sse-streaming/
+│   │   │   │       └── spec.md
+│   │   │   ├── design.md
+│   │   │   ├── proposal.md
+│   │   │   ├── state.yaml
+│   │   │   └── tasks.md
+│   │   ├── fix/
+│   │   │   └── ceo-domain-misalignment-148/
+│   │   │       ├── design.md
+│   │   │       ├── proposal.md
+│   │   │       ├── spec.md
+│   │   │       └── tasks.md
+│   │   ├── issue-114-operations-chief/
+│   │   │   ├── specs/
+│   │   │   │   ├── core/
+│   │   │   │   │   └── spec.md
+│   │   │   │   └── operations-chief/
+│   │   │   │       └── spec.md
+│   │   │   ├── design.md
+│   │   │   ├── proposal.md
+│   │   │   ├── tasks.md
+│   │   │   └── walkthrough.md
+│   │   ├── issue-144-redis-janitor/
+│   │   │   ├── specs/
+│   │   │   │   └── infrastructure/
+│   │   │   │       └── spec.md
+│   │   │   ├── design.md
+│   │   │   ├── proposal.md
+│   │   │   ├── state.yaml
+│   │   │   └── tasks.md
+│   │   └── optimize-entry-flow/
+│   │       ├── design.md
+│   │       ├── proposal.md
+│   │       ├── spec.md
+│   │       ├── tasks.md
+│   │       └── walkthrough.md
+│   ├── specs/
+│   │   ├── core/
+│   │   │   ├── budget-control/
+│   │   │   │   └── spec.md
+│   │   │   └── spec.md
+│   │   ├── observability/
+│   │   │   └── logging/
+│   │   │       └── spec.md
+│   │   ├── reasoning/
+│   │   │   └── sequential-thinking/
+│   │   │       └── spec.md
+│   │   └── security/
+│   │       └── sse-event/
+│   │           └── spec.md
+│   └── config.yaml
+├── packages/
+│   ├── protos/
+│   │   ├── src/
+│   │   │   ├── generated/
+│   │   │   │   ├── ai_engine/
+│   │   │   │   │   ├── AIEngine.ts
+│   │   │   │   │   ├── Empty.ts
+│   │   │   │   │   ├── PingResponse.ts
+│   │   │   │   │   ├── WorkerProgressUpdate.ts
+│   │   │   │   │   ├── WorkerTaskRequest.ts
+│   │   │   │   │   └── WorkerTaskResponse.ts
+│   │   │   │   ├── google/
+│   │   │   │   │   └── protobuf/
+│   │   │   │   │       ├── ListValue.ts
+│   │   │   │   │       ├── NullValue.ts
+│   │   │   │   │       ├── Struct.ts
+│   │   │   │   │       └── Value.ts
+│   │   │   │   └── ai_engine.ts
+│   │   │   ├── generated 2/
+│   │   │   │   ├── ai_engine/
+│   │   │   │   └── google/
+│   │   │   └── ai_engine.proto
+│   │   ├── generate-python.sh
+│   │   └── package.json
+│   └── shared/
+│       ├── src/
+│       │   ├── contracts/
+│       │   │   ├── ceo.ts
+│       │   │   ├── documentation_worker.ts
+│       │   │   ├── index.ts
+│       │   │   ├── operations_chief.ts
+│       │   │   ├── operations_worker.ts
+│       │   │   ├── researcher.ts
+│       │   │   ├── review_worker.ts
+│       │   │   └── security_worker.ts
+│       │   ├── types/
+│       │   │   ├── AgentNode.types.ts
+│       │   │   ├── AgentState.types.ts
+│       │   │   ├── AgentThought.types.ts
+│       │   │   ├── BackendState.types.ts
+│       │   │   ├── index.ts
+│       │   │   ├── Project.types.ts
+│       │   │   └── Store.types.ts
+│       │   └── index.ts
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── tsconfig.tsbuildinfo
 ├── protos/
 │   └── ai_engine.proto
 ├── scripts/
+│   ├── architecture-audit/
+│   │   ├── eslint-plugin/
+│   │   │   ├── rules/
+│   │   │   │   └── no-deep-imports.js
+│   │   │   ├── index.js
+│   │   │   └── package.json
+│   │   ├── rules/
+│   │   │   ├── exported-types.rule.ts
+│   │   │   ├── frontend-extensions.rule.ts
+│   │   │   ├── index.ts
+│   │   │   ├── max-lines.rule.ts
+│   │   │   ├── no-any.rule.ts
+│   │   │   ├── no-console.rule.ts
+│   │   │   ├── no-deep-imports.rule.ts
+│   │   │   ├── reasoning-first.rule.ts
+│   │   │   └── strict-xml.rule.ts
+│   │   ├── cache-manager.ts
+│   │   ├── runner.ts
+│   │   ├── structural-checks.ts
+│   │   └── types.ts
 │   ├── .gitkeep
 │   ├── check-docker.js
 │   ├── generate-architecture.js
+│   ├── quick-commit.ts
 │   ├── sync-project-structure.js
-│   ├── verify-sacred-laws.js
 │   ├── verify-srp.js
 │   └── verify-types-isolation.js
 ├── skills/
@@ -374,6 +633,7 @@
 ├── types/
 │   ├── .gitkeep
 │   └── index.ts
+├── .architecture-cache.json
 ├── .env.example
 ├── .gitignore
 ├── .opencodeignore.save

@@ -13,16 +13,19 @@ graph TD
     subgraph Chiefs [Capa de Coordinación]
         CEO -- "Delegación Dinámica (Enum)" --> SC[👨‍💼 Software Chief]
         CEO -- "Delegación Dinámica (Enum)" --> BC[💼 Business Chief]
+        CEO -- "Delegación Dinámica (Enum)" --> OC[⚙️ Operations Chief]
     end
     
     subgraph Workers [Capa de Ejecución]
         SC --> GW[🛠️ Git Worker]
         SC --> RW[🔍 Research Worker]
         SC --> TR[🧪 Test Runner]
-        SC --> AIW[🤖 AI Engine Worker]
         
-        BC --> AIW
+        BC --> AIW[🤖 AI Engine Worker]
         BC --> RW
+        
+        OC --> OW[🏗️ Operations Worker]
+        OC --> SD[📊 Sequence Diagram]
     end
     
     subgraph Engine [Motor Externo]
@@ -35,9 +38,11 @@ graph TD
     RW -- Reporte --> SC/BC
     TR -- Reporte --> SC
     AIW -- Reporte --> SC/BC
+    OW -- Reporte --> OC
     
     SC -- Consolidado --> CEO
     BC -- Consolidado --> CEO
+    OC -- Consolidado --> CEO
     
     CEO -- "Resultado Final" --> User
 ```
@@ -52,7 +57,11 @@ graph TD
 - **Hito:** Implementado para manejar el pipeline comercial.
 - **Acción:** Genera payloads gRPC para el AI Engine pidiendo leads o análisis.
 
-### 3. AI Engine Worker (The Python Bridge)
+### 3. Operations Chief (The Infrastructure Guardian)
+- **Hito:** Implementado para gestionar despliegues, salud del sistema y observabilidad.
+- **Acción:** Ejecuta diagnósticos de infraestructura y genera diagramas de secuencia automáticos.
+
+### 4. AI Engine Worker (The Python Bridge)
 - **Hito:** Nodo genérico en el backend (Node.js) que se comunica con el AI-Engine (Python).
 - **Acción:** Ejecuta tareas de larga duración como scraping sin bloquear el grafo principal.
 
