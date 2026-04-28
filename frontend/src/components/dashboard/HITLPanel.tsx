@@ -16,11 +16,31 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
   onReject, 
   onRewind 
 }) => {
-  const { isWaiting: isOpen, threadId, activeNode } = useAgentStore();
+  const { isWaiting: isOpen, threadId, activeNode, executiveSummary } = useAgentStore();
   const [feedback, setFeedback] = useState("");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [mode, setMode] = useState<'decision' | 'history'>('decision');
+
+  const handleApprove = async () => {
+    setIsProcessing(true);
+    try {
+      await onApprove();
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!feedback) return;
+    setIsProcessing(true);
+    try {
+      await onReject(feedback);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
@@ -28,7 +48,7 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
       const res = await fetch(`/api/agents/history/${threadId}`);
       if (res.ok) {
         const data = await res.json();
-        setHistory(data);
+        setHistory(data.history || []);
       }
     } catch (e) {
       console.error("Error fetching history:", e);
@@ -98,11 +118,24 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-8"
               >
-                <div className="space-y-4 text-center">
-                  <p className="text-[14px] text-slate-300 leading-relaxed font-medium">
-                    The autonomous core has identified a critical decision point. 
-                    Review the current strategy in the background feed and choose how to proceed.
-                  </p>
+                <div className="space-y-4">
+                  {executiveSummary && (
+                    <div className="p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 space-y-3">
+                       <div className="flex items-center gap-2">
+                          <Zap className="text-blue-400" size={16} />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Current Strategy</span>
+                       </div>
+                       <p className="text-[13px] text-slate-300 leading-relaxed font-medium italic">
+                         "{executiveSummary}"
+                       </p>
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <p className="text-[14px] text-slate-400 leading-relaxed font-medium">
+                      The autonomous core has identified a critical decision point. 
+                      Review the strategy above and choose how to proceed.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -113,10 +146,11 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">Proceed with the proposed plan without modification.</p>
                     <Button 
-                      onClick={onApprove}
+                      onClick={handleApprove}
+                      disabled={isProcessing}
                       className="w-full bg-white text-black hover:bg-white/90 font-black h-12 rounded-xl uppercase tracking-widest text-[11px] group-hover:scale-[1.02] transition-transform"
                     >
-                      Authorize Execution
+                      {isProcessing ? "Processing..." : "Authorize Execution"}
                     </Button>
                   </div>
 
@@ -130,15 +164,16 @@ export const HITLPanel: React.FC<HITLPanelProps> = ({
                       value={feedback}
                       onChange={(e) => setFeedback(e.target.value)}
                       placeholder="Enter instruction change..."
+                      disabled={isProcessing}
                       className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-[11px] text-white focus:outline-none focus:border-blue-500/50 min-h-[80px]"
                     />
                     <Button 
-                      disabled={!feedback}
-                      onClick={() => onReject(feedback)}
+                      disabled={!feedback || isProcessing}
+                      onClick={handleReject}
                       variant="outline"
                       className="w-full border-white/10 hover:bg-white/5 font-black h-12 rounded-xl uppercase tracking-widest text-[11px]"
                     >
-                      Reject & Redraw Plan
+                      {isProcessing ? "Processing..." : "Reject & Redraw Plan"}
                     </Button>
                   </div>
                 </div>
