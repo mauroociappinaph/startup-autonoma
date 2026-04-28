@@ -2,8 +2,16 @@ import asyncio
 import logging
 
 import grpc
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
+from app.helpers.telemetry import init_telemetry
 
 from app.grpc_generated import ai_engine_pb2, ai_engine_pb2_grpc
+
+# Inicializar Telemetría antes de arrancar el servidor
+init_telemetry()
+# Instrumentar gRPC
+grpc_instrumentor = GrpcInstrumentorServer()
+grpc_instrumentor.instrument()
 
 # Importamos la función del worker (ahora asíncrona)
 from app.workers.lead_gen_worker import process_lead_generation_task

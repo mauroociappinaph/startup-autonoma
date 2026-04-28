@@ -5,6 +5,7 @@ import type { ProtoGrpcType } from '@startup/protos/src/generated/ai_engine.js';
 import type { AIEngineClient as _AIEngineClient } from '@startup/protos/src/generated/ai_engine/AIEngine.js';
 import type { WorkerTaskResponse__Output } from '@startup/protos/src/generated/ai_engine/WorkerTaskResponse.js';
 import type { WorkerProgressUpdate__Output } from '@startup/protos/src/generated/ai_engine/WorkerProgressUpdate.js';
+import * as opentelemetry from "@opentelemetry/api";
 
 const require = createRequire(import.meta.url);
 const PROTO_PATH = require.resolve('@startup/protos/src/ai_engine.proto');
@@ -36,26 +37,49 @@ export class AIEngineClient {
    * Ejecuta una tarea en un Worker de Python.
    */
   async executeTask(input: { worker_name: string; task_description: string; trace_id: string; payload?: object }): Promise<WorkerTaskResponse__Output> {
-    console.log(`--- [gRPC CLIENT] Enviando tarea: ${input.worker_name} ---`);
+    const tracer = opentelemetry.trace.getTracer("grpc-client");
+    
+    return tracer.startActiveSpan(`GRPC_CALL:${input.worker_name}`, async (span): Promise<WorkerTaskResponse__Output> => {
+      console.log(`--- [gRPC CLIENT] Enviando tarea: ${input.worker_name} ---`);
+      
+      const metadata = new grpc.Metadata();
+      opentelemetry.propagation.inject(opentelemetry.context.active(), metadata, {
+        set: (carrier, key, value) => carrier.set(key, value as string | Buffer)
+      });
 
-    const grpcInput = {
-      worker_name: input.worker_name,
-      task_description: input.task_description,
-      trace_id: input.trace_id,
-      payload: input.payload || {},
-    };
+      const grpcInput = {
+        worker_name: input.worker_name,
+        task_description: input.task_description,
+        trace_id: input.trace_id,
+        payload: input.payload || {},
+      };
 
-    return new Promise((resolve, reject) => {
-      this.client.ExecuteWorkerTask(grpcInput, (error: grpc.ServiceError | null, output?: WorkerTaskResponse__Output) => {
-        if (error) {
-          console.error(`❌ Error en llamada gRPC (ExecuteTask): ${error.message}`);
-          reject(error);
-        } else if (!output) {
-          reject(new Error("No response received from server"));
-        } else {
-          console.log(`✅ Tarea ${input.worker_name} completada.`);
-          resolve(output);
-        }
+      span.setAttributes({
+        "rpc.system": "grpc",
+        "rpc.service": "ai_engine.AIEngine",
+        "rpc.method": "ExecuteWorkerTask",
+        "worker.name": input.worker_name
+      });
+
+      return new Promise((resolve, reject) => {
+        this.client.ExecuteWorkerTask(grpcInput, metadata, (error: grpc.ServiceError | null, output?: WorkerTaskResponse__Output) => {
+          if (error) {
+            console.error(`❌ Error en llamada gRPC (ExecuteTask): ${error.message}`);
+            span.recordException(error);
+            span.setStatus({ code: opentelemetry.SpanStatusCode.ERROR });
+            reject(error);
+          } else if (!output) {
+            const err = new Error("No response received from server");
+            span.recordException(err);
+            span.setStatus({ code: opentelemetry.SpanStatusCode.ERROR });
+            reject(err);
+          } else {
+            console.log(`✅ Tarea ${input.worker_name} completada.`);
+            span.setStatus({ code: opentelemetry.SpanStatusCode.OK });
+            resolve(output);
+          }
+          span.end();
+        });
       });
     });
   }
