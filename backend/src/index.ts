@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import agentRoutes from '@/routes/agentRoutes.js';
+import projectRoutes from '@/routes/projectRoutes.js';
 import { SystemController } from '@/controllers/systemController.js';
 import { agentWorker, setupRedisJanitor, systemWorker } from '@/jobs/index.js';
 import { closeRedisConnections } from '@/db/redis.js';
@@ -21,6 +22,7 @@ app.use(express.json());
  * Registro de Rutas (Screaming Architecture)
  */
 app.use('/api/agents', agentRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Health Check delegado al Controller
 app.get('/health', SystemController.healthCheck);
