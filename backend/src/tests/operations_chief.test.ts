@@ -70,7 +70,8 @@ describe('Operations Chief Node', () => {
 
     expect(result.next_node).toBe('operations_worker');
     const lastMsg = result.messages?.[result.messages.length - 1] as any;
-    expect(lastMsg.additional_kwargs.operations_instruction.command).toBe('docker_ps');
+    expect(lastMsg.additional_kwargs.operations_instruction.command).toBe('monitor');
+    expect(lastMsg.additional_kwargs.operations_instruction.args[0]).toBe('docker_ps');
   });
 
   it('debería volver al CEO si requiere aprobación', async () => {
