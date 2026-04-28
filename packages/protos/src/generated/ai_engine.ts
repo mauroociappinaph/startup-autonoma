@@ -10,6 +10,8 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 export interface ProtoGrpcType {
   ai_engine: {
     AIEngine: SubtypeConstructor<typeof grpc.Client, _ai_engine_AIEngineClient> & { service: _ai_engine_AIEngineDefinition }
+    Empty: MessageTypeDefinition
+    PingResponse: MessageTypeDefinition
     WorkerProgressUpdate: MessageTypeDefinition
     WorkerTaskRequest: MessageTypeDefinition
     WorkerTaskResponse: MessageTypeDefinition

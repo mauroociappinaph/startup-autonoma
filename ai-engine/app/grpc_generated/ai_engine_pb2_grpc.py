@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import ai_engine_pb2 as ai__engine__pb2
+import ai_engine_pb2 as ai__engine__pb2
 
 GRPC_GENERATED_VERSION = '1.80.0'
 GRPC_VERSION = grpc.__version__
@@ -45,6 +45,11 @@ class AIEngineStub(object):
                 request_serializer=ai__engine__pb2.WorkerTaskRequest.SerializeToString,
                 response_deserializer=ai__engine__pb2.WorkerProgressUpdate.FromString,
                 _registered_method=True)
+        self.Ping = channel.unary_unary(
+                '/ai_engine.AIEngine/Ping',
+                request_serializer=ai__engine__pb2.Empty.SerializeToString,
+                response_deserializer=ai__engine__pb2.PingResponse.FromString,
+                _registered_method=True)
 
 
 class AIEngineServicer(object):
@@ -65,6 +70,13 @@ class AIEngineServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Ping(self, request, context):
+        """Verifica la salud del servidor
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AIEngineServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -77,6 +89,11 @@ def add_AIEngineServicer_to_server(servicer, server):
                     servicer.StreamWorkerProgress,
                     request_deserializer=ai__engine__pb2.WorkerTaskRequest.FromString,
                     response_serializer=ai__engine__pb2.WorkerProgressUpdate.SerializeToString,
+            ),
+            'Ping': grpc.unary_unary_rpc_method_handler(
+                    servicer.Ping,
+                    request_deserializer=ai__engine__pb2.Empty.FromString,
+                    response_serializer=ai__engine__pb2.PingResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -134,6 +151,33 @@ class AIEngine(object):
             '/ai_engine.AIEngine/StreamWorkerProgress',
             ai__engine__pb2.WorkerTaskRequest.SerializeToString,
             ai__engine__pb2.WorkerProgressUpdate.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Ping(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ai_engine.AIEngine/Ping',
+            ai__engine__pb2.Empty.SerializeToString,
+            ai__engine__pb2.PingResponse.FromString,
             options,
             channel_credentials,
             insecure,

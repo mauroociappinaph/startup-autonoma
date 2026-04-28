@@ -75,7 +75,7 @@ services:
     networks:
       - internal
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import grpc; channel = grpc.insecure_channel('localhost:50051'); grpc.channel_ready_future(channel).result(timeout=10)\" || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

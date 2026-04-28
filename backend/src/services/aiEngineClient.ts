@@ -77,6 +77,22 @@ export class AIEngineClient {
   }
 
   /**
+   * Verifica la salud del AI-Engine vía gRPC.
+   */
+  async ping(): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.client.Ping({}, { deadline: Date.now() + 2000 }, (error, response) => {
+        if (error || !response || response.status !== 'healthy') {
+          console.error(`❌ AI-Engine Health Check falló: ${error?.message}`);
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  /**
    * Cierra el canal gRPC de forma segura.
    */
   public close(): void {

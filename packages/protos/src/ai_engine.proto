@@ -11,6 +11,17 @@ service AIEngine {
 
   // Permite ver el razonamiento y progreso del worker en tiempo real
   rpc StreamWorkerProgress (WorkerTaskRequest) returns (stream WorkerProgressUpdate);
+
+  // Verifica la salud del servidor
+  rpc Ping (Empty) returns (PingResponse);
+}
+
+// Mensaje vacío para solicitudes de salud
+message Empty {}
+
+// Respuesta de salud
+message PingResponse {
+  string status = 1;
 }
 
 // Solicitud de tarea para un Worker de Python

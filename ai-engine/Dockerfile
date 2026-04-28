@@ -5,6 +5,7 @@ WORKDIR /app
 # Instalar dependencias del sistema necesarias para gRPC/Python
 RUN apt-get update && apt-get install -y \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar archivos de dependencias
@@ -21,5 +22,5 @@ COPY . .
 EXPOSE 50051
 
 # Comando para iniciar el servidor gRPC
-# El archivo principal es app/core/grpc_server.py
-CMD ["python", "-m", "app.core.grpc_server"]
+# El archivo principal es app/main.py, que inicia tanto FastAPI como gRPC
+CMD ["python", "app/main.py"]

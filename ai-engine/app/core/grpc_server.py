@@ -53,6 +53,10 @@ class AIEngineServicer(ai_engine_pb2_grpc.AIEngineServicer):
             )
         yield ai_engine_pb2.WorkerProgressUpdate(status="Finalizing", progress_percentage=100, log_message="Streaming finalizado", trace_id=request.trace_id)
 
+    async def Ping(self, request, context):
+        print("--- [GRPC SERVER] Health Check (Ping) received ---")
+        return ai_engine_pb2.PingResponse(status="healthy")
+
 async def serve():
     server = grpc.aio.server()
     ai_engine_pb2_grpc.add_AIEngineServicer_to_server(AIEngineServicer(), server)
