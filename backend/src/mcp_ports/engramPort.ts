@@ -39,10 +39,8 @@ export class EngramPort {
       });
 
       await Promise.race([connectionPromise, timeoutPromise]);
-      if (timeoutId) clearTimeout(timeoutId);
 
       // 2. Llamada a la herramienta mem_save
-      // Nota: El servidor Engram MCP expone 'mem_save' según el protocolo estándar.
       const result = await client.callTool({
         name: "mem_save",
         arguments: {
@@ -55,7 +53,6 @@ export class EngramPort {
 
       SacredLogger.success(`Memoria persistida: ${args.title}`, this.CONTEXT);
 
-      // El resultado de MCP puede tener múltiples bloques de contenido, buscamos el texto
       const callResult = result as { content: Array<{ type: string, text: string }> };
       const firstTextBlock = callResult.content.find((b) => b.type === "text");
       
@@ -69,13 +66,13 @@ export class EngramPort {
       const errorMsg = error instanceof Error ? error.message : String(error);
       SacredLogger.warn(`No se pudo persistir en Engram: ${errorMsg}`, this.CONTEXT);
       
-      // RF-2.2: Graceful degradation
       return {
         success: false,
         message: `Fallo de persistencia (MCP_UNAVAILABLE): ${errorMsg}`,
         id: `failed-${Date.now()}`
       };
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       try {
         await client.close();
       } catch {
