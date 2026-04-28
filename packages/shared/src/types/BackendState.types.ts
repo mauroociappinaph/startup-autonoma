@@ -1,8 +1,11 @@
+import { ProjectContext } from "./Project.types.js";
+
 /**
  * Interfaz que refleja el estado crudo que viene del backend (AgentStateType).
  * Se utiliza para la repoblación del store (populateState).
  */
 export interface BackendAgentState {
+  project_context?: ProjectContext;
   active_chief?: string;
   next_node?: string;
   plan: string[];

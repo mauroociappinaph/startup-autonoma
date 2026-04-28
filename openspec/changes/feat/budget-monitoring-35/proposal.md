@@ -9,6 +9,8 @@ Evitar el riesgo financiero de la startup autónoma mediante un control estricto
 - Validación de gasto acumulado en USD dentro del `BudgetService`.
 - Corte de ejecución por el `Circuit Breaker` ante exceso de gasto.
 - Emisión de eventos de alerta (80%, 90%) en USD.
+- **Persistencia de Configuración**: Guardar y recuperar el presupuesto por proyecto en Redis.
+- **UI de Configuración**: Panel para que el usuario pueda ver y editar el presupuesto límite.
 
 ### Out of Scope
 - Gestión de pagos o recarga de saldo.
@@ -40,5 +42,7 @@ Se extenderá el `BudgetService` para que consulte al `TelemetryService` el gast
 Revertir cambios en el `shared` package y el `circuit_breaker.ts` para volver al monitoreo exclusivo de tokens.
 
 ## Success Criteria
-- [ ] El sistema detiene la ejecución si el costo acumulado supera el `maxUsdBudget`.
-- [ ] Se emiten alertas al 90% del presupuesto en USD vía `EventBus`.
+- [x] El sistema detiene la ejecución si el costo acumulado supera el `maxUsdBudget`.
+- [x] Se emiten alertas al 90% del presupuesto en USD vía `EventBus`.
+- [ ] La configuración del presupuesto persiste entre reinicios del servidor.
+- [ ] El usuario puede editar el `maxUsdBudget` desde el Dashboard.

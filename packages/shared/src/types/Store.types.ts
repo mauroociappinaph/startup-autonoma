@@ -10,11 +10,13 @@ export interface AgentState {
   completedSteps: string[];
   executiveSummary: string | null;
   threadId: string;
+  projectId: string | null;
   
   // Telemetría
   totalTokens: number;
   iterations: number;
   totalCost: number;
+  maxUsdBudget: number;
 
   // Acciones (Setters)
   setThoughts: (updater: (prev: AgentThought[]) => AgentThought[]) => void;
@@ -25,6 +27,7 @@ export interface AgentState {
   setCompletedSteps: (updater: (prev: string[]) => string[]) => void;
   setExecutiveSummary: (summary: string | null) => void;
   setThreadId: (id: string) => void;
+  setMaxUsdBudget: (budget: number) => Promise<void>;
   
   updateTelemetry: (data: { tokens?: number; iterations?: number; cost?: number }) => void;
   populateState: (state: BackendAgentState) => void;
