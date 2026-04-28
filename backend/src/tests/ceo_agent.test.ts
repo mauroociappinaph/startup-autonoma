@@ -27,7 +27,7 @@ jest.mock('ioredis', () => {
 describe('CEO Agent Node', () => {
   let ceo_node: any;
   let LLMService: any;
-  let TelemetryService: any;
+  let telemetryServiceInstance: any;
   let AuditService: any;
   let initialState: any;
 
@@ -39,7 +39,7 @@ describe('CEO Agent Node', () => {
 
     ceo_node = ceoModule.ceo_node;
     LLMService = llmModule.LLMService;
-    TelemetryService = telemetryModule.TelemetryService;
+    telemetryServiceInstance = telemetryModule.telemetryService;
     AuditService = auditModule.AuditService;
   });
 
@@ -90,7 +90,7 @@ describe('CEO Agent Node', () => {
       model: 'test-model'
     });
 
-    const telemetrySpy = jest.spyOn(TelemetryService, 'recordMetric').mockResolvedValue(0.002);
+    const telemetrySpy = jest.spyOn(telemetryServiceInstance, 'recordMetric').mockResolvedValue(0.002);
     const auditSpy = jest.spyOn(AuditService, 'logDecision').mockResolvedValue(undefined);
 
     const result = await ceo_node(initialState);

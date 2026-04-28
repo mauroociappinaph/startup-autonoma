@@ -69,7 +69,7 @@ jest.mock('ioredis', () => {
 
 describe("TelemetryService Integration Tests", () => {
   const projectId = "test-project-" + Date.now();
-  let TelemetryService: typeof TelemetryServiceType;
+  let telemetryServiceInstance: any;
   let getRedisConnection: () => Redis;
   let closeRedisConnections: () => Promise<void>;
   let redis: Redis;
@@ -79,7 +79,7 @@ describe("TelemetryService Integration Tests", () => {
     const redisModule = await import("../db/redis.js");
     const telemetryModule = await import("../services/telemetryService.js");
     
-    TelemetryService = telemetryModule.TelemetryService;
+    telemetryServiceInstance = new telemetryModule.TelemetryService();
     getRedisConnection = redisModule.getRedisConnection;
     closeRedisConnections = redisModule.closeRedisConnections;
     
@@ -98,7 +98,7 @@ describe("TelemetryService Integration Tests", () => {
   it("should calculate cost correctly for a given model", () => {
     const usage = { prompt: 1000, completion: 500 };
     const model = "gpt-4o"; 
-    const cost = TelemetryService.calculateCost(usage, model);
+    const cost = (telemetryServiceInstance.constructor as any).calculateCost(usage, model);
     
     expect(cost).toBeGreaterThan(0);
     expect(cost).toBeCloseTo(0.0125, 6);
@@ -112,9 +112,9 @@ describe("TelemetryService Integration Tests", () => {
       usage: { total: 1500, prompt: 1000, completion: 500 }
     };
 
-    const cost1 = await TelemetryService.recordMetric(projectId, data1);
+    const cost1 = await telemetryServiceInstance.recordMetric(projectId, data1);
     
-    const stats1 = await TelemetryService.getProjectStats(projectId);
+    const stats1 = await telemetryServiceInstance.getProjectStats(projectId);
     expect(stats1.total_runs).toBe(1);
     expect(stats1.total_tokens).toBe(1500);
     expect(stats1.total_cost_usd).toBeCloseTo(cost1, 6);
@@ -126,9 +126,9 @@ describe("TelemetryService Integration Tests", () => {
       usage: { total: 3000, prompt: 2000, completion: 1000 }
     };
 
-    const cost2 = await TelemetryService.recordMetric(projectId, data2);
+    const cost2 = await telemetryServiceInstance.recordMetric(projectId, data2);
     
-    const stats2 = await TelemetryService.getProjectStats(projectId);
+    const stats2 = await telemetryServiceInstance.getProjectStats(projectId);
     expect(stats2.total_runs).toBe(2);
     expect(stats2.total_tokens).toBe(4500);
     expect(stats2.total_cost_usd).toBeCloseTo(cost1 + cost2, 6);

@@ -24,16 +24,16 @@ export class TelemetryService {
   /**
    * Registra y emite un evento de telemetría completo, persistiendo los totales en Redis.
    */
-  static async recordMetric(projectId: string, data: {
+  async recordMetric(projectId: string, data: {
     node: string;
     model: string;
     latency: number;
     usage: { total: number; prompt: number; completion: number };
     trace_id?: string;
   }) {
-    const cost = this.calculateCost(data.usage, data.model);
+    const cost = (this.constructor as typeof TelemetryService).calculateCost(data.usage, data.model);
     const redis = getRedisConnection();
-    const statsKey = `${this.KEY_PREFIX}${projectId}`;
+    const statsKey = `${TelemetryService.KEY_PREFIX}${projectId}`;
     
     // Actualizamos acumulados en Redis de forma atómica
     const pipeline = redis.pipeline();
@@ -67,9 +67,9 @@ export class TelemetryService {
   /**
    * Recupera las estadísticas acumuladas de un proyecto.
    */
-  static async getProjectStats(projectId: string) {
+  async getProjectStats(projectId: string) {
     const redis = getRedisConnection();
-    const statsKey = `${this.KEY_PREFIX}${projectId}`;
+    const statsKey = `${TelemetryService.KEY_PREFIX}${projectId}`;
     const stats = await redis.hgetall(statsKey);
     
     return {
@@ -80,3 +80,5 @@ export class TelemetryService {
     };
   }
 }
+
+export const telemetryService = new TelemetryService();

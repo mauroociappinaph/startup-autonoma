@@ -10,6 +10,7 @@ export const ProjectContextSchema = z.object({
   workDir: z.string().min(1, "El directorio de trabajo es requerido"),
   engramNamespace: z.string().min(1, "El namespace de Engram es requerido"),
   maxTokenBudget: z.number().int().positive().default(1000000),
+  maxUsdBudget: z.number().positive().default(10.0),
   metadata: z.record(z.any()).optional(),
 });
 

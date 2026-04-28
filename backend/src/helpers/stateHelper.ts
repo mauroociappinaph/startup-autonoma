@@ -1,5 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { TelemetryService } from "@/services/telemetryService.js";
+import { telemetryService } from "@/services/telemetryService.js";
 import { AuditService } from "@/services/auditService.js";
 import { NodeMetadata } from "@/types/state-helper.types.js";
 
@@ -14,7 +14,7 @@ export async function prepareNodeUpdate(
   const projectId = state.project_context?.projectId || "unknown";
 
   // 1. Telemetría Dinámica (Usa el modelo real configurado en el LLMService)
-  await TelemetryService.recordMetric(projectId, {
+  await telemetryService.recordMetric(projectId, {
     node: metadata.nodeName,
     model: metadata.model,
     latency: metadata.latency,

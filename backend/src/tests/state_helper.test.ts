@@ -26,7 +26,7 @@ jest.mock('ioredis', () => {
 describe("stateHelper", () => {
   let prepareNodeUpdate: any;
   let incrementIteration: any;
-  let TelemetryService: any;
+  let telemetryServiceInstance: any;
   let AuditService: any;
   let initialState: any;
 
@@ -37,7 +37,7 @@ describe("stateHelper", () => {
     
     prepareNodeUpdate = module.prepareNodeUpdate;
     incrementIteration = module.incrementIteration;
-    TelemetryService = telemetryModule.TelemetryService;
+    telemetryServiceInstance = telemetryModule.telemetryService;
     AuditService = auditModule.AuditService;
   });
 
@@ -65,7 +65,7 @@ describe("stateHelper", () => {
   describe("prepareNodeUpdate", () => {
     it("debe incrementar iteración y acumular costos/tokens correctamente", async () => {
       // Usamos spyOn para evitar problemas de ESM mocks
-      const telemetrySpy = jest.spyOn(TelemetryService, 'recordMetric').mockResolvedValue(0.002);
+      const telemetrySpy = jest.spyOn(telemetryServiceInstance, 'recordMetric').mockResolvedValue(0.002);
       const auditSpy = jest.spyOn(AuditService, 'logDecision').mockResolvedValue(undefined);
 
       const metadata = {

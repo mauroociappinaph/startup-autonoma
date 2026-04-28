@@ -34,6 +34,7 @@ class ProjectService {
       workDir,
       engramNamespace: `project:${projectSlug}`,
       maxTokenBudget: 1000000,
+      maxUsdBudget: 10.0,
     };
 
     // Validación estricta del contrato Zod

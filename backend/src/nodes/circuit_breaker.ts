@@ -20,10 +20,12 @@ export async function circuit_breaker_node(state: AgentStateType) {
   const lastRecorded = state.last_recorded_tokens || 0;
 
   // Sincronizar gasto con Redis si hubo consumo nuevo (Gap 5)
+  const budgetService = new BudgetService();
+  
   if (project && currentSessionTokens > lastRecorded) {
     const diff = currentSessionTokens - lastRecorded;
     console.log(`🤑 Sincronizando consumo nuevo: ${diff} tokens...`);
-    await BudgetService.recordUsage(project.projectId, diff);
+    await budgetService.recordUsage(project.projectId, diff);
   }
 
   // 1. Verificación de Bucle Infinito (Iteraciones)
@@ -40,21 +42,21 @@ export async function circuit_breaker_node(state: AgentStateType) {
     };
   }
 
-  // 2. Verificación de Presupuesto Dinámico (Tokens)
+  // 2. Verificación de Presupuesto Dinámico (Tokens & USD)
   if (project) {
-    // checkSecurityStatus ya contempla el acumulado total en Redis
-    const status = await BudgetService.checkSecurityStatus(project, 0); 
+    // checkSecurityStatus ya contempla el acumulado total en Redis y el costo en USD
+    const status = await budgetService.checkSecurityStatus(project); 
     
-    console.log(`📊 Presupuesto del Proyecto: ${status.totalUsage} / ${status.limit} tokens (${status.percentage.toFixed(2)}%)`);
+    console.log(`📊 Presupuesto: Tokens (${status.tokenUsage}/${status.tokenLimit}) | USD ($${status.totalUsdUsage.toFixed(4)}/$${status.usdLimit.toFixed(2)})`);
 
-    if (status.isLimitReached) {
-      console.error("🚨 [CIRCUIT BREAKER] Presupuesto TOTAL del proyecto excedido.");
+    if (status.max_budget_reached) {
+      console.error(`🚨 [CIRCUIT BREAKER] ${status.message}`);
       return {
         max_budget_reached: true,
         last_recorded_tokens: currentSessionTokens,
-        executive_summary: "🚨 Emergencia: Presupuesto total de la startup agotado.",
+        executive_summary: `🚨 Emergencia: ${status.message}`,
         messages: state.messages.concat([new AIMessage({
-          content: `🚨 **LÍMITE DE PROYECTO ALCANZADO**\n\nTu startup ha consumido ${status.totalUsage} tokens de un límite de ${status.limit}. No es posible continuar sin ampliar el presupuesto.`,
+          content: `🚨 **LÍMITE ALCANZADO**\n\n${status.message}\n\nTokens: ${status.tokenUsage}/${status.tokenLimit}\nUSD: $${status.totalUsdUsage.toFixed(4)}/$${status.usdLimit.toFixed(2)}`,
         })])
       };
     }

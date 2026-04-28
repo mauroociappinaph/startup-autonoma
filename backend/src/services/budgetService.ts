@@ -1,71 +1,82 @@
 import { getRedisConnection } from "../db/redis.js";
 import { ProjectContext } from "@startup/shared";
 import { EventBus } from "./eventBus.js";
+import { TelemetryService } from "./telemetryService.js";
 
 /**
- * BudgetService: Gestiona el control de gastos y límites de tokens por proyecto.
- * Persiste el consumo acumulado en Redis para aislamiento multi-tenant (Gap 5).
+ * BudgetService: Gestiona el control de gastos y límites de tokens/USD por proyecto.
+ * Persiste el consumo acumulado en Redis para aislamiento multi-tenant.
  */
 export class BudgetService {
   private static readonly KEY_PREFIX = "project:budget:usage:";
+  private telemetryService: TelemetryService;
+
+  constructor(telemetryService = new TelemetryService()) {
+    this.telemetryService = telemetryService;
+  }
 
   /**
    * Obtiene el consumo acumulado de tokens para un proyecto.
    */
-  static async getProjectUsage(projectId: string): Promise<number> {
+  async getProjectUsage(projectId: string): Promise<number> {
     const redis = getRedisConnection();
-    const key = `${this.KEY_PREFIX}${projectId}`;
+    const key = `${BudgetService.KEY_PREFIX}${projectId}`;
     const usage = await redis.get(key);
     return usage ? parseInt(usage, 10) : 0;
   }
 
   /**
    * Registra un nuevo consumo de tokens.
-   * Lo hace de forma atómica usando INCRBY en Redis.
    */
-  static async recordUsage(projectId: string, amount: number): Promise<number> {
+  async recordUsage(projectId: string, amount: number): Promise<number> {
     if (amount <= 0) return await this.getProjectUsage(projectId);
-    
+
     const redis = getRedisConnection();
-    const key = `${this.KEY_PREFIX}${projectId}`;
+    const key = `${BudgetService.KEY_PREFIX}${projectId}`;
     const newTotal = await redis.incrby(key, Math.round(amount));
-    
+
     return newTotal;
   }
 
   /**
-   * Evalúa los límites y dispara alertas si es necesario.
-   * Retorna un objeto con el estado de seguridad.
+   * Evalúa los límites de tokens y USD y dispara alertas si es necesario.
    */
-  static async checkSecurityStatus(context: ProjectContext, sessionUsage: number) {
-    const cumulativeUsage = await this.getProjectUsage(context.projectId);
-    const totalUsage = cumulativeUsage + sessionUsage;
-    const limit = context.maxTokenBudget;
+  async checkSecurityStatus(context: ProjectContext) {
+    const totalUsage = await this.getProjectUsage(context.projectId);
+    const tokenLimit = context.maxTokenBudget;
 
-    const percentage = (totalUsage / limit) * 100;
+    // Obtener stats financieros de TelemetryService
+    const stats = await this.telemetryService.getProjectStats(context.projectId);
+    const totalCostUsd = stats.total_cost_usd || 0;
+    const usdLimit = context.maxUsdBudget || 10.0;
 
-    // Alerta de umbral (80% y 90%)
-    if (percentage >= 80 && percentage < 90) {
+    const tokenPercentage = (totalUsage / tokenLimit) * 100;
+    const usdPercentage = (totalCostUsd / usdLimit) * 100;
+
+    // Lógica de Alerta de USD (90%)
+    if (usdPercentage >= 90 && usdPercentage < 100) {
       await EventBus.publish(context.projectId, {
         agent: "SYSTEM",
-        text: `⚠️ ALERTA DE PRESUPUESTO: Se ha alcanzado el 80% del límite de tokens (${totalUsage}/${limit}).`,
-        type: "WARNING",
-        level: 80
-      });
-    } else if (percentage >= 90 && percentage < 100) {
-      await EventBus.publish(context.projectId, {
-        agent: "SYSTEM",
-        text: `🚨 CRÍTICO: Se ha alcanzado el 90% del límite de tokens. El servicio se detendrá al llegar al 100%.`,
+        text: `🚨 CRÍTICO (USD): Se ha alcanzado el 90% del presupuesto USD ($${totalCostUsd.toFixed(4)}/$${usdLimit.toFixed(2)}).`,
         type: "CRITICAL",
         level: 90
       });
     }
 
+    const isLimitReached = totalUsage >= tokenLimit || totalCostUsd >= usdLimit;
+
+    let message = "";
+    if (totalUsage >= tokenLimit) message = "Límite de tokens alcanzado.";
+    if (totalCostUsd >= usdLimit) message = "Presupuesto USD excedido.";
+
     return {
-      isLimitReached: totalUsage >= limit,
-      totalUsage,
-      limit,
-      percentage
+      status: isLimitReached ? "FAIL" : "PASS",
+      max_budget_reached: isLimitReached,
+      tokenUsage: totalUsage,
+      tokenLimit,
+      totalUsdUsage: totalCostUsd,
+      usdLimit,
+      message
     };
   }
 }

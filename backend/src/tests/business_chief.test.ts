@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
-import { TelemetryService } from '@/services/telemetryService.js';
+import { telemetryService } from '@/services/telemetryService.js';
 import { AuditService } from '@/services/auditService.js';
 import { HumanMessage } from '@langchain/core/messages';
 
@@ -86,7 +86,7 @@ describe('Business Chief Node', () => {
       model: 'test-model'
     });
 
-    const telemetrySpy = jest.spyOn(TelemetryService, 'recordMetric').mockResolvedValue(0.001);
+    const telemetrySpy = jest.spyOn(telemetryService, 'recordMetric').mockResolvedValue(0.001);
 
     const result = await business_chief_node(initialState);
 
