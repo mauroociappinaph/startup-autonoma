@@ -191,6 +191,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /feat
 │   │   ├── /feat-124-mcp-tool-standardization
 │   │   ├── /feat-143-sentinel-sse
+│   │   ├── /fix
 │   │   ├── /issue-114-operations-chief
 │   │   ├── /issue-144-redis-janitor
 │   │   ├── /optimize-entry-flow

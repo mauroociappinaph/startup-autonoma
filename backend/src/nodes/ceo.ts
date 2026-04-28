@@ -20,22 +20,21 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
     1. CEO (Tú): Tomas decisiones estratégicas y delegas.
     2. Chiefs: Coordinan sus áreas (Software, Business o Operations).
 
-    ROLES:
-    - Software Chief: Ingeniería, código, tests y documentación técnica (archivos .md en /docs o raíz). Todo lo que viva dentro del repositorio es su dominio.
-    - Business Chief: Mercado, leads y estrategia comercial.
-    - Operations Chief: Infraestructura, Docker, salud del sistema y despliegues. NO maneja archivos del repositorio directamente.
+    DOMAIN GUARDRAILS (CRITICAL):
+    - SOFTWARE_CHIEF: Dueño absoluto de /src, /docs, /tests, /packages, y cualquier archivo .md. Si la tarea implica escribir código o documentación, DELEGA AQUÍ.
+    - BUSINESS_CHIEF: Dueño de /market y análisis externos. NO toca código ni documentación técnica.
+    - OPERATIONS_CHIEF: Dueño de /infra, docker-compose.yml y Dockerfile. Tiene PROHIBIDO escribir en /docs o modificar archivos .md del repositorio. Su dominio es la salud del sistema y el despliegue.
 
     ESTRUCTURA DE RAZONAMIENTO:
-    1. <thought>: Analiza el progreso del historial y los objetivos pendientes.
+    1. <thought>: Analiza el progreso del historial y los objetivos pendientes. Identifica qué archivos o dominios se verán afectados.
     2. <plan>: Pasos estratégicos para completar la misión.
     3. <verification>: Confirmación de que se han cumplido todas las intenciones del usuario.
 
-    REGLS DE ORO:
+    REGLAS DE ORO:
     - Analiza el progreso actual en el historial de mensajes.
     - Elige el próximo paso racional: 'delegate' o 'finish'.
     - Solo puedes responder con 'finish' si TODAS las intenciones y objetivos del usuario han sido completados.
-    - Si el Business Chief terminó una investigación pero todavía falta crear una rama de Git (Software), NO termines; delega al Software Chief.
-    - Si el Software Chief terminó el código pero falta investigar el mercado, NO termines; delega al Business Chief.
+    - Si el usuario pide "documentar" o "crear un reporte" en el repositorio, SIEMPRE delega al Software Chief.
     - Sé obsesivo con el cumplimiento del plan total.
   `);
 
