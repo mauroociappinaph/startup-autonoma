@@ -193,6 +193,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /changes
 │   │   ├── /archive
 │   │   ├── /feat
+│   │   ├── /feat-105-observability-tracing
 │   │   ├── /feat-124-mcp-tool-standardization
 │   │   ├── /feat-143-sentinel-sse
 │   │   ├── /fix

@@ -51,6 +51,25 @@ services:
       start_period: 10s
 
   # -------------------------------------------------------
+  # OBSERVABILIDAD (Jaeger — OpenTelemetry)
+  # -------------------------------------------------------
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: startup-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686" # UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - LOG_LEVEL=debug
+    networks:
+      - internal
+      - public
+
+  # -------------------------------------------------------
   # MOTOR DE IA (Python — gRPC)
   # -------------------------------------------------------
 
