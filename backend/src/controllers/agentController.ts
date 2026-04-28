@@ -115,13 +115,8 @@ export class AgentController {
     res.setHeader('Connection', 'keep-alive');
 
     try {
-      // Si el humano rechaza con feedback, inyectamos el feedback antes de reanudar
-      if (status === 'rejected' && feedback) {
-        await GraphService.resumeAgent(String(threadId)); // To update mission approved to false if needed? 
-        // Actually, we should call a more flexible resume that can accept feedback.
-      }
-
-      const generator = GraphService.resumeAgent(String(threadId));
+      // Reanudamos la ejecución pasando el status y feedback (T1 Fix)
+      const generator = GraphService.resumeAgent(String(threadId), status, feedback);
 
       for await (const event of generator) {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
