@@ -1,6 +1,6 @@
 import os
 from opentelemetry import trace
-from opentelemetry.sdk.resources import RESOURCE_ATTRIBUTES, Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -12,10 +12,8 @@ def init_telemetry():
     if os.getenv("OTEL_ENABLED", "false").lower() != "true":
         return
 
-    # Nombre del servicio
-    resource = Resource(attributes={
-        RESOURCE_ATTRIBUTES.SERVICE_NAME: "ai-engine"
-    })
+    # Configuración de Recursos
+    resource = Resource(attributes={SERVICE_NAME: "ai-engine"})
 
     # Proveedor de trazas
     provider = TracerProvider(resource=resource)

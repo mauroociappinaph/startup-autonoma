@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x61i_engine.proto\x12\tai_engine\x1a\x1cgoogle/protobuf/struct.proto\"\x07\n\x05\x45mpty\"\x1e\n\x0cPingResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"~\n\x11WorkerTaskRequest\x12\x13\n\x0bworker_name\x18\x01 \x01(\t\x12\x18\n\x10task_description\x18\x02 \x01(\t\x12\x10\n\x08trace_id\x18\x03 \x01(\t\x12(\n\x07payload\x18\x04 \x01(\x0b\x32\x17.google.protobuf.Struct\"s\n\x12WorkerTaskResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\'\n\x06result\x18\x03 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x12\n\nerror_code\x18\x04 \x01(\t\"j\n\x14WorkerProgressUpdate\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x1b\n\x13progress_percentage\x18\x02 \x01(\x02\x12\x13\n\x0blog_message\x18\x03 \x01(\t\x12\x10\n\x08trace_id\x18\x04 \x01(\t2\xe8\x01\n\x08\x41IEngine\x12P\n\x11\x45xecuteWorkerTask\x12\x1c.ai_engine.WorkerTaskRequest\x1a\x1d.ai_engine.WorkerTaskResponse\x12W\n\x14StreamWorkerProgress\x12\x1c.ai_engine.WorkerTaskRequest\x1a\x1f.ai_engine.WorkerProgressUpdate0\x01\x12\x31\n\x04Ping\x12\x10.ai_engine.Empty\x1a\x17.ai_engine.PingResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x61i_engine.proto\x12\tai_engine\x1a\x1cgoogle/protobuf/struct.proto\"\x07\n\x05\x45mpty\"\x1e\n\x0cPingResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"~\n\x11WorkerTaskRequest\x12\x13\n\x0bworker_name\x18\x01 \x01(\t\x12\x18\n\x10task_description\x18\x02 \x01(\t\x12\x10\n\x08trace_id\x18\x03 \x01(\t\x12(\n\x07payload\x18\x04 \x01(\x0b\x32\x17.google.protobuf.Struct\"\x85\x01\n\x12WorkerTaskResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\'\n\x06result\x18\x03 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x12\n\nerror_code\x18\x04 \x01(\t\x12\x10\n\x08trace_id\x18\x05 \x01(\t\"j\n\x14WorkerProgressUpdate\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x1b\n\x13progress_percentage\x18\x02 \x01(\x02\x12\x13\n\x0blog_message\x18\x03 \x01(\t\x12\x10\n\x08trace_id\x18\x04 \x01(\t2\xe8\x01\n\x08\x41IEngine\x12P\n\x11\x45xecuteWorkerTask\x12\x1c.ai_engine.WorkerTaskRequest\x1a\x1d.ai_engine.WorkerTaskResponse\x12W\n\x14StreamWorkerProgress\x12\x1c.ai_engine.WorkerTaskRequest\x1a\x1f.ai_engine.WorkerProgressUpdate0\x01\x12\x31\n\x04Ping\x12\x10.ai_engine.Empty\x1a\x17.ai_engine.PingResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -38,10 +38,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PINGRESPONSE']._serialized_end=99
   _globals['_WORKERTASKREQUEST']._serialized_start=101
   _globals['_WORKERTASKREQUEST']._serialized_end=227
-  _globals['_WORKERTASKRESPONSE']._serialized_start=229
-  _globals['_WORKERTASKRESPONSE']._serialized_end=344
-  _globals['_WORKERPROGRESSUPDATE']._serialized_start=346
-  _globals['_WORKERPROGRESSUPDATE']._serialized_end=452
-  _globals['_AIENGINE']._serialized_start=455
-  _globals['_AIENGINE']._serialized_end=687
+  _globals['_WORKERTASKRESPONSE']._serialized_start=230
+  _globals['_WORKERTASKRESPONSE']._serialized_end=363
+  _globals['_WORKERPROGRESSUPDATE']._serialized_start=365
+  _globals['_WORKERPROGRESSUPDATE']._serialized_end=471
+  _globals['_AIENGINE']._serialized_start=474
+  _globals['_AIENGINE']._serialized_end=706
 # @@protoc_insertion_point(module_scope)

@@ -38,6 +38,7 @@ message WorkerTaskResponse {
   string message = 2;          // Mensaje de estado o resumen
   google.protobuf.Struct result = 3; // El resultado final (leads, datos, etc.)
   string error_code = 4;       // Código de error si success es false
+  string trace_id = 5;         // Identificador de traza para respuesta
 }
 
 // Actualización de progreso (para streaming)
