@@ -1,4 +1,11 @@
 import { TraceContext } from "../services/traceContext.js";
+import * as opentelemetry from "@opentelemetry/api";
+import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
+
+// Registrar el context manager para que OTel pueda propagar el contexto en los tests
+const contextManager = new AsyncHooksContextManager();
+contextManager.enable();
+opentelemetry.context.setGlobalContextManager(contextManager);
 
 describe("TraceContext & Observability Propagation", () => {
   it("debe propagar el traceId a través de llamadas asíncronas", async () => {
@@ -36,5 +43,17 @@ describe("TraceContext & Observability Propagation", () => {
     const [res1, res2] = await Promise.all([p1, p2]);
     expect(res1).toBe("trace-1");
     expect(res2).toBe("trace-2");
+  });
+
+  it("debe retornar el traceId de OpenTelemetry si hay un span activo", async () => {
+    const tracer = opentelemetry.trace.getTracer("test");
+    
+    await tracer.startActiveSpan("test-span", async (span) => {
+      const otelTraceId = span.spanContext().traceId;
+      const contextTraceId = TraceContext.getTraceId();
+      
+      expect(contextTraceId).toBe(otelTraceId);
+      span.end();
+    });
   });
 });
