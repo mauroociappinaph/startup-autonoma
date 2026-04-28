@@ -1,6 +1,30 @@
 import { getRedisConnection } from "../db/redis.js";
 import { MODEL_PRICING } from "../config/pricing.js";
 import { EventBus } from "./eventBus.js";
+import { SacredLogger } from "../helpers/logger.js";
+import * as opentelemetry from "@opentelemetry/api";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { Resource } from "@opentelemetry/resources";
+import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+
+/**
+ * OpenTelemetry Configuration
+ */
+const otelSdk = new NodeSDK({
+  resource: new Resource({
+    [SemanticResourceAttributes.SERVICE_NAME]: "startup-backend",
+  }),
+  traceExporter: new OTLPTraceExporter({
+    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318/v1/traces",
+  }),
+});
+
+// Iniciamos el SDK de forma asíncrona pero sin bloquear el resto del sistema
+if (process.env.OTEL_ENABLED === "true") {
+  otelSdk.start();
+  SacredLogger.info("🛡️ [OTEL] OpenTelemetry SDK Initialized and Exporting to Jaeger", "TELEMETRY_SDK");
+}
 
 /**
  * TelemetryService: Motor de observabilidad avanzada.
@@ -8,6 +32,13 @@ import { EventBus } from "./eventBus.js";
  */
 export class TelemetryService {
   private static readonly KEY_PREFIX = "project:telemetry:stats:";
+
+  /**
+   * Obtiene el tracer global de la aplicación.
+   */
+  static getTracer() {
+    return opentelemetry.trace.getTracer("startup-backend");
+  }
 
   /**
    * Calcula el costo en USD basado en el uso y el modelo.
@@ -42,8 +73,8 @@ export class TelemetryService {
     pipeline.hincrby(statsKey, "total_runs", 1);
     pipeline.hincrbyfloat(statsKey, "total_latency_ms", data.latency);
     await pipeline.exec();
-
-    console.log(`📊 [TELEMETRÍA] ${data.node} (${data.model}) -> Latencia: ${data.latency.toFixed(2)}ms | Costo: $${cost.toFixed(6)}`);
+    
+    SacredLogger.info(`📊 [TELEMETRÍA] ${data.node} (${data.model}) -> Latencia: ${data.latency.toFixed(2)}ms | Costo: $${cost.toFixed(6)}`, "METRICS");
 
     // Publicamos al Dashboard vía EventBus
     await EventBus.publish(projectId, {
