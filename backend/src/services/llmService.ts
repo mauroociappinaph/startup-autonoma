@@ -8,6 +8,7 @@ import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 import { TelemetryService } from "./telemetryService.js";
 import { SacredLogger } from "@/helpers/logger.js";
+import { SpanStatusCode, Span } from "@opentelemetry/api";
 
 /**
  * Helper interno para Timeouts.
@@ -47,7 +48,9 @@ export class LLMService {
     latency: number;
     model: string;
   }> {
-    const startTime = performance.now();
+    return this._withSpan(`LLM_GENERATE_STRUCTURED:${config.type}`, { "llm.type": config.type }, async (span) => {
+      const startTime = performance.now();
+      // ... rest of logic
     const rawModel = LLMFactory.createModel(config) as BaseChatModel;
     const trimmedMessages = await ContextManager.trim(messages, rawModel);
 
@@ -131,6 +134,7 @@ export class LLMService {
 
     SacredLogger.error("Agotados todos los intentos de resiliencia.", "LLM_SERVICE", lastError || undefined);
     throw lastError || new Error("Error desconocido en LLMService");
+    });
   }
   
   /**
@@ -146,7 +150,8 @@ export class LLMService {
     latency: number;
     model: string;
   }> {
-    const startTime = performance.now();
+    return this._withSpan(`LLM_GENERATE_TEXT:${config.type}`, { "llm.type": config.type }, async (span) => {
+      const startTime = performance.now();
     const rawModel = LLMFactory.createModel(config) as BaseChatModel;
     const trimmedMessages = await ContextManager.trim(messages, rawModel);
     
@@ -179,6 +184,7 @@ export class LLMService {
       latency,
       model: modelName
     };
+    });
   }
 
   /**
@@ -231,5 +237,48 @@ export class LLMService {
       SacredLogger.error("Error crítico: El modelo no cumplió con el formato JSON solicitado.", "LLM_SERVICE");
       throw e;
     }
+  }
+
+  /**
+   * Helper interno para manejar spans de OpenTelemetry.
+   */
+  private static async _withSpan<T>(
+    spanName: string,
+    attributes: Record<string, string | number | boolean>,
+    fn: (span: Span) => Promise<T>
+  ): Promise<T> {
+    const tracer = TelemetryService.getTracer();
+    return tracer.startActiveSpan(spanName, async (span) => {
+      span.setAttributes(attributes);
+      try {
+        const result = await fn(span);
+        // Si el resultado tiene uso de tokens, lo agregamos al span
+        interface LLMResult {
+          usage?: { prompt: number; completion: number; total: number };
+          model?: string;
+          cost?: number;
+        }
+        
+        if (result && typeof result === "object") {
+          const res = result as LLMResult;
+          if (res.usage) {
+            span.setAttributes({
+              "llm.usage.prompt": res.usage.prompt,
+              "llm.usage.completion": res.usage.completion,
+              "llm.usage.total": res.usage.total,
+            });
+          }
+          if (res.model) span.setAttribute("llm.model", res.model);
+          if (res.cost) span.setAttribute("llm.cost", res.cost);
+        }
+        return result;
+      } catch (error) {
+        span.recordException(error as Error);
+        span.setStatus({ code: SpanStatusCode.ERROR });
+        throw error;
+      } finally {
+        span.end();
+      }
+    });
   }
 }
