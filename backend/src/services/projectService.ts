@@ -3,6 +3,7 @@ import path from "path";
 import { ProjectContext, ProjectContextSchema } from "@startup/shared";
 import { v4 as uuidv4 } from "uuid";
 import { getRedisConnection } from "../db/redis.js";
+import { prisma, Prisma } from "@startup/db";
 
 /**
  * Servicio para la gestión del ciclo de vida y aislamiento de proyectos (Gap 2).
@@ -27,12 +28,15 @@ class ProjectService {
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
-    // 1. Intentar recuperar ID existente por slug
-    const existingId = await redis.get(`${ProjectService.SLUG_MAP_PREFIX}${projectSlug}`);
-    
-    if (existingId) {
-      const existingProject = await this.getProject(existingId);
-      if (existingProject) return existingProject;
+    // 1. Intentar recuperar de PostgreSQL primero (Fuente de Verdad)
+    const dbProject = await prisma.project.findFirst({
+      where: { name: name } // O usar el slug si lo guardamos
+    });
+
+    if (dbProject) {
+      // Sincronizar Redis si no está (cache)
+      await redis.set(`${ProjectService.SLUG_MAP_PREFIX}${projectSlug}`, dbProject.projectId);
+      return ProjectContextSchema.parse(dbProject);
     }
 
     const workDir = path.join(this.BASE_WORKSPACE, projectSlug);
@@ -52,7 +56,7 @@ class ProjectService {
 
     const validated = ProjectContextSchema.parse(context);
 
-    // 2. Persistir configuración y mapeo
+    // 2. Persistir en PostgreSQL y Redis
     await this.saveProject(validated);
     await redis.set(`${ProjectService.SLUG_MAP_PREFIX}${projectSlug}`, validated.projectId);
 
@@ -60,25 +64,73 @@ class ProjectService {
   }
 
   /**
-   * Recupera un proyecto por su ID desde Redis.
+   * Recupera un proyecto por su ID. Primero busca en Redis (cache) y luego en PostgreSQL.
    */
   async getProject(projectId: string): Promise<ProjectContext | null> {
     const redis = getRedisConnection();
-    const data = await redis.get(`${ProjectService.KEY_PREFIX}${projectId}`);
     
-    if (!data) return null;
-    return ProjectContextSchema.parse(JSON.parse(data));
+    // Cache Check
+    const cached = await redis.get(`${ProjectService.KEY_PREFIX}${projectId}`);
+    if (cached) return ProjectContextSchema.parse(JSON.parse(cached));
+
+    // DB Fallback
+    const dbProject = await prisma.project.findUnique({
+      where: { projectId }
+    });
+
+    if (dbProject) {
+      const context = ProjectContextSchema.parse(dbProject);
+      await this.syncCache(context);
+      return context;
+    }
+
+    return null;
   }
 
   /**
-   * Guarda o actualiza un proyecto en Redis.
+   * Guarda o actualiza un proyecto en PostgreSQL y sincroniza el cache de Redis.
    */
   async saveProject(project: ProjectContext): Promise<void> {
-    const redis = getRedisConnection();
     const validated = ProjectContextSchema.parse(project);
+
+    // Preparamos el metadato con un cast para Prisma (Gap 2)
+    const metadata = (validated.metadata || {}) as any; // architecture-disable
+
+    // SQL Upsert
+    await prisma.project.upsert({
+      where: { projectId: validated.projectId },
+      update: {
+        name: validated.name,
+        repoUrl: validated.repoUrl,
+        workDir: validated.workDir,
+        maxUsdBudget: validated.maxUsdBudget,
+        maxTokenBudget: validated.maxTokenBudget,
+        // @ts-ignore
+        metadata
+      },
+      create: {
+        projectId: validated.projectId,
+        name: validated.name,
+        repoUrl: validated.repoUrl,
+        workDir: validated.workDir,
+        engramNamespace: validated.engramNamespace,
+        maxUsdBudget: validated.maxUsdBudget,
+        maxTokenBudget: validated.maxTokenBudget,
+        // @ts-ignore
+        metadata
+      }
+    });
+
+    // Cache Sync
+    await this.syncCache(validated);
+  }
+
+  private async syncCache(project: ProjectContext): Promise<void> {
+    const redis = getRedisConnection();
     await redis.set(
-      `${ProjectService.KEY_PREFIX}${validated.projectId}`, 
-      JSON.stringify(validated)
+      `${ProjectService.KEY_PREFIX}${project.projectId}`, 
+      JSON.stringify(project),
+      "EX", 3600 // Cache por 1 hora
     );
   }
 

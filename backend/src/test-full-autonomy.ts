@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { getGraph } from "./graph/index.js";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { projectService } from "./services/projectService.js";
 
 /**
  * STARTUP AUTÓNOMA: Full Autonomy E2E Test
@@ -12,6 +13,9 @@ async function runFullAutonomyTest() {
   const thread_id = `autonomy-test-${Date.now()}`;
   const config = { configurable: { thread_id } };
 
+  // Inicializar contexto de proyecto para evitar errores de FK en auditoría
+  const projectContext = await projectService.getOrCreateProject("test-project", "https://github.com/mauroociappinaph/startup-autonoma");
+
   console.log("\n" + "=".repeat(60));
   console.log("🚀 INICIANDO TEST DE AUTONOMÍA TOTAL");
   console.log(`📝 MISIÓN: ${userPrompt}`);
@@ -21,6 +25,7 @@ async function runFullAutonomyTest() {
     messages: [new HumanMessage(userPrompt)],
     original_prompt: userPrompt,
     trace_id: "test-e2e-" + Date.now(),
+    project_context: projectContext
   };
 
   try {

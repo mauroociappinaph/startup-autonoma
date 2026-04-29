@@ -25,30 +25,41 @@ import { code_writer_node } from "@/nodes/workers/code_writer_node.js";
 import { operations_worker_node } from "@/nodes/workers/operations_worker_node.js";
 import { security_blocked_node } from "@/nodes/security_blocked.js";
 import { TelemetryHelper } from "@/helpers/telemetryHelper.js";
+import { AuditHelper } from "@/helpers/auditHelper.js";
+
+/**
+ * Combina múltiples wrappers (Telemetry, Auditing, etc.) en uno solo.
+ */
+function wrap(
+    nodeName: string, 
+    nodeFn: (state: AgentStateType, config?: unknown) => Promise<Partial<AgentStateType>> | Partial<AgentStateType>
+) {
+    return TelemetryHelper.wrapNode(nodeName, AuditHelper.wrapNode(nodeName, nodeFn));
+}
 
 /**
  * Orquestador Principal de la Startup Autónoma.
  * Usa SimpleRedisSaver para persistencia compatible.
  */
 const workflow = new StateGraph(AgentAnnotation)
-    .addNode("aduana_sentinel", TelemetryHelper.wrapNode("aduana_sentinel", aduana_sentinel_node))
-    .addNode("ceo", TelemetryHelper.wrapNode("ceo", ceo_node))
-    .addNode("circuit_breaker", TelemetryHelper.wrapNode("circuit_breaker", circuit_breaker_node))
-    .addNode("software_chief", TelemetryHelper.wrapNode("software_chief", software_chief_node))
-    .addNode("business_chief", TelemetryHelper.wrapNode("business_chief", business_chief_node))
-    .addNode("researcher", TelemetryHelper.wrapNode("researcher", researcher_node))
-    .addNode("git_worker", TelemetryHelper.wrapNode("git_worker", git_worker_node))
-    .addNode("test_runner", TelemetryHelper.wrapNode("test_runner", test_runner_node))
-    .addNode("ai_engine_worker", TelemetryHelper.wrapNode("ai_engine_worker", ai_engine_worker_node))
-    .addNode("persistence_worker", TelemetryHelper.wrapNode("persistence_worker", persistence_node))
-    .addNode("code_researcher", TelemetryHelper.wrapNode("code_researcher", code_researcher_node))
-    .addNode("operations_chief", TelemetryHelper.wrapNode("operations_chief", operations_chief_node))
-    .addNode("review_worker", TelemetryHelper.wrapNode("review_worker", review_worker_node))
-    .addNode("security_worker", TelemetryHelper.wrapNode("security_worker", security_worker_node))
-    .addNode("documentation_worker", TelemetryHelper.wrapNode("documentation_worker", documentation_worker_node))
-    .addNode("code_writer", TelemetryHelper.wrapNode("code_writer", code_writer_node))
-    .addNode("operations_worker", TelemetryHelper.wrapNode("operations_worker", operations_worker_node))
-    .addNode("security_blocked", TelemetryHelper.wrapNode("security_blocked", security_blocked_node))
+    .addNode("aduana_sentinel", wrap("aduana_sentinel", aduana_sentinel_node))
+    .addNode("ceo", wrap("ceo", ceo_node))
+    .addNode("circuit_breaker", wrap("circuit_breaker", circuit_breaker_node))
+    .addNode("software_chief", wrap("software_chief", software_chief_node))
+    .addNode("business_chief", wrap("business_chief", business_chief_node))
+    .addNode("researcher", wrap("researcher", researcher_node))
+    .addNode("git_worker", wrap("git_worker", git_worker_node))
+    .addNode("test_runner", wrap("test_runner", test_runner_node))
+    .addNode("ai_engine_worker", wrap("ai_engine_worker", ai_engine_worker_node))
+    .addNode("persistence_worker", wrap("persistence_worker", persistence_node))
+    .addNode("code_researcher", wrap("code_researcher", code_researcher_node))
+    .addNode("operations_chief", wrap("operations_chief", operations_chief_node))
+    .addNode("review_worker", wrap("review_worker", review_worker_node))
+    .addNode("security_worker", wrap("security_worker", security_worker_node))
+    .addNode("documentation_worker", wrap("documentation_worker", documentation_worker_node))
+    .addNode("code_writer", wrap("code_writer", code_writer_node))
+    .addNode("operations_worker", wrap("operations_worker", operations_worker_node))
+    .addNode("security_blocked", wrap("security_blocked", security_blocked_node))
 
     .addEdge(START, "aduana_sentinel")
     .addConditionalEdges(

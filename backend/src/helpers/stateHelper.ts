@@ -1,6 +1,6 @@
 import { AgentStateType } from "@startup/shared";
 import { telemetryService } from "@/services/telemetryService.js";
-import { AuditService } from "@/services/auditService.js";
+import { auditService } from "@/services/auditService.js";
 import { NodeMetadata } from "@/types/state-helper.types.js";
 
 /**
@@ -23,7 +23,7 @@ export async function prepareNodeUpdate(
 
   // 2. Auditoría (solo si hay una decisión estratégica)
   if (metadata.decision && metadata.reasoning) {
-    await AuditService.logDecision(projectId, {
+    await auditService.logDecision(projectId, {
       agent: metadata.nodeName,
       decision: metadata.decision,
       reasoning: metadata.reasoning

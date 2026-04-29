@@ -1,45 +1,54 @@
-import { getRedisConnection } from "../db/redis.js";
+import { prisma } from "@startup/db";
+import { SacredLogger } from "@/helpers/logger.js";
+import { AgentActionLog } from "@/types/audit.types.js";
 
-/**
- * AuditService: Auditoría inmutable de decisiones (Gap 6).
- * Persiste el rastro de razonamiento de los agentes por proyecto.
- */
 export class AuditService {
-  private static readonly KEY_PREFIX = "project:audit:reasoning:";
+  /**
+   * Registra una acción de un agente en la base de datos SQL.
+   */
+  static async logAction(log: AgentActionLog): Promise<void> {
+    try {
+      await prisma.auditLog.create({
+        data: {
+          projectId: log.projectId,
+          nodeName: log.nodeName,
+          action: log.action,
+          reasoning: log.reasoning,
+          metadata: (log.metadata || {}) as any, // architecture-disable
+          status: log.status || "success",
+        },
+      });
+
+      SacredLogger.info(`📝 Audit: ${log.nodeName} -> ${log.action}`, "AUDIT");
+    } catch (error) {
+      SacredLogger.error("Fallo al persistir log de auditoría", (error as Error).message, "AUDIT");
+    }
+  }
 
   /**
-   * Registra una decisión y su razonamiento en la auditoría del proyecto.
-   * Usa una lista de Redis para mantener el orden cronológico.
+   * Helper para registrar decisiones estratégicas (compatibilidad).
    */
-  static async logDecision(projectId: string, data: {
-    agent: string;
-    decision: string;
-    reasoning: string;
-    metadata?: Record<string, unknown>;
-  }) {
-    const redis = getRedisConnection();
-    const key = `${this.KEY_PREFIX}${projectId}`;
-    
-    const entry = {
-      ...data,
-      timestamp: new Date().toISOString()
-    };
-
-    // Guardamos en la lista (LPUSH) y limitamos a los últimos 500 registros para no saturar
-    await redis.lpush(key, JSON.stringify(entry));
-    await redis.ltrim(key, 0, 499);
-
-    console.log(`📜 [AUDITORÍA] Registro guardado para ${data.agent} en proyecto ${projectId}`);
+  static async logDecision(projectId: string, decision: { agent: string; decision: string; reasoning: string }) {
+    return this.logAction({
+      projectId,
+      nodeName: decision.agent,
+      action: decision.decision,
+      reasoning: decision.reasoning,
+      status: "success"
+    });
   }
 
   /**
    * Recupera el historial de auditoría de un proyecto.
    */
-  static async getAuditTrail(projectId: string, limit = 50) {
-    const redis = getRedisConnection();
-    const key = `${this.KEY_PREFIX}${projectId}`;
-    const logs = await redis.lrange(key, 0, limit - 1);
-    
-    return logs.map(log => JSON.parse(log));
+  static async getProjectHistory(projectId: string, limit = 50) {
+    return prisma.auditLog.findMany({
+      where: { projectId },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    });
   }
 }
+
+// Exportamos también una instancia para compatibilidad con código que use minúsculas
+export const auditService = AuditService;

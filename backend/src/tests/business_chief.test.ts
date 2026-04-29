@@ -2,7 +2,7 @@
 
 import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { telemetryService } from '@/services/telemetryService.js';
-import { AuditService } from '@/services/auditService.js';
+import { auditService } from '@/services/auditService.js';
 import { HumanMessage } from '@langchain/core/messages';
 
 // Mockeamos los servicios que dejan handles abiertos
@@ -108,7 +108,7 @@ describe('Business Chief Node', () => {
       model: 'test-model'
     });
 
-    const auditSpy = jest.spyOn(AuditService, 'logDecision').mockResolvedValue(undefined);
+    const auditSpy = jest.spyOn(auditService, 'logDecision').mockResolvedValue(undefined as any);
 
     const result = await business_chief_node(initialState);
 

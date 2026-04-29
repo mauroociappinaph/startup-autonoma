@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { telemetryService } from '@/services/telemetryService.js';
-import { AuditService } from '@/services/auditService.js';
+import { auditService } from '@/services/auditService.js';
 import { AgentStateType } from '@startup/shared';
 import { HumanMessage } from '@langchain/core/messages';
 
@@ -110,7 +110,7 @@ describe('SoftwareChief Node Delegation', () => {
       model: "nemotron-340b"
     });
 
-    const auditSpy = jest.spyOn(AuditService, 'logDecision').mockResolvedValue(undefined);
+    const auditSpy = jest.spyOn(auditService, 'logDecision').mockResolvedValue(undefined as any);
 
     const result = await software_chief_node(initialState);
 

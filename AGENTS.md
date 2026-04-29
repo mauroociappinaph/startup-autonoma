@@ -140,6 +140,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /skills
 │   │   ├── /state
 │   │   ├── test-business-workflow.ts
+│   │   ├── test-db.ts
 │   │   ├── test-full-autonomy.ts
 │   │   ├── test-persistence.ts
 │   │   ├── test-resilience.ts
@@ -157,7 +158,9 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /e2e-audit-002
 │   │   ├── /stress-test-1776895876969
 │   │   ├── /stress-test-1776895990115
+│   │   ├── /test-project
 │   │   ├── /test-project-001
+│   │   ├── /test-project-1777478222266
 ├── commitlint.config.js
 ├── docker-compose.yml
 ├── /docs
@@ -210,6 +213,10 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── package-lock.json
 ├── package.json
 ├── /packages
+│   ├── /db
+│   │   ├── package.json
+│   │   ├── /prisma
+│   │   ├── /src
 │   ├── /protos
 │   │   ├── package.json
 │   │   ├── /src

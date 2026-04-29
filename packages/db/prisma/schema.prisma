@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Project {
+  id              String   @id @default(uuid())
+  projectId       String   @unique
+  name            String
+  repoUrl         String?
+  workDir         String
+  engramNamespace String
+  maxTokenBudget  Int      @default(1000000)
+  maxUsdBudget    Float    @default(10.0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  auditLogs       AuditLog[]
+
+  @@map("projects")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  projectId   String
+  nodeName    String
+  action      String
+  reasoning   String?
+  metadata    Json?
+  status      String   @default("success")
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [projectId])
+
+  @@map("audit_logs")
+}
