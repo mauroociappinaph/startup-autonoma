@@ -7,6 +7,9 @@ import { SystemController } from '@/controllers/systemController.js';
 import { agentWorker, setupRedisJanitor, systemWorker } from '@/jobs/index.js';
 import { closeRedisConnections } from '@/db/redis.js';
 import { SacredLogger } from '@/helpers/logger.js';
+import { initializeSkills } from '@/skills/loader.js';
+
+initializeSkills();
 
 import { tracingMiddleware } from '@/middleware/tracingMiddleware.js';
 

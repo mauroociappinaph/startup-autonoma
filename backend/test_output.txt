@@ -1,0 +1,125 @@
+
+> backend@1.0.0 test
+> NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles backend/src/tests/skills/impact_analysis.test.ts
+
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in /Users/mauroociappina/Desktop/Agentes Personales/backend/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+  console.log
+    [SkillRegistry] Registrando skill: code-impact-analysis v1.0.0
+
+      at SkillRegistry.register (src/skills/skill_registry.ts:17:13)
+
+  console.log
+    🤖 Iniciando LLM: [NVIDIA] -> meta/llama-3.1-405b-instruct
+
+      at LLMFactory.createModel (src/services/llmFactory.ts:20:13)
+
+(node:5408) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Intento 1/3 para ultra (meta/llama-3.1-405b-instruct)[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Fallo en intento 1: Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.[39m
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Reintentando con modo manual...[39m
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Intento 2/3 para ultra (meta/llama-3.1-405b-instruct)[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Fallo en intento 2: Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Cambiando de proveedor a groq para el último intento...[39m
+  console.log
+    🤖 Iniciando LLM: [NVIDIA] -> meta/llama-3.1-8b-instruct
+
+      at LLMFactory.createModel (src/services/llmFactory.ts:20:13)
+
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Intento 3/3 para ultra (meta/llama-3.1-405b-instruct)[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Fallo en intento 3: Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.[39m
+2026-04-29 13:39:35 [31merror[39m [LLM_SERVICE]: [31m🛡️ Agotados todos los intentos de resiliencia.[39m
+  console.log
+    🤖 Iniciando LLM: [NVIDIA] -> meta/llama-3.1-405b-instruct
+
+      at LLMFactory.createModel (src/services/llmFactory.ts:20:13)
+
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Intento 1/3 para ultra (meta/llama-3.1-405b-instruct)[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Fallo en intento 1: Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.[39m
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Reintentando con modo manual...[39m
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Intento 2/3 para ultra (meta/llama-3.1-405b-instruct)[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Fallo en intento 2: Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Cambiando de proveedor a groq para el último intento...[39m
+  console.log
+    🤖 Iniciando LLM: [NVIDIA] -> meta/llama-3.1-8b-instruct
+
+      at LLMFactory.createModel (src/services/llmFactory.ts:20:13)
+
+2026-04-29 13:39:35 [32minfo[39m [LLM_SERVICE]: [32m🛡️ Intento 3/3 para ultra (meta/llama-3.1-405b-instruct)[39m
+2026-04-29 13:39:35 [33mwarn[39m [LLM_SERVICE]: [33m🛡️ Fallo en intento 3: Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.[39m
+2026-04-29 13:39:35 [31merror[39m [LLM_SERVICE]: [31m🛡️ Agotados todos los intentos de resiliencia.[39m
+FAIL src/tests/skills/impact_analysis.test.ts
+  CodeChangeImpactAnalysisSkill
+    ✕ debería analizar correctamente un cambio de alto riesgo (959 ms)
+    ✕ debería dar riesgo bajo para documentación (7 ms)
+
+  ● CodeChangeImpactAnalysisSkill › debería analizar correctamente un cambio de alto riesgo
+
+    Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.
+
+      213 |     });
+      214 |
+    > 215 |     const response = await withTimeout(model.invoke(formattedMessages), 120000);
+          |                      ^
+      216 |     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
+      217 |     
+      218 |     // Cast seguro para evitar eslint error de no-explicit-any
+
+      at new OpenAI (../node_modules/openai/src/client.ts:415:13)
+      at ChatOpenAICompletions._getClientOptions (../node_modules/@langchain/openai/src/chat_models/base.ts:629:21)
+      at ChatOpenAICompletions.completionWithRetry (../node_modules/@langchain/openai/src/chat_models/completions.ts:459:32)
+      at ChatOpenAICompletions._generate (../node_modules/@langchain/openai/src/chat_models/completions.ts:204:31)
+      at ChatOpenAI._generate (../node_modules/@langchain/openai/src/chat_models/index.ts:676:29)
+      at ../node_modules/@langchain/core/src/language_models/chat_models.ts:568:46
+          at Array.map (<anonymous>)
+      at ChatOpenAI._generateUncached (../node_modules/@langchain/core/src/language_models/chat_models.ts:567:22)
+      at ChatOpenAI.invoke (../node_modules/@langchain/core/src/language_models/chat_models.ts:282:20)
+      at LLMService._getManualStructuredData (src/services/llmService.ts:215:22)
+      at src/services/llmService.ts:73:26
+      at src/services/llmService.ts:254:24
+      at CodeChangeImpactAnalysisSkill.runStructured (src/skills/base_skill.ts:25:42)
+      at CodeChangeImpactAnalysisSkill.run (src/skills/software/impact_analysis.ts:48:36)
+      at Object.<anonymous> (src/tests/skills/impact_analysis.test.ts:17:22)
+
+  ● CodeChangeImpactAnalysisSkill › debería dar riesgo bajo para documentación
+
+    Missing credentials. Please pass an `apiKey`, `workloadIdentity`, or set the `OPENAI_API_KEY` environment variable.
+
+      213 |     });
+      214 |
+    > 215 |     const response = await withTimeout(model.invoke(formattedMessages), 120000);
+          |                      ^
+      216 |     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
+      217 |     
+      218 |     // Cast seguro para evitar eslint error de no-explicit-any
+
+      at new OpenAI (../node_modules/openai/src/client.ts:415:13)
+      at ChatOpenAICompletions._getClientOptions (../node_modules/@langchain/openai/src/chat_models/base.ts:629:21)
+      at ChatOpenAICompletions.completionWithRetry (../node_modules/@langchain/openai/src/chat_models/completions.ts:459:32)
+      at ChatOpenAICompletions._generate (../node_modules/@langchain/openai/src/chat_models/completions.ts:204:31)
+      at ChatOpenAI._generate (../node_modules/@langchain/openai/src/chat_models/index.ts:676:29)
+      at ../node_modules/@langchain/core/src/language_models/chat_models.ts:568:46
+          at Array.map (<anonymous>)
+      at ChatOpenAI._generateUncached (../node_modules/@langchain/core/src/language_models/chat_models.ts:567:22)
+      at ChatOpenAI.invoke (../node_modules/@langchain/core/src/language_models/chat_models.ts:282:20)
+      at LLMService._getManualStructuredData (src/services/llmService.ts:215:22)
+      at src/services/llmService.ts:73:26
+      at src/services/llmService.ts:254:24
+      at CodeChangeImpactAnalysisSkill.runStructured (src/skills/base_skill.ts:25:42)
+      at CodeChangeImpactAnalysisSkill.run (src/skills/software/impact_analysis.ts:48:36)
+      at Object.<anonymous> (src/tests/skills/impact_analysis.test.ts:34:22)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        1.74 s, estimated 2 s
+Ran all test suites matching /backend\/src\/tests\/skills\/impact_analysis.test.ts/i.
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/mauroociappina/Desktop/Agentes Personales/backend
+npm error workspace backend@1.0.0
+npm error location /Users/mauroociappina/Desktop/Agentes Personales/backend
+npm error command failed
+npm error command sh -c NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles backend/src/tests/skills/impact_analysis.test.ts
