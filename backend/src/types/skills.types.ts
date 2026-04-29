@@ -42,6 +42,29 @@ export const ImpactAnalysisOutputSchema = z.object({
 export type ImpactAnalysisOutput = z.infer<typeof ImpactAnalysisOutputSchema>;
 
 /**
+ * Esquema de salida para la calificación de leads.
+ */
+export const LeadQualificationOutputSchema = z.object({
+  reasoning: z.string().describe("Razonamiento XML con <thought>, <plan>, <verification>."),
+  qualified_leads: z.array(z.object({
+    name: z.string(),
+    company: z.string().optional(),
+    contact: z.string().optional(),
+    score: z.number().min(1).max(10),
+    justification: z.string()
+  })).describe("Lista de leads filtrados y puntuados."),
+  market_fit_analysis: z.string().describe("Breve análisis de por qué estos leads encajan en el nicho.")
+});
+
+export type LeadQualificationOutput = z.infer<typeof LeadQualificationOutputSchema>;
+
+export interface LeadQualificationInput {
+  leads: unknown[];
+  niche: string;
+  min_score?: number;
+}
+
+/**
  * Esquema base para el razonamiento de un Skill.
  * Útil para validaciones estructuradas.
  */

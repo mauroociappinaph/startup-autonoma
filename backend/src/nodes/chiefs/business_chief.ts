@@ -3,6 +3,10 @@ import { LLMService } from "@/services/llmService.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { prepareNodeUpdate } from "@/helpers/index.js";
+import { SkillRegistry } from "@/skills/skill_registry.js";
+import { LeadQualificationSkill } from "@/skills/business/lead_qualification.js";
+import { LeadQualificationOutput, LeadQualificationInput } from "@/types/skills.types.js";
+import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Esquema de decisión interna del Business Chief.
@@ -30,7 +34,7 @@ const BusinessChiefDecisionSchema = z.object({
  * Coordina tareas de investigación de mercado y generación de leads.
  */
 export async function business_chief_node(state: AgentStateType) {
-  console.log("--- EJECUTANDO NODO BUSINESS CHIEF ---");
+  SacredLogger.info("--- EJECUTANDO NODO BUSINESS CHIEF ---", "BUSINESS");
 
   // Verificamos si acabamos de recibir resultados de un worker (Ley de Robustez)
   const lastMessage = state.messages.length > 0 ? state.messages[state.messages.length - 1] : null;
@@ -82,8 +86,8 @@ export async function business_chief_node(state: AgentStateType) {
       BusinessChiefDecisionSchema
     );
 
-    console.log(`🧠 Business Chief Reasoning: ${response.reasoning}`);
-    console.log(`📊 [${model}] Costo: $${cost.toFixed(6)}`);
+    SacredLogger.info(`🧠 Business Chief Reasoning: ${response.reasoning}`, "BUSINESS");
+    SacredLogger.info(`📊 [${model}] Costo: $${cost.toFixed(6)}`, "BUSINESS");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Business Chief",
@@ -125,29 +129,30 @@ export async function business_chief_node(state: AgentStateType) {
     }
     else if (response.decision === "qualify_leads") {
       updates.plan = ["qualify_leads"];
-      // Usaremos el modelo GLM específicamente para este paso
-      console.log("🎯 Calificando leads usando GLM-4 (NVIDIA NIM)...");
       
-      const qualification_prompt = `
-        Analiza la siguiente lista de leads para el nicho: ${state.lead_gen_payload?.niche || 'desconocido'}.
-        Asigna a cada uno un score de 1 a 10 basado en su relevancia comercial.
-        Solo devuelve los leads con score > 7.
+      try {
+        SacredLogger.info("🎯 Calificando leads usando Lead Qualification Skill...", "BUSINESS");
         
-        DATA: ${JSON.stringify(aiEngineResult)}
-      `;
+        const qualificationSkill = SkillRegistry.get<LeadQualificationInput, LeadQualificationOutput>("lead-qualification");
+        const { data } = await qualificationSkill.run({
+          leads: (aiEngineResult as unknown[]) || [],
+          niche: state.lead_gen_payload?.niche || "general"
+        });
 
-      // Llamada directa al LLM configurado como 'smart' en NVIDIA (que ahora es GLM-4)
-      const { content: qualifiedContent } = await LLMService.getText(
-        { type: "reasoning" }, 
-        [new SystemMessage("Eres un experto en Growth Hacking y prospección B2B."), new AIMessage(qualification_prompt)]
-      );
-
-      updates.messages?.push(new AIMessage({
-        content: `[LEAD_QUALIFICATION_SUCCESS] Leads filtrados por GLM-4: ${qualifiedContent}`,
-        additional_kwargs: {
-          qualified_leads: qualifiedContent
-        }
-      }));
+        updates.messages?.push(new AIMessage({
+          content: `[LEAD_QUALIFICATION_SUCCESS] Leads calificados: ${data.qualified_leads.length} prospectos encontrados.
+${data.market_fit_analysis}
+Reasoning: ${data.reasoning}`,
+          additional_kwargs: {
+            qualified_leads: data.qualified_leads
+          }
+        }));
+      } catch (err) {
+        SacredLogger.error("❌ Fallo al calificar leads via Expert Skill", "BUSINESS");
+        updates.messages?.push(new AIMessage({
+          content: `[LEAD_QUALIFICATION_ERROR] No se pudo calificar automáticamente: ${err instanceof Error ? err.message : String(err)}`
+        }));
+      }
       
       updates.next_node = "business_chief"; // Vuelve a sí mismo para decidir persistir
     }
