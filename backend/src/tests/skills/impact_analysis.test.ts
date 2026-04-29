@@ -23,7 +23,7 @@ describe("CodeChangeImpactAnalysisSkill", () => {
     expect(response.reasoning).toContain("<verification>");
     
     console.log("✅ Impact Analysis Test Result:", JSON.stringify(response.data, null, 2));
-  }, 60000); // 60s timeout para LLM
+  }, 120000); // 120s timeout para LLM
 
   it("debería dar riesgo bajo para documentación", async () => {
     const input = {
@@ -34,5 +34,5 @@ describe("CodeChangeImpactAnalysisSkill", () => {
 
     expect(response.data.impact_score).toBeLessThanOrEqual(3);
     console.log("✅ Doc Analysis Test Result:", response.data.impact_score);
-  }, 60000);
+  }, 120000);
 });
