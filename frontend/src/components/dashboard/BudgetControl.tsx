@@ -5,7 +5,9 @@ import { Wallet, ShieldAlert, Edit3, Check, X } from "lucide-react";
 import { useAgentStore } from "@/store/useAgentStore";
 
 export const BudgetControl: React.FC = () => {
-  const { totalCost, maxUsdBudget, setMaxUsdBudget } = useAgentStore();
+  const totalCost = useAgentStore(s => s.totalCost);
+  const maxUsdBudget = useAgentStore(s => s.maxUsdBudget);
+  const setMaxUsdBudget = useAgentStore(s => s.setMaxUsdBudget);
   const [isEditing, setIsEditing] = useState(false);
   const [tempBudget, setTempBudget] = useState(maxUsdBudget.toString());
 
