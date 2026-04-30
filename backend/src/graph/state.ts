@@ -31,10 +31,13 @@ export const AgentAnnotation = Annotation.Root({
   }),
 
   /**
-   * Historial de mensajes.
+   * Historial de mensajes (Truncado a los últimos 30 para performance).
    */
   messages: Annotation<BaseMessage[]>({
-    reducer: messagesStateReducer,
+    reducer: (prev, next) => {
+      const all = messagesStateReducer(prev, next);
+      return all.length > 30 ? all.slice(-30) : all;
+    },
     default: () => [],
   }),
 

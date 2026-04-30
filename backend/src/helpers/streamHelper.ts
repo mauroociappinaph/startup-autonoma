@@ -33,7 +33,10 @@ export class StreamHelper {
             if (closingQuoteIndex !== -1) fullReasoning = fullReasoning.substring(0, closingQuoteIndex + 1);
             const cleaned = fullReasoning.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\t/g, "\t");
             const newChunk = cleaned.substring(lastYieldedLength);
-            if (newChunk) {
+            
+            // OPTIMIZACIÓN: Solo emitimos si el nuevo fragmento es suficientemente grande (ej. 40 chars)
+            // para evitar inundar el frontend con micro-re-renders de 1-2 caracteres.
+            if (newChunk.length > 40) {
               const partialEv = { agent: nodeName.toUpperCase(), text: newChunk, isPartial: true, threadId };
               await EventBus.publish(threadId, partialEv);
               return { buffer: newBuffer, lastLength: cleaned.length, yielded: true };
