@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { useAgentStore } from "@/store/useAgentStore";
 
 export const StrategyCard: React.FC = () => {
-  const { executiveSummary: summary, currentPlan: plan, completedSteps } = useAgentStore();
+  const summary = useAgentStore(s => s.executiveSummary);
+  const plan = useAgentStore(s => s.currentPlan);
+  const completedSteps = useAgentStore(s => s.completedSteps);
   const isCompleted = (step: string) => completedSteps.includes(step);
 
   return (

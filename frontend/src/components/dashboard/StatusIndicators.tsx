@@ -8,7 +8,8 @@ import { useAgentStore } from "@/store/useAgentStore";
  * Desacoplado para evitar re-renders innecesarios en el Dashboard principal.
  */
 export const StatusIndicators: React.FC = () => {
-  const { isStreaming, threadId } = useAgentStore();
+  const isStreaming = useAgentStore(s => s.isStreaming);
+  const threadId = useAgentStore(s => s.threadId);
   
   return (
     <div className="absolute bottom-8 left-8 flex items-center gap-4 pointer-events-none">

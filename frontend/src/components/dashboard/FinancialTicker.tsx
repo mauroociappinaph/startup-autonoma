@@ -6,7 +6,8 @@ import { DollarSign, TrendingUp, Clock, Globe } from "lucide-react";
 import { useAgentStore } from "@/store/useAgentStore";
 
 export const FinancialTicker: React.FC = () => {
-  const { totalCost, isStreaming } = useAgentStore();
+  const totalCost = useAgentStore(s => s.totalCost);
+  const isStreaming = useAgentStore(s => s.isStreaming);
   return (
     <div className="w-full bg-black/40 backdrop-blur-md border-b border-white/5 py-1 px-6 flex items-center justify-between overflow-hidden relative group">
       {/* Luz de estado lateral (sutil) */}

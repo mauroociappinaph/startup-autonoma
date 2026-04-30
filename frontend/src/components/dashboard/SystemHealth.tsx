@@ -28,7 +28,9 @@ const Metric: React.FC<MetricProps> = ({ label, value, icon, unit }) => (
 import { useAgentStore } from "@/store/useAgentStore";
 
 export const SystemHealth: React.FC = () => {
-  const { totalTokens, iterations, totalCost } = useAgentStore();
+  const totalTokens = useAgentStore(s => s.totalTokens);
+  const iterations = useAgentStore(s => s.iterations);
+  const totalCost = useAgentStore(s => s.totalCost);
   const [metrics, setMetrics] = useState({
     latency: 24,
     cpu: 18, 

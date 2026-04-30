@@ -9,31 +9,31 @@ import { type AgentThought } from "@/types/index";
  * Refactorizado para mayor estabilidad, desacoplamiento y mejor UX.
  */
 export function useAgentStream() {
-  // Desestructuramos el store para dependencias estables en los hooks
-  const {
-    thoughts,
-    isStreaming,
-    isWaiting,
-    activeNode,
-    currentPlan,
-    completedSteps,
-    executiveSummary,
-    totalTokens,
-    iterations,
-    totalCost,
-    threadId,
-    setThoughts,
-    setIsStreaming,
-    setIsWaiting,
-    setActiveNode,
-    setCurrentPlan,
-    setCompletedSteps,
-    setExecutiveSummary,
-    setThreadId,
-    updateTelemetry,
-    populateState,
-    resetSession
-  } = useAgentStore();
+  // Selectores atómicos para evitar re-renders masivos (Optimización de Performance)
+  const thoughts = useAgentStore(s => s.thoughts);
+  const isStreaming = useAgentStore(s => s.isStreaming);
+  const isWaiting = useAgentStore(s => s.isWaiting);
+  const activeNode = useAgentStore(s => s.activeNode);
+  const currentPlan = useAgentStore(s => s.currentPlan);
+  const completedSteps = useAgentStore(s => s.completedSteps);
+  const executiveSummary = useAgentStore(s => s.executiveSummary);
+  const totalTokens = useAgentStore(s => s.totalTokens);
+  const iterations = useAgentStore(s => s.iterations);
+  const totalCost = useAgentStore(s => s.totalCost);
+  const threadId = useAgentStore(s => s.threadId);
+
+  // Acciones (no cambian, no necesitan selectores reactivos)
+  const setThoughts = useAgentStore(s => s.setThoughts);
+  const setIsStreaming = useAgentStore(s => s.setIsStreaming);
+  const setIsWaiting = useAgentStore(s => s.setIsWaiting);
+  const setActiveNode = useAgentStore(s => s.setActiveNode);
+  const setCurrentPlan = useAgentStore(s => s.setCurrentPlan);
+  const setCompletedSteps = useAgentStore(s => s.setCompletedSteps);
+  const setExecutiveSummary = useAgentStore(s => s.setExecutiveSummary);
+  const setThreadId = useAgentStore(s => s.setThreadId);
+  const updateTelemetry = useAgentStore(s => s.updateTelemetry);
+  const populateState = useAgentStore(s => s.populateState);
+  const resetSession = useAgentStore(s => s.resetSession);
 
   // Objeto de acciones para el procesador (desacoplado del store global)
   const actions = {

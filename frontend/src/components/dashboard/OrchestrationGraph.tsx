@@ -68,7 +68,7 @@ const initialEdges: Edge[] = [
 ];
 
 export const OrchestrationGraph: React.FC = () => {
-  const { activeNode } = useAgentStore();
+  const activeNode = useAgentStore(s => s.activeNode);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 

@@ -8,7 +8,9 @@ import { useAgentStore } from "@/store/useAgentStore";
 import { RotateCcw } from "lucide-react";
 
 export const ReasoningFeed: React.FC = () => {
-  const { thoughts, isStreaming, rewindTo } = useAgentStore();
+  const thoughts = useAgentStore(s => s.thoughts);
+  const isStreaming = useAgentStore(s => s.isStreaming);
+  const rewindTo = useAgentStore(s => s.rewindTo);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleRewind = async (checkpointId: string) => {
