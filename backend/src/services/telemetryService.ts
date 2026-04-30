@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getRedisConnection } from "../db/redis.js";
 import { MODEL_PRICING } from "../config/pricing.js";
 import { EventBus } from "./eventBus.js";
