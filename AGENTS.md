@@ -119,6 +119,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── /scratch
 │   │   ├── debug_tests.ts
 │   │   ├── test_mcp_integration.ts
+│   │   ├── test_redis_size.ts
 │   ├── /scripts
 │   │   ├── check-grpc-sync.ts
 │   │   ├── stress-test.ts
@@ -204,12 +205,14 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /issue-114-operations-chief
 │   │   ├── /issue-144-redis-janitor
 │   │   ├── /optimize-entry-flow
+│   │   ├── /optimize-system-performance
 │   ├── /specs
 │   │   ├── /core
 │   │   ├── /observability
 │   │   ├── /orchestration
 │   │   ├── /reasoning
 │   │   ├── /security
+│   │   ├── /system-performance-optimization
 ├── package-lock.json
 ├── package.json
 ├── /packages
