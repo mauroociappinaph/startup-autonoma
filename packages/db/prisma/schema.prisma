@@ -35,5 +35,7 @@ model AuditLog {
   createdAt   DateTime @default(now())
   project     Project  @relation(fields: [projectId], references: [projectId])
 
+  @@index([nodeName])
+  @@index([createdAt])
   @@map("audit_logs")
 }

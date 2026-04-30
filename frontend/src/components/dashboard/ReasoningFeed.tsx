@@ -56,9 +56,9 @@ export const ReasoningFeed: React.FC = () => {
               <p className="text-[10px] uppercase font-bold tracking-widest italic">Awaiting instructions...</p>
             </motion.div>
           ) : (
-            thoughts.map((thought, index) => (
+            thoughts.map((thought) => (
               <motion.div
-                key={`${thought.time}-${index}`}
+                key={thought.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`group p-4 rounded-xl border transition-all duration-300 ${

@@ -35,6 +35,8 @@ export class AIEngineClient {
       'grpc.http2.min_time_between_pings_ms': 10000,
       'grpc.http2.min_ping_interval_without_data_ms': 5000,
       'grpc.default_deadline_ms': 300000, // 5 minutos por defecto para tareas pesadas
+      'grpc.max_receive_message_length': 64 * 1024 * 1024, // 64MB
+      'grpc.max_send_message_length': 64 * 1024 * 1024, // 64MB
     };
 
     this.client = new aiEngineProto.AIEngine(

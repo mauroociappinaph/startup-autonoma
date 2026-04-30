@@ -1,4 +1,5 @@
 export interface AgentThought {
+  id?: string;
   agent: string;
   text: string;
   time: string;

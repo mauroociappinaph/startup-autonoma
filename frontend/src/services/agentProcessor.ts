@@ -76,14 +76,14 @@ export const agentProcessor = {
           const updated = { ...last, text: last.text + data.text };
           next = [...prev.slice(0, -1), updated];
         } else {
-          next = [...prev, { ...data, time: new Date().toLocaleTimeString() }];
+          next = [...prev, { ...data, id: crypto.randomUUID(), time: new Date().toLocaleTimeString() }];
         }
       } else {
         const last = prev[prev.length - 1];
         if (last && last.isPartial && last.agent === data.agent) {
-          next = [...prev.slice(0, -1), data];
+          next = [...prev.slice(0, -1), { ...data, id: last.id }];
         } else {
-          next = [...prev, data];
+          next = [...prev, { ...data, id: crypto.randomUUID() }];
         }
       }
 
