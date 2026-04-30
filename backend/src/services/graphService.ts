@@ -25,7 +25,7 @@ export class GraphService {
     const initialInput: Partial<AgentStateType> = {
       project_context: projectContext,
       messages: [new HumanMessage(prompt)],
-      trace_id: threadId,
+      trace_id: TraceContext.getTraceId() || threadId,
       plan: [],
       executive_summary: "",
       retry_count: 0,

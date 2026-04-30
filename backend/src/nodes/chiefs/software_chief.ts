@@ -8,6 +8,7 @@ import { prepareNodeUpdate } from "@/helpers/index.js";
 import { SkillRegistry } from "@/skills/skill_registry.js";
 import { CodeChangeImpactAnalysisSkill } from "@/skills/software/impact_analysis.js";
 import { SacredLogger } from "@/helpers/logger.js";
+import { TraceContext } from "@/services/traceContext.js";
 import { ImpactAnalysisOutput } from "@/types/skills.types.js";
 
 /**
@@ -190,7 +191,7 @@ export async function software_chief_node(state: AgentStateType) {
           ai_engine_task: {
             worker_name: response.ai_engine_task!.worker_name,
             task_description: response.ai_engine_task!.task_description,
-            trace_id: state.trace_id || "unknown-trace", // Usamos trace_id del estado o uno por defecto
+            trace_id: TraceContext.getTraceId() || state.trace_id || "unknown-trace", // Usamos trace_id del estado o uno por defecto
             payload: response.ai_engine_task!.payload || {},
           }
         }
