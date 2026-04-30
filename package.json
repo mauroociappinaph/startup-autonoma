@@ -32,10 +32,23 @@
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.216.0",
+    "@opentelemetry/instrumentation": "^0.216.0",
+    "@opentelemetry/instrumentation-express": "^0.64.0",
+    "@opentelemetry/instrumentation-grpc": "^0.216.0",
+    "@opentelemetry/instrumentation-http": "^0.216.0",
+    "@opentelemetry/instrumentation-redis-4": "^0.48.0",
+    "@opentelemetry/otlp-transformer": "^0.216.0",
+    "@opentelemetry/resources": "^2.7.1",
+    "@opentelemetry/sdk-trace-base": "^2.7.1",
+    "@opentelemetry/sdk-trace-node": "^2.7.1",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@prisma/instrumentation": "^7.8.0",
+    "eslint-plugin-architecture": "file:scripts/architecture-audit/eslint-plugin",
     "husky": "^9.0.11",
     "ts-morph": "^28.0.0",
     "tsx": "^4.21.0",
-    "turbo": "^2.1.2",
-    "eslint-plugin-architecture": "file:scripts/architecture-audit/eslint-plugin"
+    "turbo": "^2.1.2"
   }
 }

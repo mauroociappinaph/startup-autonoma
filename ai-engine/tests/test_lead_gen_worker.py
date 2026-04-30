@@ -1,7 +1,8 @@
-import asyncio
 import pytest
-from app.workers.lead_gen_worker import process_lead_generation_task
 from google.protobuf import struct_pb2
+
+from app.workers.lead_gen_worker import process_lead_generation_task
+
 
 @pytest.mark.asyncio
 async def test_lead_gen_worker_concurrency():

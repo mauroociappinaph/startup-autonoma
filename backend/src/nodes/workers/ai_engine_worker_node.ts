@@ -3,6 +3,7 @@ import { aiEngineClient } from "@/services/aiEngineClient.js";
 import { AIMessage } from "@langchain/core/messages";
 import { incrementIteration } from "@/helpers/index.js";
 import { AIEngineTask } from "@/types/index.js";
+import { TraceContext } from "@/services/traceContext.js";
 
 
 /**
@@ -45,7 +46,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
     console.log(`🚀 Llamando a Worker Python: ${aiTask.worker_name}...`);
     
     // Aseguramos que trace_id sea un string
-    const traceId = aiTask.trace_id || (state.trace_id ? String(state.trace_id) : "unknown");
+    const traceId = TraceContext.getTraceId() || aiTask.trace_id || (state.trace_id ? String(state.trace_id) : "unknown");
 
     const response = await aiEngineClient.executeTask({
       worker_name: aiTask.worker_name,

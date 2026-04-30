@@ -7,6 +7,7 @@ import { SkillRegistry } from "@/skills/skill_registry.js";
 import { LeadQualificationSkill } from "@/skills/business/lead_qualification.js";
 import { LeadQualificationOutput, LeadQualificationInput } from "@/types/skills.types.js";
 import { SacredLogger } from "@/helpers/logger.js";
+import { TraceContext } from "@/services/traceContext.js";
 
 /**
  * Esquema de decisión interna del Business Chief.
@@ -121,7 +122,7 @@ export async function business_chief_node(state: AgentStateType) {
           ai_engine_task: {
             worker_name: "lead_gen",
             task_description: response.worker_instruction || `Prospección para: ${response.lead_gen_payload?.niche}`,
-            trace_id: String(state.trace_id || Date.now()),
+            trace_id: TraceContext.getTraceId() || String(state.trace_id || Date.now()),
             payload: response.lead_gen_payload || {},
           }
         }
