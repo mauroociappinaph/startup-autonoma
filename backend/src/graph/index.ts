@@ -1,5 +1,6 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { SimpleRedisSaver } from "./checkpoints/SimpleRedisSaver.js";
+import { MsgpackSerializer } from "./serializers/MsgpackSerializer.js";
 import { getRedisConnection } from "@/db/redis.js";
 import { AgentAnnotation } from "@/graph/state.js";
 import { AgentStateType } from "@startup/shared";
@@ -116,8 +117,8 @@ workflow.addConditionalEdges("documentation_worker", workerReturnRouter);
 workflow.addConditionalEdges("code_writer", workerReturnRouter);
 workflow.addConditionalEdges("operations_worker", workerReturnRouter);
 
-// Checkpointer compatible con Redis estándar
-const checkpointer = new SimpleRedisSaver(getRedisConnection());
+// Checkpointer con serialización binaria (Msgpack)
+const checkpointer = new SimpleRedisSaver(getRedisConnection(), new MsgpackSerializer());
 
 /**
  * Exportación directa del grafo compilado.
