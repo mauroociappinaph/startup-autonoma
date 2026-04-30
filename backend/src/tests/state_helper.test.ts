@@ -23,6 +23,17 @@ jest.mock('ioredis', () => {
   };
 });
 
+// Mockeamos el DB client para evitar problemas de Prisma en Jest ESM
+jest.unstable_mockModule('@startup/db', () => ({
+  prisma: {
+    auditLog: {
+      create: (jest.fn() as any).mockResolvedValue({}),
+      findMany: (jest.fn() as any).mockResolvedValue([]),
+    }
+  }
+}));
+
+
 describe("stateHelper", () => {
   let prepareNodeUpdate: any;
   let incrementIteration: any;
