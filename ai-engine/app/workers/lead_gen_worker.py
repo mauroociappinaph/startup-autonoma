@@ -15,9 +15,10 @@ from opentelemetry.trace import Status, StatusCode
 logger = logging.getLogger(__name__)
 tracer = get_tracer()
 
-async def simulate_search(niche: str, location: str = "") -> List[Dict[str, Any]]:
+def simulate_search(niche: str, location: str = "") -> List[Dict[str, Any]]:
     """
-    Simula una búsqueda estructurada de leads de forma asíncrona (liberando el GIL).
+    Simula una búsqueda estructurada de leads de forma síncrona.
+    Se ejecutará en un hilo separado mediante asyncio.to_thread.
     """
     with tracer.start_as_current_span("lead_gen.simulate_search") as span:
         span.set_attribute("search.niche", niche)
@@ -66,8 +67,8 @@ async def process_lead_generation_task(request_payload: struct_pb2.Struct, trace
             # 2. Simulación de latencia de red asíncrona (libera Event Loop)
             await asyncio.sleep(1.5)
             
-            # 3. Ejecución de la búsqueda
-            leads = await simulate_search(parsed_request.niche, parsed_request.location)
+            # 3. Ejecución de la búsqueda en un hilo separado para no bloquear el Event Loop
+            leads = await asyncio.to_thread(simulate_search, parsed_request.niche, parsed_request.location)
             
             # 4. Formateo de resultados (LIMIT)
             final_leads = leads[:parsed_request.limit]
