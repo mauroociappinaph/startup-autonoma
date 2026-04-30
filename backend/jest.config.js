@@ -7,8 +7,13 @@ export default {
   moduleNameMapper: {
     '^@/(.*)\\.js$': '<rootDir>/src/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^(\\.\\.?/.*)\\.js$': '$1'
+    '^(\\.\\.?/.*)\\.js$': '$1',
+    '^@startup/db$': '<rootDir>/src/tests/mocks/db.ts'
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(@prisma|@startup)/)'
+  ],
+
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
