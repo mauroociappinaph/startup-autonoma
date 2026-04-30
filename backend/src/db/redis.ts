@@ -23,7 +23,7 @@ async function enforceRedisLimits(redis: Redis) {
   try {
     // Intentamos configurar maxmemory y política de desalojo
     // Esto es vital para entornos locales/dev sin configurar
-    await redis.config("SET", "maxmemory", "256mb");
+    await redis.config("SET", "maxmemory", "512mb");
     await redis.config("SET", "maxmemory-policy", "allkeys-lru");
     const logger = await getLogger();
     logger.info("✅ Redis: límites de memoria configurados (256mb, allkeys-lru)", "INFRA");

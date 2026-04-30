@@ -18,8 +18,15 @@
 - [ ] 3.2 Refactor `ReasoningFeed.tsx` to use atomic selectors for `thoughts`.
 - [ ] 3.3 Refactor `FinancialTicker.tsx` to use atomic selectors for `totalCost`.
 - [ ] 3.4 Refactor `StrategyCard.tsx`, `BudgetControl.tsx`, and `StatusIndicators.tsx` for atomic state consumption.
+- [ ] 3.5 Update `ReasoningFeed.tsx` list rendering to use stable keys instead of indices.
 
-## Phase 4: Verification & Testing
+## Phase 4: Database & Infrastructure
+
+- [ ] 4.1 Add indexes to `AuditLog` for `nodeName` and `createdAt` in Prisma schema.
+- [ ] 4.2 Run Prisma migration: `npx prisma migrate dev --name add_audit_log_indexes`.
+- [ ] 4.3 Increase Redis `maxmemory` to 512MB in `backend/src/db/redis.ts`.
+
+## Phase 5: Verification & Testing
 
 - [ ] 4.1 Test: Verify Redis checkpoint size reduction using `DEBUG=redis` or `redis-cli memory usage`.
 - [ ] 4.2 Test: Verify targeted re-renders in `OrchestrationGraph` during stream using React DevTools.
