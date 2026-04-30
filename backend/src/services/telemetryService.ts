@@ -3,26 +3,46 @@ import { MODEL_PRICING } from "../config/pricing.js";
 import { EventBus } from "./eventBus.js";
 import { SacredLogger } from "../helpers/logger.js";
 import * as opentelemetry from "@opentelemetry/api";
-import { NodeSDK } from "@opentelemetry/sdk-node";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
+import { GrpcInstrumentation } from "@opentelemetry/instrumentation-grpc";
+import { RedisInstrumentation } from "@opentelemetry/instrumentation-redis-4";
+import { PrismaInstrumentation } from "@prisma/instrumentation";
+import { registerInstrumentations } from "@opentelemetry/instrumentation";
 
 /**
  * OpenTelemetry Configuration
  */
-const otelSdk = new NodeSDK({
+const provider = new NodeTracerProvider({
   resource: new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: "startup-backend",
   }),
-  traceExporter: new OTLPTraceExporter({
-    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318/v1/traces",
-  }),
+});
+
+const exporter = new OTLPTraceExporter({
+  url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318/v1/traces",
+});
+
+provider.addSpanProcessor(new BatchSpanProcessor(exporter));
+provider.register();
+
+registerInstrumentations({
+  instrumentations: [
+    new HttpInstrumentation(),
+    new ExpressInstrumentation(),
+    new GrpcInstrumentation(),
+    new RedisInstrumentation(),
+    new PrismaInstrumentation(),
+  ],
 });
 
 // Iniciamos el SDK de forma asíncrona pero sin bloquear el resto del sistema
 if (process.env.OTEL_ENABLED === "true") {
-  otelSdk.start();
   SacredLogger.info("🛡️ [OTEL] OpenTelemetry SDK Initialized and Exporting to Jaeger", "TELEMETRY_SDK");
 }
 
