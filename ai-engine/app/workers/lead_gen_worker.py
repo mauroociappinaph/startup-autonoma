@@ -5,11 +5,11 @@ import logging
 from typing import Any, Dict, List
 
 from google.protobuf import json_format, struct_pb2
+from opentelemetry.trace import Status, StatusCode
 
 from app.contracts.lead_gen import LeadGenRequest
 from app.grpc_generated import ai_engine_pb2
 from app.helpers.telemetry import get_tracer
-from opentelemetry.trace import Status, StatusCode
 
 # Configuración de logging para el worker
 logger = logging.getLogger(__name__)

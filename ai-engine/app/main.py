@@ -8,6 +8,10 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from app.core.grpc_server import serve
+from app.helpers.telemetry import init_telemetry
+
+# Iniciar Observabilidad Distribuida
+init_telemetry()
 
 # Configurar el path para que los módulos de app sean visibles
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))

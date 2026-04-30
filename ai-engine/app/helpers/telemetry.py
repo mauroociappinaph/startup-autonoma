@@ -1,15 +1,19 @@
 import os
+
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
 
 def init_telemetry():
     """
     Inicializa el SDK de OpenTelemetry para el AI Engine.
     """
     if os.getenv("OTEL_ENABLED", "false").lower() != "true":
+        print("⚠️ [OTEL] OpenTelemetry is disabled via OTEL_ENABLED env var.")
         return
 
     # Configuración de Recursos
@@ -18,7 +22,7 @@ def init_telemetry():
     # Proveedor de trazas
     provider = TracerProvider(resource=resource)
     
-    # Exportador OTLP (usamos HTTP por simplicidad, igual que en el backend)
+    # Exportador OTLP
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318/v1/traces")
     exporter = OTLPSpanExporter(endpoint=endpoint)
     
@@ -27,6 +31,11 @@ def init_telemetry():
     
     # Registrar el proveedor global
     trace.set_tracer_provider(provider)
+
+    # Instrumentar gRPC Server (esto permite recibir el contexto de traza de Node.js)
+    GrpcInstrumentorServer().instrument()
+    
+    print(f"🛡️ [OTEL] OpenTelemetry Initialized in AI Engine (Exporting to {endpoint})")
 
 def get_tracer():
     return trace.get_tracer("ai-engine")
