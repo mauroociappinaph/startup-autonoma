@@ -4,8 +4,8 @@ import { EventBus } from "./eventBus.js";
 import { TelemetryService } from "./telemetryService.js";
 
 /**
- * BudgetService: Gestiona el control de gastos y límites de tokens/USD por proyecto.
- * Persiste el consumo acumulado en Redis para aislamiento multi-tenant.
+ * BudgetService: Manages token and USD budget limits per project.
+ * Persists accumulated usage in Redis for multi-tenant isolation.
  */
 export class BudgetService {
   private static readonly KEY_PREFIX = "project:budget:usage:";
@@ -16,36 +16,36 @@ export class BudgetService {
   }
 
   /**
-   * Obtiene el consumo acumulado de tokens para un proyecto.
+   * Retrieves the accumulated token usage for a project.
    */
   async getProjectUsage(projectId: string): Promise<number> {
     const redis = getRedisConnection();
     const key = `${BudgetService.KEY_PREFIX}${projectId}`;
     const usage = await redis.get(key);
-    return usage ? parseInt(usage, 10) : 0;
+    return usage ? parseFloat(usage) : 0;
   }
 
   /**
-   * Registra un nuevo consumo de tokens.
+   * Records new token usage.
    */
   async recordUsage(projectId: string, amount: number): Promise<number> {
     if (amount <= 0) return await this.getProjectUsage(projectId);
 
     const redis = getRedisConnection();
     const key = `${BudgetService.KEY_PREFIX}${projectId}`;
-    const newTotal = await redis.incrby(key, Math.round(amount));
+    const newTotal = await redis.incrbyfloat(key, amount);
 
-    return newTotal;
+    return parseFloat(newTotal);
   }
 
   /**
-   * Evalúa los límites de tokens y USD y dispara alertas si es necesario.
+   * Evaluates token and USD limits, triggering alerts if necessary.
    */
   async checkSecurityStatus(context: ProjectContext) {
     const totalUsage = await this.getProjectUsage(context.projectId);
     const tokenLimit = context.maxTokenBudget;
 
-    // Obtener stats financieros de TelemetryService
+    // Get financial stats from TelemetryService
     const stats = await this.telemetryService.getProjectStats(context.projectId);
     const totalCostUsd = stats.total_cost_usd || 0;
     const usdLimit = context.maxUsdBudget || 10.0;
@@ -53,7 +53,7 @@ export class BudgetService {
     const tokenPercentage = (totalUsage / tokenLimit) * 100;
     const usdPercentage = (totalCostUsd / usdLimit) * 100;
 
-    // Lógica de Alerta de USD (90%)
+    // USD Alert Logic (90%)
     if (usdPercentage >= 90 && usdPercentage < 100) {
       await EventBus.publish(context.projectId, {
         agent: "SYSTEM",
