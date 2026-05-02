@@ -4,8 +4,8 @@ import { auditService } from "@/services/auditService.js";
 import { NodeMetadata } from "@/types/state-helper.types.js";
 
 /**
- * Prepara la actualización del estado de un nodo, centralizando el control de iteraciones,
- * costos, telemetría y auditoría.
+ * Prepares the state update for a node, centralizing iteration tracking,
+ * costs, telemetry, and auditing.
  */
 export async function prepareNodeUpdate(
   state: AgentStateType,
@@ -13,15 +13,16 @@ export async function prepareNodeUpdate(
 ): Promise<Partial<AgentStateType>> {
   const projectId = state.project_context?.projectId || "unknown";
 
-  // 1. Telemetría Dinámica (Usa el modelo real configurado en el LLMService)
+  // 1. Dynamic Telemetry (Uses the actual model configured in LLMService)
   await telemetryService.recordMetric(projectId, {
     node: metadata.nodeName,
     model: metadata.model,
     latency: metadata.latency,
-    usage: metadata.usage
+    usage: metadata.usage,
+    cost: metadata.cost
   });
 
-  // 2. Auditoría (solo si hay una decisión estratégica)
+  // 2. Auditing (only if there's a strategic decision)
   if (metadata.decision && metadata.reasoning) {
     await auditService.logDecision(projectId, {
       agent: metadata.nodeName,
@@ -30,10 +31,10 @@ export async function prepareNodeUpdate(
     });
   }
 
-  // 3. Preparar Updates del Estado
-  // IMPORTANTE: Calculamos los valores absolutos para que el estado sea explícito.
+  // 3. Prepare State Updates
+  // IMPORTANT: Calculate absolute values to make state explicit, except for additive reducers.
   return {
-    iteration_count: (state.iteration_count || 0) + 1,
+    iteration_count: 1,
     total_cost_usd: (state.total_cost_usd || 0) + metadata.cost,
     token_usage: {
       prompt: (state.token_usage?.prompt || 0) + metadata.usage.prompt,
@@ -46,10 +47,10 @@ export async function prepareNodeUpdate(
 }
 
 /**
- * Solo incrementa la iteración (para workers que no usan LLM).
+ * Only increments the iteration count (for workers that don't use LLMs).
  */
 export function incrementIteration(state: AgentStateType): Partial<AgentStateType> {
   return {
-    iteration_count: (state.iteration_count || 0) + 1
+    iteration_count: 1
   };
 }

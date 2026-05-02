@@ -77,7 +77,7 @@ export const AgentAnnotation = Annotation.Root({
    * Contador de iteraciones globales del grafo.
    */
   iteration_count: Annotation<number>({
-    reducer: (prev, next) => next || prev,
+    reducer: (prev, next) => prev + next,
     default: () => 0,
   }),
 
