@@ -68,6 +68,32 @@ if (running < total) {
 log(`Docker Compose: ${running}/${total} servicios en pie.`);
 
 // -------------------------------------------------------
+// 3.5 Verificar volúmenes persistentes
+// -------------------------------------------------------
+log("Verificando volúmenes persistentes...");
+try {
+  const volumesRaw = execSync("docker volume ls --format json").toString().trim();
+  const volumeNames = volumesRaw.split("\n").filter(Boolean).map(line => {
+    try {
+      return JSON.parse(line).Name;
+    } catch {
+      return "";
+    }
+  });
+
+  const requiredVolumes = ["startup-autonoma_redis_data", "startup-autonoma_postgres_data"];
+  const missingVolumes = requiredVolumes.filter(v => !volumeNames.some(name => name.includes(v)));
+
+  if (missingVolumes.length > 0) {
+    warn(`Faltan volúmenes persistentes: ${missingVolumes.join(", ")}. ¡Ojo que no vas a tener persistencia!`);
+  } else {
+    log("Volúmenes de persistencia verificados.");
+  }
+} catch {
+  warn("No se pudo verificar los volúmenes de Docker. Saltando...");
+}
+
+// -------------------------------------------------------
 // 4. Verificar que el backend responde el health endpoint
 // -------------------------------------------------------
 const backendPort = process.env.BACKEND_PORT || 4000;
