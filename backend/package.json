@@ -18,7 +18,7 @@
     "@langchain/groq": "^1.2.0",
     "@langchain/langgraph": "latest",
     "@langchain/openai": "^1.4.4",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "zod": "^3.23.8"
   },
