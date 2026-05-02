@@ -4,6 +4,7 @@ import { AgentStateType } from "@startup/shared";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { prepareNodeUpdate } from "@/helpers/index.js";
 import { SacredLogger } from "@/helpers/logger.js";
+import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
 
 /**
  * Nodo CEO: El Estratega de la Startup.
@@ -56,7 +57,7 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
       latency,
       cost,
       decision: response.next_step,
-      reasoning: response.reasoning
+      reasoning: ReasoningSanitizer.sanitize(response.reasoning)
     });
 
     const updates: Partial<AgentStateType> = {

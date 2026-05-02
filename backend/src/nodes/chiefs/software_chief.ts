@@ -10,6 +10,7 @@ import { CodeChangeImpactAnalysisSkill } from "@/skills/software/impact_analysis
 import { SacredLogger } from "@/helpers/logger.js";
 import { TraceContext } from "@/services/traceContext.js";
 import { ImpactAnalysisOutput } from "@/types/skills.types.js";
+import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
 
 /**
  * Esquema de decisión interna del Software Chief.
@@ -118,7 +119,7 @@ export async function software_chief_node(state: AgentStateType) {
       latency,
       cost,
       decision: response.decision,
-      reasoning: response.reasoning
+      reasoning: ReasoningSanitizer.sanitize(response.reasoning)
     });
 
     const updates: Partial<AgentStateType> = {
