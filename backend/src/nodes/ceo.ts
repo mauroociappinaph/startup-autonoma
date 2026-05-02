@@ -60,13 +60,17 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
       reasoning: ReasoningSanitizer.sanitize(response.reasoning)
     });
 
+    const isFinishing = response.next_step === "finish";
+
     const updates: Partial<AgentStateType> = {
       ...metricsUpdate,
       executive_summary: response.analysis, // El CEO usa 'analysis' para el resumen
-      active_chief: (response.delegated_to as "software_chief" | "business_chief" | "operations_chief" | undefined),
+      active_chief: isFinishing ? undefined : (response.delegated_to as "software_chief" | "business_chief" | "operations_chief" | undefined),
+      next_node: isFinishing ? undefined : state.next_node,
+      plan: isFinishing ? [] : state.plan,
       messages: state.messages.concat([new AIMessage({
         content: `[CEO_THOUGHT] ${response.reasoning}
-[CEO_DECISION] ${response.next_step} ${response.delegated_to ? `a ${response.delegated_to}` : ""}`,
+[CEO_DECISION] ${response.next_step} ${!isFinishing && response.delegated_to ? `a ${response.delegated_to}` : ""}`,
       })])
     };
 
