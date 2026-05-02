@@ -7,6 +7,7 @@ export interface WorkerTaskResponse {
   'message'?: (string);
   'result'?: (_google_protobuf_Struct | null);
   'errorCode'?: (string);
+  'traceId'?: (string);
 }
 
 export interface WorkerTaskResponse__Output {
@@ -14,4 +15,5 @@ export interface WorkerTaskResponse__Output {
   'message': (string);
   'result': (_google_protobuf_Struct__Output | null);
   'errorCode': (string);
+  'traceId': (string);
 }
