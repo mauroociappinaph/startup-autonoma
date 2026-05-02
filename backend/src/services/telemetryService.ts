@@ -47,46 +47,34 @@ if (process.env.OTEL_ENABLED === "true") {
 }
 
 /**
- * TelemetryService: Motor de observabilidad avanzada.
- * Calcula costos, mide latencia y reporta métricas en tiempo real (Gap 6).
+ * TelemetryService: Advanced observability engine.
+ * Measures latency and reports metrics in real-time (Gap 6).
  */
 export class TelemetryService {
   private static readonly KEY_PREFIX = "project:telemetry:stats:";
 
-  /**
-   * Obtiene el tracer global de la aplicación.
-   */
   static getTracer() {
     return opentelemetry.trace.getTracer("startup-backend");
   }
 
-  /**
-   * Calcula el costo en USD basado en el uso y el modelo.
-   */
-  static calculateCost(usage: { prompt: number; completion: number }, model: string): number {
-    const pricing = MODEL_PRICING[model] || MODEL_PRICING["default"];
-    
-    const inputCost = (usage.prompt / 1_000_000) * pricing.input;
-    const outputCost = (usage.completion / 1_000_000) * pricing.output;
-    
-    return inputCost + outputCost;
-  }
+
 
   /**
-   * Registra y emite un evento de telemetría completo, persistiendo los totales en Redis.
+   * Registers and emits a complete telemetry event, persisting totals in Redis.
    */
   async recordMetric(projectId: string, data: {
     node: string;
     model: string;
     latency: number;
     usage: { total: number; prompt: number; completion: number };
+    cost: number;
     trace_id?: string;
   }) {
-    const cost = (this.constructor as typeof TelemetryService).calculateCost(data.usage, data.model);
+    const cost = data.cost;
     const redis = getRedisConnection();
     const statsKey = `${TelemetryService.KEY_PREFIX}${projectId}`;
     
-    // Actualizamos acumulados en Redis de forma atómica
+    // Update accumulated values in Redis atomically
     const pipeline = redis.pipeline();
     pipeline.hincrbyfloat(statsKey, "total_cost_usd", cost);
     pipeline.hincrby(statsKey, "total_tokens", data.usage.total);
@@ -96,7 +84,7 @@ export class TelemetryService {
     
     SacredLogger.info(`📊 [TELEMETRÍA] ${data.node} (${data.model}) -> Latencia: ${data.latency.toFixed(2)}ms | Costo: $${cost.toFixed(6)}`, "METRICS");
 
-    // Publicamos al Dashboard vía EventBus
+    // Publish to Dashboard via EventBus
     await EventBus.publish(projectId, {
       agent: "SYSTEM",
       type: "METRIC_UPDATE",
@@ -116,7 +104,7 @@ export class TelemetryService {
   }
 
   /**
-   * Recupera las estadísticas acumuladas de un proyecto.
+   * Retrieves accumulated stats for a project.
    */
   async getProjectStats(projectId: string) {
     const redis = getRedisConnection();

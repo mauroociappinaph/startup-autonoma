@@ -3,6 +3,7 @@ import { AgentStateType } from '@startup/shared';
 import { ProjectContext } from '@startup/shared';
 import { EventBus } from './eventBus.js';
 import { TelemetryService } from './telemetryService.js';
+import { LLMService } from './llmService.js';
 import { GraphFormatter } from '@/helpers/graphFormatter.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LangGraphStreamEvent } from '@/types/index.js';
@@ -53,7 +54,7 @@ export class GraphService {
           chunkCounter++;
           if (chunkCounter % 10 === 0) {
             const estimatedTokens = Math.ceil(reasoningBuffer.length / 4);
-            const currentNodeCost = TelemetryService.calculateCost(
+            const currentNodeCost = LLMService.calculateCost(
               { prompt: 0, completion: estimatedTokens },
               event.metadata?.model_name || "default"
             );

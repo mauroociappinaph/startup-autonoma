@@ -2,8 +2,9 @@ import { z } from "zod";
 import { BaseMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { LLMFactory } from "./llmFactory.js";
-import { LLMFactoryOptions } from "@/types/llm.types.js";
+import { LLMFactoryOptions, LangChainResponseWithUsage } from "@/types/llm.types.js";
 import { ContextManager } from "../helpers/contextManager.js";
+import { MODEL_PRICING } from "../config/pricing.js";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 import { TelemetryService } from "./telemetryService.js";
@@ -34,6 +35,16 @@ function withTimeout<T>(promise: Promise<T>, ms: number = 120000): Promise<T> {
  * Garantiza cumplimiento de Ley #13 (Trimming) y Ley #14 (Structured Data).
  */
 export class LLMService {
+  /**
+   * Calculates USD cost based on usage and model.
+   */
+  public static calculateCost(usage: { prompt: number; completion: number }, model: string): number {
+    const pricing = MODEL_PRICING[model] || MODEL_PRICING["default"];
+    const inputCost = (usage.prompt / 1_000_000) * pricing.input;
+    const outputCost = (usage.completion / 1_000_000) * pricing.output;
+    return inputCost + outputCost;
+  }
+
   /**
    * Obtiene datos estructurados garantizados junto con telemetría completa.
    */
@@ -70,16 +81,16 @@ export class LLMService {
         // Intento de salida estructurada nativa (o manual si es nvidia)
         const currentProvider = LLMFactory.getProviderForType(currentConfig.type);
         if (currentProvider === "nvidia") {
-          const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema);
+          const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema, currentConfig.timeoutMs);
           const latency = performance.now() - startTime;
-          const cost = TelemetryService.calculateCost(result.usage, modelName);
+          const cost = this.calculateCost(result.usage, modelName);
           return { ...result, cost, latency, model: modelName };
         }
 
         const modelWithStructuredOutput = currentModel.withStructuredOutput(schema, { includeRaw: true });
-        const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), 120000)) as { 
+        const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), currentConfig.timeoutMs || 120000)) as { 
           parsed: z.infer<T>, 
-          raw: { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } } 
+          raw: LangChainResponseWithUsage 
         };
         
         const usage = response.raw.usage_metadata || {
@@ -95,7 +106,7 @@ export class LLMService {
           completion: usage.output_tokens || 0
         };
 
-        const cost = TelemetryService.calculateCost(usageData, modelName);
+        const cost = this.calculateCost(usageData, modelName);
 
         return {
           data: response.parsed as z.infer<T>,
@@ -112,9 +123,9 @@ export class LLMService {
           // Segundo intento: Mismo modelo pero forzamos modo manual
           SacredLogger.info("Reintentando con modo manual...", "LLM_SERVICE");
           try {
-             const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema);
+             const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema, currentConfig.timeoutMs);
              const latency = performance.now() - startTime;
-             const cost = TelemetryService.calculateCost(result.usage, modelName);
+             const cost = this.calculateCost(result.usage, modelName);
              return { ...result, cost, latency, model: modelName };
           } catch (manualError: unknown) {
              lastError = manualError as Error;
@@ -158,10 +169,10 @@ export class LLMService {
     const modelWithName = rawModel as BaseChatModel & { modelName?: string; model?: string };
     const modelName = modelWithName.modelName || modelWithName.model || "unknown";
 
-    const response = await withTimeout(rawModel.invoke(trimmedMessages), 120000);
+    const response = await withTimeout(rawModel.invoke(trimmedMessages), config.timeoutMs || 120000);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
-    const responseWithMetadata = response as { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } };
+    const responseWithMetadata = response as LangChainResponseWithUsage;
     const usage = responseWithMetadata.usage_metadata || {
       input_tokens: 0,
       output_tokens: 0,
@@ -175,7 +186,7 @@ export class LLMService {
     };
 
     const latency = performance.now() - startTime;
-    const cost = TelemetryService.calculateCost(usageData, modelName);
+    const cost = this.calculateCost(usageData, modelName);
 
     return {
       content,
@@ -193,7 +204,8 @@ export class LLMService {
   private static async _getManualStructuredData<T extends z.ZodTypeAny>(
     model: BaseChatModel, 
     messages: BaseMessage[], 
-    schema: T
+    schema: T,
+    timeoutMs?: number
   ): Promise<{ data: z.infer<T>; usage: { total: number; prompt: number; completion: number } }> {
     const parser = StructuredOutputParser.fromZodSchema(schema);
     const formatInstructions = parser.getFormatInstructions();
@@ -212,11 +224,11 @@ export class LLMService {
       return { role, content };
     });
 
-    const response = await withTimeout(model.invoke(formattedMessages), 120000);
+    const response = await withTimeout(model.invoke(formattedMessages), timeoutMs || 120000);
     const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
     
-    // Cast seguro para evitar eslint error de no-explicit-any
-    const responseWithMetadata = response as { usage_metadata?: { total_tokens?: number, input_tokens?: number, output_tokens?: number } };
+    // Seguro para evitar eslint error de no-explicit-any
+    const responseWithMetadata = response as LangChainResponseWithUsage;
     const usage = responseWithMetadata.usage_metadata || {
       input_tokens: 0,
       output_tokens: 0,

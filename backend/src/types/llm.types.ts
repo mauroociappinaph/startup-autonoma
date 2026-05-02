@@ -32,4 +32,16 @@ export interface LLMFactoryOptions {
   type: LLMModelType;
   temperature?: number;
   streaming?: boolean;
+  timeoutMs?: number;
+}
+
+/**
+ * Interfaz formal para la respuesta de LangChain que incluye metadatos de uso.
+ */
+export interface LangChainResponseWithUsage {
+  usage_metadata?: {
+    total_tokens?: number;
+    input_tokens?: number;
+    output_tokens?: number;
+  };
 }
