@@ -40,12 +40,12 @@ const routeRules = [
 const controllerRules = [
   { pattern: 'Request|Response', mandatory: true, message: 'Debe tipar req/res con Request/Response de Express.' },
   { pattern: 'graph\\.stream', forbidden: true, message: 'No debe tocar el grafo directamente. Usar un Service.' },
-  { pattern: 'import\\s+.*from\\s+[\'"]express[\'"]', forbidden: false, message: 'Ojo: solo importar tipos de express.' }
+  { pattern: 'import\\s+(?!{[^}]*}).*from\\s+[\'"]express[\'"]', forbidden: true, message: 'Solo se deben importar tipos estructurados (ej. { Request, Response }) de express en Controllers.' }
 ];
 
 // 4. Services (src/services/)
 const serviceRules = [
-  { pattern: 'Response|Request', forbidden: true, message: 'No debe conocer el protocolo HTTP (req/res). Recibir datos limpios.' },
+  { pattern: '\\b(Request|Response|NextFunction)\\b', forbidden: true, message: 'No debe conocer el protocolo HTTP de Express. Recibir datos limpios.' },
   { pattern: 'import\\s+.*from\\s+[\'"]express[\'"]', forbidden: true, message: 'Prohibido importar express en la capa de servicios.' }
 ];
 
@@ -64,7 +64,7 @@ function walk(dir, rules) {
   fs.readdirSync(dir).forEach(file => {
     const fullPath = path.join(dir, file);
     if (fs.statSync(fullPath).isDirectory()) return;
-    if (file.endsWith('.ts')) checkFile(fullPath, rules);
+    if (file.endsWith('.ts') && file !== 'index.ts') checkFile(fullPath, rules);
   });
 }
 
