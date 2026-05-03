@@ -1,5 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import { write_file, patch_file } from "@/tools/fs.js";
 import { CodeWriterInstructionSchema } from "@/types/code-writer.types.js";
 import { incrementIteration } from "@/helpers/index.js";
@@ -17,7 +17,7 @@ export async function code_writer_node(state: AgentStateType) {
   try {
     // 1. Encontrar la instrucción de escritura en los mensajes más recientes
     const instructionMessage = state.messages.find(
-      (m): m is AIMessage => m instanceof AIMessage && typeof m.content === "string" && m.content.includes("[CHIEF_DELEGATION] Delegando capacidad de escritura")
+      (m: BaseMessage): m is AIMessage => m instanceof AIMessage && typeof m.content === "string" && m.content.includes("[CHIEF_DELEGATION] Delegando capacidad de escritura")
     );
 
     if (!instructionMessage || !("code_writer_instruction" in instructionMessage.additional_kwargs)) {

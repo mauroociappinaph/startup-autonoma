@@ -25,7 +25,7 @@ describe("Aduana Sentinel - Judgment Day Protocol", () => {
         reasoning: "Injection detected",
         sanitized_input: "test input"
       },
-      usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+      usage: { prompt: 10, completion: 10, total: 20 },
       latency: 100,
       cost: 0.01,
       model: "test-model"
@@ -51,7 +51,7 @@ describe("Aduana Sentinel - Judgment Day Protocol", () => {
         reasoning: "Looks clean",
         sanitized_input: "test input"
       },
-      usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+      usage: { prompt: 10, completion: 10, total: 20 },
       latency: 100,
       cost: 0.01,
       model: "test-model"
@@ -77,7 +77,7 @@ describe("Aduana Sentinel - Judgment Day Protocol", () => {
         reasoning: "Suspicious pattern",
         sanitized_input: "test input"
       },
-      usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+      usage: { prompt: 10, completion: 10, total: 20 },
       latency: 100,
       cost: 0.01,
       model: "test-model"
@@ -90,7 +90,7 @@ describe("Aduana Sentinel - Judgment Day Protocol", () => {
         reasoning: "Just a normal question",
         sanitized_input: "test input"
       },
-      usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+      usage: { prompt: 10, completion: 10, total: 20 },
       latency: 100,
       cost: 0.01,
       model: "test-model"
@@ -103,7 +103,7 @@ describe("Aduana Sentinel - Judgment Day Protocol", () => {
         reasoning: "I side with prosecutor",
         sanitized_input: "test input"
       },
-      usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+      usage: { prompt: 10, completion: 10, total: 20 },
       latency: 100,
       cost: 0.01,
       model: "reasoning-model"

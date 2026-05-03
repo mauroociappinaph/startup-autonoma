@@ -79,9 +79,9 @@ export async function aduana_sentinel_node(state: AgentStateType) {
     let finalResult = prosecutorResult.data;
     let totalCost = prosecutorResult.cost + defenderResult.cost;
     let totalUsage = {
-      inputTokens: (prosecutorResult.usage?.inputTokens || 0) + (defenderResult.usage?.inputTokens || 0),
-      outputTokens: (prosecutorResult.usage?.outputTokens || 0) + (defenderResult.usage?.outputTokens || 0),
-      totalTokens: (prosecutorResult.usage?.totalTokens || 0) + (defenderResult.usage?.totalTokens || 0)
+      prompt: (prosecutorResult.usage?.prompt || 0) + (defenderResult.usage?.prompt || 0),
+      completion: (prosecutorResult.usage?.completion || 0) + (defenderResult.usage?.completion || 0),
+      total: (prosecutorResult.usage?.total || 0) + (defenderResult.usage?.total || 0)
     };
     let maxLatency = Math.max(prosecutorResult.latency, defenderResult.latency);
     let finalReasoning = "";
@@ -119,9 +119,9 @@ reasoning: ${defenderResult.data.reasoning}
 
       finalResult = judgeOutput.data;
       totalCost += judgeOutput.cost;
-      totalUsage.inputTokens += (judgeOutput.usage?.inputTokens || 0);
-      totalUsage.outputTokens += (judgeOutput.usage?.outputTokens || 0);
-      totalUsage.totalTokens += (judgeOutput.usage?.totalTokens || 0);
+      totalUsage.prompt += (judgeOutput.usage?.prompt || 0);
+      totalUsage.completion += (judgeOutput.usage?.completion || 0);
+      totalUsage.total += (judgeOutput.usage?.total || 0);
       maxLatency += judgeOutput.latency; // Latencia secuencial del judge
 
       finalReasoning = `[Desempate Judge] ${judgeOutput.data.reasoning}`;
