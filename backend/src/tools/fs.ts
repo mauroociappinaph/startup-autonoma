@@ -2,15 +2,18 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 
-// Definimos la raíz del proyecto para el sandboxing
-// Asumimos que el agente opera desde la raíz del monorepo
-const PROJECT_ROOT = path.resolve(process.cwd(), ".."); 
+// Definimos la raíz del proyecto para el sandboxing de forma robusta
+// fs.ts está en backend/src/tools/, por lo que subimos 3 niveles para llegar a la raíz del monorepo
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PROJECT_ROOT = path.resolve(__dirname, "..", "..", ".."); 
 
 /**
  * Valida que una ruta esté dentro de los límites del proyecto.
  */
-function validatePath(targetPath: string) {
+export function validatePath(targetPath: string) {
   const resolved = path.resolve(PROJECT_ROOT, targetPath);
   if (!resolved.startsWith(PROJECT_ROOT)) {
     throw new Error(`Acceso denegado: La ruta ${targetPath} está fuera de los límites del proyecto.`);
