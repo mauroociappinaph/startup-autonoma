@@ -203,7 +203,6 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /feat-143-sentinel-sse
 │   │   ├── /feat-36-judgment-day
 │   │   ├── /fix
-│   │   ├── /fix-151-idempotent-state
 │   │   ├── /issue-114-operations-chief
 │   │   ├── /issue-144-redis-janitor
 │   │   ├── /optimize-entry-flow

@@ -16,13 +16,14 @@ El sistema SHALL evitar delegaciones redundantes a un mismo dominio si el objeti
 - THEN el CEO MUST elegir `finish` en lugar de volver a delegar al `SoftwareChief`.
 
 ### Requirement: Gestión Determinista del Estado de Control
-El estado del grafo MUST permitir la limpieza explícita de los campos de control (`active_chief` y `next_node`) para evitar ciclos de retorno involuntarios.
+El estado del grafo MUST permitir la limpieza explícita de los campos de control (`active_chief`, `next_node` y `plan`) para evitar ciclos de retorno involuntarios.
 
-#### Scenario: Limpieza de Jefe Activo
-- GIVEN un `SoftwareChief` que ha terminado su sub-misión.
-- WHEN el nodo retorna una actualización con `active_chief: undefined`.
-- THEN el reducer de estado MUST actualizar el valor a `undefined` (limpiando el campo).
-- AND el `circuit_breaker` MUST redirigir al `ceo` como fallback por defecto.
+#### Scenario: Limpieza de Estado en CEO al Finalizar
+- GIVEN un CEO que decide finalizar la misión (`next_step: "finish"`).
+- WHEN el CEO actualiza el estado.
+- THEN el sistema MUST forzar `active_chief: undefined`, `next_node: undefined` y `plan: []`.
+- AND estas actualizaciones MUST realizarse incluso si el LLM retorna alucinaciones en campos de delegación.
+- AND el `circuit_breaker` MUST redirigir al nodo `END` al detectar el estado de control vacío.
 
 ### Requirement: Razonamiento Contextual (CoT)
 Todo agente Chief o CEO MUST realizar un análisis de progreso antes de cada decisión técnica.
