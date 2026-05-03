@@ -162,6 +162,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /test-project
 │   │   ├── /test-project-001
 │   │   ├── /test-project-1777478222266
+├── backend_check.log
 ├── commitlint.config.js
 ├── docker-compose.yml
 ├── /docs
@@ -203,7 +204,6 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /feat-143-sentinel-sse
 │   │   ├── /feat-36-judgment-day
 │   │   ├── /fix
-│   │   ├── /fix-152-filesystem-root-bug
 │   │   ├── /issue-114-operations-chief
 │   │   ├── /issue-144-redis-janitor
 │   │   ├── /optimize-entry-flow

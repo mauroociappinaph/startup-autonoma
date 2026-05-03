@@ -1,6 +1,6 @@
 import { AgentStateType } from "@startup/shared";
 import { aiEngineClient } from "@/services/aiEngineClient.js";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import { incrementIteration } from "@/helpers/index.js";
 import { AIEngineTask } from "@/types/index.js";
 import { TraceContext } from "@/services/traceContext.js";
@@ -28,7 +28,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
   }
 
   // IDEMPOTENCIA: Verificar si ya obtuvimos el resultado para esta tarea específica
-  const existingResult = state.messages.find(m => 
+  const existingResult = state.messages.find((m: BaseMessage) => 
     m instanceof AIMessage && 
     typeof m.content === "string" && 
     m.content.includes(`[WORKER_RESULT] Resultado de ${aiTask.worker_name}`) &&

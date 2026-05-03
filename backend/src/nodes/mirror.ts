@@ -1,7 +1,7 @@
 import { AgentStateType } from "@startup/shared";
 import { LLMService } from "@/services/llmService.js";
 import { MirrorResponseSchema } from "@/types/mirror.types.js";
-import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
+import { SystemMessage, HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import { SacredLogger } from "@/helpers/logger.js";
 import { prepareNodeUpdate } from "@/helpers/index.js";
 
@@ -13,7 +13,7 @@ export async function mirror_node(state: AgentStateType) {
   SacredLogger.node("MIRROR (INTROSPECCIÓN)");
 
   // Buscamos el prompt original del usuario en los mensajes
-  const originalPrompt = state.messages.find(m => m._getType() === 'human')?.content || "";
+  const originalPrompt = state.messages.find((m: BaseMessage) => m._getType() === 'human')?.content || "";
 
   if (!originalPrompt) {
     SacredLogger.error("No se encontró un prompt original en el historial.", "MIRROR");
