@@ -34,7 +34,7 @@ export async function prepareNodeUpdate(
   // 3. Prepare State Updates
   // IMPORTANT: Calculate absolute values to make state explicit, except for additive reducers.
   return {
-    iteration_count: 1,
+    iteration_count: (state.iteration_count || 0) + 1,
     total_cost_usd: (state.total_cost_usd || 0) + metadata.cost,
     token_usage: {
       prompt: (state.token_usage?.prompt || 0) + metadata.usage.prompt,
@@ -51,6 +51,6 @@ export async function prepareNodeUpdate(
  */
 export function incrementIteration(state: AgentStateType): Partial<AgentStateType> {
   return {
-    iteration_count: 1
+    iteration_count: (state.iteration_count || 0) + 1
   };
 }

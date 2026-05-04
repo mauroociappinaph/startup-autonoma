@@ -33,15 +33,15 @@ export class RedisMock {
       ltrim: jest.fn<(k: string, s: number, e: number) => RedisPipeline>().mockImplementation(() => pipelineObj),
       expire: jest.fn<(k: string, s: number) => RedisPipeline>().mockImplementation(() => pipelineObj),
       hincrbyfloat: jest.fn<(k: string, f: string, v: number) => RedisPipeline>().mockImplementation((k, f, v) => {
-        this.hincrbyfloat(k, f, v);
+        this.hincrbyfloatSync(k, f, v);
         return pipelineObj;
       }),
       hincrby: jest.fn<(k: string, f: string, v: number) => RedisPipeline>().mockImplementation((k, f, v) => {
-        this.hincrby(k, f, v);
+        this.hincrbySync(k, f, v);
         return pipelineObj;
       }),
       hset: jest.fn<(k: string, f: string, v: string | number) => RedisPipeline>().mockImplementation((k, f, v) => {
-        this.hset(k, f, v);
+        this.hsetSync(k, f, v);
         return pipelineObj;
       }),
       exec: jest.fn<() => Promise<unknown[]>>().mockResolvedValue([]),
@@ -49,7 +49,8 @@ export class RedisMock {
     return pipelineObj;
   }
 
-  async hincrbyfloat(key: string, field: string, value: number): Promise<number> {
+  // Synchronous versions for internal mock use
+  private hincrbyfloatSync(key: string, field: string, value: number): number {
     if (!this.storage[key]) this.storage[key] = {};
     const current = parseFloat(this.storage[key][field] || "0");
     const newValue = current + value;
@@ -57,12 +58,27 @@ export class RedisMock {
     return newValue;
   }
 
-  async hincrby(key: string, field: string, value: number): Promise<number> {
+  private hincrbySync(key: string, field: string, value: number): number {
     if (!this.storage[key]) this.storage[key] = {};
     const current = parseInt(this.storage[key][field] || "0", 10);
     const newValue = current + value;
     this.storage[key][field] = newValue.toString();
     return newValue;
+  }
+
+  private hsetSync(key: string, field: string, value: string | number): number {
+    if (!this.storage[key]) this.storage[key] = {};
+    this.storage[key][field] = value.toString();
+    return 1;
+  }
+
+  // Public async API
+  async hincrbyfloat(key: string, field: string, value: number): Promise<number> {
+    return this.hincrbyfloatSync(key, field, value);
+  }
+
+  async hincrby(key: string, field: string, value: number): Promise<number> {
+    return this.hincrbySync(key, field, value);
   }
 
   async hgetall(key: string): Promise<Record<string, string>> {
@@ -96,9 +112,7 @@ export class RedisMock {
   }
 
   async hset(key: string, field: string, value: string | number): Promise<number> {
-    if (!this.storage[key]) this.storage[key] = {};
-    this.storage[key][field] = value.toString();
-    return 1;
+    return this.hsetSync(key, field, value);
   }
 
   async quit(): Promise<string> {
