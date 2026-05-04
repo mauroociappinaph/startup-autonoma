@@ -8,3 +8,4 @@ export * from "./StrategyCard";
 export * from "./SystemHealth";
 export * from "./StatusIndicators";
 export * from "./BudgetControl";
+export * from "./LiveSequenceDiagram";

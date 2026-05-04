@@ -13,7 +13,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CustomAgentNode } from "./CustomAgentNode";
-import { type AgentNodeData } from "@/types/index";
+import { type AgentNodeData } from "@startup/shared";
 import { motion } from "framer-motion";
 
 const nodeTypes = {
