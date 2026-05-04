@@ -240,10 +240,12 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── types.ts
 │   ├── quick-commit.ts
 ├── /skills
+├── task.md
 ├── tsconfig.json
 ├── turbo.json
 ├── /types
 │   ├── index.ts
+├── walkthrough.md
 ```
 
 ---

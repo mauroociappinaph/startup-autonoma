@@ -1,15 +1,22 @@
 import { Request, Response } from "express";
-import { telemetryService } from "../services/telemetryService.js";
+import { TelemetryService, telemetryService as defaultTelemetryService } from "../services/telemetryService.js";
 import { SacredLogger } from "../helpers/logger.js";
 
 /**
- * TelemetryController: Maneja las peticiones de métricas de infraestructura.
+ * TelemetryController: Handles infrastructure metrics requests.
+ * Uses Dependency Injection [DI] for better testability [ease of testing].
  */
 export class TelemetryController {
+  private telemetryService: TelemetryService;
+
+  constructor(service: TelemetryService = defaultTelemetryService) {
+    this.telemetryService = service;
+  }
+
   /**
-   * Obtiene las métricas de todos los nodos de un proyecto.
+   * Retrieves metrics for all nodes in a project.
    */
-  async getNodesStats(req: Request, res: Response) {
+  async getNodesStats(req: Request, res: Response): Promise<Response> {
     const projectId = req.params.projectId as string;
 
     if (!projectId) {
@@ -17,18 +24,19 @@ export class TelemetryController {
     }
 
     try {
-      const stats = await telemetryService.getNodesStats(projectId);
+      const stats = await this.telemetryService.getNodesStats(projectId);
       return res.json(stats);
     } catch (error) {
-      SacredLogger.error(`Error obteniendo stats de telemetría: ${(error as Error).message}`, "TELEMETRY_CONTROLLER");
+      const errorMessage = (error as Error).message;
+      SacredLogger.error(`Error fetching telemetry stats: ${errorMessage}`, "TELEMETRY_CONTROLLER");
       return res.status(500).json({ error: "Internal server error" });
     }
   }
 
   /**
-   * Obtiene las estadísticas globales del proyecto.
+   * Retrieves global project statistics.
    */
-  async getProjectStats(req: Request, res: Response) {
+  async getProjectStats(req: Request, res: Response): Promise<Response> {
     const projectId = req.params.projectId as string;
 
     if (!projectId) {
@@ -36,10 +44,11 @@ export class TelemetryController {
     }
 
     try {
-      const stats = await telemetryService.getProjectStats(projectId);
+      const stats = await this.telemetryService.getProjectStats(projectId);
       return res.json(stats);
     } catch (error) {
-      SacredLogger.error(`Error obteniendo stats globales: ${(error as Error).message}`, "TELEMETRY_CONTROLLER");
+      const errorMessage = (error as Error).message;
+      SacredLogger.error(`Error fetching global stats: ${errorMessage}`, "TELEMETRY_CONTROLLER");
       return res.status(500).json({ error: "Internal server error" });
     }
   }
