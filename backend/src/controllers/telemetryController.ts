@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { telemetryService } from "@/services/telemetryService.js";
-import { SacredLogger } from "@/helpers/logger.js";
+import { telemetryService } from "../services/telemetryService.js";
+import { SacredLogger } from "../helpers/logger.js";
 
 /**
  * TelemetryController: Maneja las peticiones de métricas de infraestructura.
@@ -10,7 +10,7 @@ export class TelemetryController {
    * Obtiene las métricas de todos los nodos de un proyecto.
    */
   async getNodesStats(req: Request, res: Response) {
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
 
     if (!projectId) {
       return res.status(400).json({ error: "projectId is required" });
@@ -29,7 +29,7 @@ export class TelemetryController {
    * Obtiene las estadísticas globales del proyecto.
    */
   async getProjectStats(req: Request, res: Response) {
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
 
     if (!projectId) {
       return res.status(400).json({ error: "projectId is required" });

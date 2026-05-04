@@ -5,10 +5,12 @@ import type { Redis } from 'ioredis';
 jest.mock('ioredis', () => {
   const storage: Record<string, Record<string, string>> = {};
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const MockRedis = jest.fn().mockImplementation(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const redisInstance: any = {
       pipeline: jest.fn().mockImplementation(() => {
-        const pipelineObj = {
+        const pipelineObj: any = {
           rpush: jest.fn().mockImplementation(() => pipelineObj),
           lpush: jest.fn().mockImplementation(() => pipelineObj),
           ltrim: jest.fn().mockImplementation(() => pipelineObj),
@@ -30,47 +32,48 @@ jest.mock('ioredis', () => {
         return pipelineObj;
       }),
       hincrbyfloat: jest.fn().mockImplementation((key: any, field: any, value: any) => {
-      if (!storage[key]) storage[key] = {};
-      const current = parseFloat(storage[key][field] || "0");
-      storage[key][field] = (current + value).toString();
-      return Promise.resolve(current + value);
-    }),
-    hincrby: jest.fn().mockImplementation((key: any, field: any, value: any) => {
-      if (!storage[key]) storage[key] = {};
-      const current = parseInt(storage[key][field] || "0", 10);
-      storage[key][field] = (current + value).toString();
-      return Promise.resolve(current + value);
-    }),
-    exec: jest.fn().mockImplementation(() => Promise.resolve([])),
-    hgetall: jest.fn().mockImplementation((key: any) => {
-      return Promise.resolve(storage[key] || {});
-    }),
-    set: jest.fn().mockImplementation((key: any, value: any) => {
-      storage[key] = { value }; // Simplificado para el mock
-      return Promise.resolve("OK");
-    }),
-    get: jest.fn().mockImplementation((key: any) => {
-      return Promise.resolve(storage[key]?.value || null);
-    }),
-    publish: jest.fn().mockImplementation(() => Promise.resolve(1)),
-    rpush: jest.fn().mockReturnThis(),
-    lpush: jest.fn().mockImplementation(() => Promise.resolve(1)),
-    ltrim: jest.fn().mockImplementation(() => Promise.resolve("OK")),
-    lrange: jest.fn().mockImplementation(() => Promise.resolve([])),
-    expire: jest.fn().mockReturnThis(),
-    on: jest.fn(),
-    quit: jest.fn().mockImplementation(() => Promise.resolve("OK")),
-    del: jest.fn().mockImplementation((key: any) => {
-      delete storage[key];
-      return Promise.resolve(1);
-    }),
-    keys: jest.fn().mockImplementation((pattern: string) => {
-      const regexStr = pattern
-        .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
-        .replace(/\*/g, '.*');               // Convert Redis wildcard to Regex wildcard
-      const regex = new RegExp("^" + regexStr + "$");
-      return Promise.resolve(Object.keys(storage).filter(k => regex.test(k)));
-    }),
+        if (!storage[key]) storage[key] = {};
+        const current = parseFloat(storage[key][field] || "0");
+        storage[key][field] = (current + value).toString();
+        return Promise.resolve(current + value);
+      }),
+      hincrby: jest.fn().mockImplementation((key: any, field: any, value: any) => {
+        if (!storage[key]) storage[key] = {};
+        const current = parseInt(storage[key][field] || "0", 10);
+        storage[key][field] = (current + value).toString();
+        return Promise.resolve(current + value);
+      }),
+      exec: jest.fn().mockImplementation(() => Promise.resolve([])),
+      hgetall: jest.fn().mockImplementation((key: any) => {
+        return Promise.resolve(storage[key] || {});
+      }),
+      set: jest.fn().mockImplementation((key: any, value: any) => {
+        storage[key] = { value };
+        return Promise.resolve("OK");
+      }),
+      get: jest.fn().mockImplementation((key: any) => {
+        return Promise.resolve(storage[key]?.value || null);
+      }),
+      publish: jest.fn().mockImplementation(() => Promise.resolve(1)),
+      rpush: jest.fn().mockReturnThis(),
+      lpush: jest.fn().mockImplementation(() => Promise.resolve(1)),
+      ltrim: jest.fn().mockImplementation(() => Promise.resolve("OK")),
+      lrange: jest.fn().mockImplementation(() => Promise.resolve([])),
+      expire: jest.fn().mockReturnThis(),
+      on: jest.fn(),
+      quit: jest.fn().mockImplementation(() => Promise.resolve("OK")),
+      del: jest.fn().mockImplementation((key: any) => {
+        delete storage[key];
+        return Promise.resolve(1);
+      }),
+      keys: (jest.fn() as any).mockImplementation((pattern: string) => {
+        const regexStr = pattern
+          .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
+          .replace(/\?/g, '.')                  // Convert Redis ? to Regex .
+          .replace(/\*/g, '.*');               // Convert Redis * to Regex .*
+        const regex = new RegExp("^" + regexStr + "$");
+        return Promise.resolve(Object.keys(storage).filter(k => regex.test(k)));
+      }),
       hset: jest.fn().mockImplementation((key: any, field: any, value: any) => {
         if (!storage[key]) storage[key] = {};
         storage[key][field] = value.toString();
@@ -87,6 +90,7 @@ jest.mock('ioredis', () => {
 
 describe("TelemetryService Integration Tests", () => {
   const projectId = "test-project-" + Date.now();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let telemetryServiceInstance: any;
   let getRedisConnection: () => Redis;
   let closeRedisConnections: () => Promise<void>;
