@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import agentRoutes from '@/routes/agentRoutes.js';
 import projectRoutes from '@/routes/projectRoutes.js';
+import telemetryRoutes from '@/routes/telemetryRoutes.js';
 import { SystemController } from '@/controllers/systemController.js';
 import { agentWorker, setupRedisJanitor, systemWorker } from '@/jobs/index.js';
 import { closeRedisConnections } from '@/db/redis.js';
@@ -27,6 +28,7 @@ app.use(express.json());
  */
 app.use('/api/agents', agentRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/telemetry', telemetryRoutes);
 
 // Health Check delegado al Controller
 app.get('/health', SystemController.healthCheck);

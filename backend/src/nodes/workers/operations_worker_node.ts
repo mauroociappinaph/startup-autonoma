@@ -47,6 +47,7 @@ export async function operations_worker_node(state: AgentStateType) {
       return {
         executive_summary: `Se ha generado un diagrama de secuencia de la ejecución actual en: ${filePath}`,
         completed_steps: (state.completed_steps || []).concat(["generate_sequence_diagram"]),
+        last_diagram: diagram,
         ...incrementIteration(state),
         next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
