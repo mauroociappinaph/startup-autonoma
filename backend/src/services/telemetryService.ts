@@ -57,6 +57,13 @@ export class TelemetryService {
     return opentelemetry.trace.getTracer("startup-backend");
   }
 
+  static calculateCost(usage: { prompt: number; completion: number }, model: string): number {
+    const pricing = MODEL_PRICING[model as keyof typeof MODEL_PRICING] || MODEL_PRICING["gpt-4o"];
+    const promptCost = (usage.prompt / 1000000) * pricing.input;
+    const completionCost = (usage.completion / 1000000) * pricing.output;
+    return promptCost + completionCost;
+  }
+
 
 
   /**
@@ -67,19 +74,31 @@ export class TelemetryService {
     model: string;
     latency: number;
     usage: { total: number; prompt: number; completion: number };
-    cost: number;
+    cost?: number;
     trace_id?: string;
   }) {
-    const cost = data.cost;
+    const cost = data.cost ?? TelemetryService.calculateCost(data.usage, data.model);
     const redis = getRedisConnection();
     const statsKey = `${TelemetryService.KEY_PREFIX}${projectId}`;
+    const nodeStatsKey = `${TelemetryService.KEY_PREFIX}${projectId}:node:${data.node}`;
     
     // Update accumulated values in Redis atomically
     const pipeline = redis.pipeline();
+    
+    // Global stats
     pipeline.hincrbyfloat(statsKey, "total_cost_usd", cost);
     pipeline.hincrby(statsKey, "total_tokens", data.usage.total);
     pipeline.hincrby(statsKey, "total_runs", 1);
     pipeline.hincrbyfloat(statsKey, "total_latency_ms", data.latency);
+
+    // Per-node stats
+    pipeline.hincrbyfloat(nodeStatsKey, "total_cost_usd", cost);
+    pipeline.hincrby(nodeStatsKey, "total_tokens", data.usage.total);
+    pipeline.hincrby(nodeStatsKey, "total_runs", 1);
+    pipeline.hincrbyfloat(nodeStatsKey, "total_latency_ms", data.latency);
+    pipeline.hset(nodeStatsKey, "last_model", data.model);
+    pipeline.hset(nodeStatsKey, "last_latency", data.latency.toString());
+
     await pipeline.exec();
     
     SacredLogger.info(`📊 [TELEMETRÍA] ${data.node} (${data.model}) -> Latencia: ${data.latency.toFixed(2)}ms | Costo: $${cost.toFixed(6)}`, "METRICS");
@@ -117,6 +136,34 @@ export class TelemetryService {
       total_runs: parseInt(stats.total_runs || "0"),
       avg_latency_ms: stats.total_runs ? parseFloat(stats.total_latency_ms || "0") / parseInt(stats.total_runs) : 0
     };
+  }
+
+  /**
+   * Retrieves stats for all nodes in a project.
+   */
+  async getNodesStats(projectId: string) {
+    const redis = getRedisConnection();
+    const pattern = `${TelemetryService.KEY_PREFIX}${projectId}:node:*`;
+    const keys = await redis.keys(pattern);
+    
+    const nodes: Record<string, any> = {};
+    
+    for (const key of keys) {
+      const nodeName = key.split(":").pop() || "unknown";
+      const stats = await redis.hgetall(key);
+      const runs = parseInt(stats.total_runs || "0");
+      
+      nodes[nodeName] = {
+        total_cost_usd: parseFloat(stats.total_cost_usd || "0"),
+        total_tokens: parseInt(stats.total_tokens || "0"),
+        total_runs: runs,
+        avg_latency_ms: runs ? parseFloat(stats.total_latency_ms || "0") / runs : 0,
+        last_model: stats.last_model || "unknown",
+        last_latency: parseFloat(stats.last_latency || "0")
+      };
+    }
+    
+    return nodes;
   }
 }
 

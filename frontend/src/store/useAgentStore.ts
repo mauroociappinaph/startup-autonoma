@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type AgentState, type BackendAgentState } from "@startup/shared";
+import { type AgentState, type BackendAgentState } from "@/types";
 import { agentService } from "@/api/agents";
 
 export const useAgentStore = create<AgentState>((set, get) => ({
@@ -12,6 +12,8 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   executiveSummary: null,
   threadId: "default-thread",
   projectId: null,
+  last_diagram: null,
+  nodeStats: {},
   totalTokens: 0,
   iterations: 0,
   totalCost: 0,
@@ -40,17 +42,35 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     totalCost: state.totalCost + (data.cost || 0),
   })),
 
-  populateState: (state: BackendAgentState) => set({
-    activeNode: state.active_chief || state.next_node || null,
-    currentPlan: state.plan || [],
-    completedSteps: state.completed_steps || [],
-    executiveSummary: state.executive_summary || null,
-    totalTokens: state.token_usage?.total || 0,
-    iterations: state.iteration_count || 0,
-    totalCost: state.total_cost_usd || 0,
-    maxUsdBudget: state.project_context?.maxUsdBudget || 10.0,
-    projectId: state.project_context?.projectId || null,
-  }),
+  fetchNodeStats: async () => {
+    const { projectId } = get();
+    if (!projectId) return;
+    try {
+      const stats = await agentService.getNodeTelemetry(projectId);
+      set({ nodeStats: stats });
+    } catch (error) {
+      console.error("Error fetching node stats:", error);
+    }
+  },
+
+  populateState: (state: BackendAgentState) => {
+    set({
+      activeNode: state.active_chief || state.next_node || null,
+      currentPlan: state.plan || [],
+      completedSteps: state.completed_steps || [],
+      executiveSummary: state.executive_summary || null,
+      totalTokens: state.token_usage?.total || 0,
+      iterations: state.iteration_count || 0,
+      totalCost: state.total_cost_usd || 0,
+      maxUsdBudget: state.project_context?.maxUsdBudget || 10.0,
+      projectId: state.project_context?.projectId || null,
+      last_diagram: state.last_diagram || get().last_diagram,
+    });
+    // Si hay un projectId nuevo, fetch stats
+    if (state.project_context?.projectId) {
+      get().fetchNodeStats();
+    }
+  },
 
   resetSession: () => set({
     thoughts: [],
@@ -60,6 +80,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     currentPlan: [],
     completedSteps: [],
     executiveSummary: null,
+    last_diagram: null,
     totalTokens: 0,
     iterations: 0,
     totalCost: 0,

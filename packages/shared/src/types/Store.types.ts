@@ -11,6 +11,8 @@ export interface AgentState {
   executiveSummary: string | null;
   threadId: string;
   projectId: string | null;
+  last_diagram: string | null;
+  nodeStats: Record<string, any>;
   
   // Telemetría
   totalTokens: number;
@@ -30,6 +32,7 @@ export interface AgentState {
   setMaxUsdBudget: (budget: number) => Promise<void>;
   
   updateTelemetry: (data: { tokens?: number; iterations?: number; cost?: number }) => void;
+  fetchNodeStats: () => Promise<void>;
   populateState: (state: BackendAgentState) => void;
   resetSession: () => void;
   

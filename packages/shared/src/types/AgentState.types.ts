@@ -41,5 +41,6 @@ export interface AgentStateType {
   is_malicious?: boolean; // Detectado por AduanaSentinel
   threat_level?: "none" | "low" | "medium" | "high" | "critical"; // Nivel de amenaza detectado
   security_report?: string; // Reporte detallado del Sentinel
+  last_diagram?: string; // Contenido del último diagrama Mermaid generado
   [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)
 }

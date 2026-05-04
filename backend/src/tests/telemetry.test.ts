@@ -22,6 +22,7 @@ jest.mock('ioredis', () => {
           self.hincrby(k, f, v);
           return this;
         }),
+        hset: jest.fn().mockReturnThis(),
         exec: (jest.fn() as any).mockResolvedValue([]),
       };
     }),
@@ -58,6 +59,15 @@ jest.mock('ioredis', () => {
     quit: jest.fn().mockImplementation(() => Promise.resolve("OK")),
     del: jest.fn().mockImplementation((key: any) => {
       delete storage[key];
+      return Promise.resolve(1);
+    }),
+    keys: jest.fn().mockImplementation((pattern: string) => {
+      const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
+      return Promise.resolve(Object.keys(storage).filter(k => regex.test(k)));
+    }),
+    hset: jest.fn().mockImplementation((key: any, field: any, value: any) => {
+      if (!storage[key]) storage[key] = {};
+      storage[key][field] = value.toString();
       return Promise.resolve(1);
     })
   }));

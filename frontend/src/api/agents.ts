@@ -41,5 +41,13 @@ export const agentService = {
    */
   async updateProjectBudget(projectId: string, maxUsdBudget: number) {
     return apiClient.patch(`/projects/${projectId}/budget`, { maxUsdBudget });
+  },
+
+  /**
+   * Obtiene la telemetría detallada por cada nodo del proyecto.
+   */
+  async getNodeTelemetry(projectId: string) {
+    const response = await apiClient.get(`/telemetry/${projectId}/nodes`);
+    return response.data;
   }
 };
