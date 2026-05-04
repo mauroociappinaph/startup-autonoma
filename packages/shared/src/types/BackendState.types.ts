@@ -18,5 +18,6 @@ export interface BackendAgentState {
   };
   iteration_count: number;
   total_cost_usd?: number;
+  last_diagram?: string;
   [key: string]: unknown;
 }

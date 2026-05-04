@@ -184,4 +184,11 @@ export const AgentAnnotation = Annotation.Root({
     reducer: (prev, next) => next ?? prev,
     default: () => false,
   }),
+  /**
+   * Contenido del último diagrama Mermaid generado.
+   */
+  last_diagram: Annotation<string | undefined>({
+    reducer: (prev, next) => next || prev,
+    default: () => undefined,
+  }),
 });
