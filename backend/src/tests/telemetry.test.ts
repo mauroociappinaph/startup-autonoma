@@ -1,32 +1,35 @@
 import { describe, it, expect, afterAll, beforeAll, jest } from '@jest/globals';
-import type { TelemetryService as TelemetryServiceType } from '../services/telemetryService.js';
 import type { Redis } from 'ioredis';
 
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
   const storage: Record<string, Record<string, string>> = {};
   
-  const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: jest.fn().mockImplementation(function(this: any) {
-      const self = this;
-      return {
-        rpush: jest.fn().mockReturnThis(),
-        lpush: jest.fn().mockReturnThis(),
-        ltrim: jest.fn().mockReturnThis(),
-        expire: jest.fn().mockReturnThis(),
-        hincrbyfloat: jest.fn().mockImplementation((k, f, v) => {
-          self.hincrbyfloat(k, f, v);
-          return this;
-        }),
-        hincrby: jest.fn().mockImplementation((k, f, v) => {
-          self.hincrby(k, f, v);
-          return this;
-        }),
-        hset: jest.fn().mockReturnThis(),
-        exec: (jest.fn() as any).mockResolvedValue([]),
-      };
-    }),
-    hincrbyfloat: jest.fn().mockImplementation((key: any, field: any, value: any) => {
+  const MockRedis = jest.fn().mockImplementation(() => {
+    const redisInstance: any = {
+      pipeline: jest.fn().mockImplementation(() => {
+        const pipelineObj = {
+          rpush: jest.fn().mockImplementation(() => pipelineObj),
+          lpush: jest.fn().mockImplementation(() => pipelineObj),
+          ltrim: jest.fn().mockImplementation(() => pipelineObj),
+          expire: jest.fn().mockImplementation(() => pipelineObj),
+          hincrbyfloat: jest.fn().mockImplementation((k, f, v) => {
+            redisInstance.hincrbyfloat(k, f, v);
+            return pipelineObj;
+          }),
+          hincrby: jest.fn().mockImplementation((k, f, v) => {
+            redisInstance.hincrby(k, f, v);
+            return pipelineObj;
+          }),
+          hset: jest.fn().mockImplementation((k, f, v) => {
+            redisInstance.hset(k, f, v);
+            return pipelineObj;
+          }),
+          exec: (jest.fn() as any).mockResolvedValue([]),
+        };
+        return pipelineObj;
+      }),
+      hincrbyfloat: jest.fn().mockImplementation((key: any, field: any, value: any) => {
       if (!storage[key]) storage[key] = {};
       const current = parseFloat(storage[key][field] || "0");
       storage[key][field] = (current + value).toString();
@@ -62,15 +65,20 @@ jest.mock('ioredis', () => {
       return Promise.resolve(1);
     }),
     keys: jest.fn().mockImplementation((pattern: string) => {
-      const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
+      const regexStr = pattern
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
+        .replace(/\*/g, '.*');               // Convert Redis wildcard to Regex wildcard
+      const regex = new RegExp("^" + regexStr + "$");
       return Promise.resolve(Object.keys(storage).filter(k => regex.test(k)));
     }),
-    hset: jest.fn().mockImplementation((key: any, field: any, value: any) => {
-      if (!storage[key]) storage[key] = {};
-      storage[key][field] = value.toString();
-      return Promise.resolve(1);
-    })
-  }));
+      hset: jest.fn().mockImplementation((key: any, field: any, value: any) => {
+        if (!storage[key]) storage[key] = {};
+        storage[key][field] = value.toString();
+        return Promise.resolve(1);
+      })
+    };
+    return redisInstance;
+  });
   return {
     Redis: MockRedis,
     default: MockRedis
