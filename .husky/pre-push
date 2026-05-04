@@ -28,9 +28,10 @@ fi
 # 2. Healthcheck de Infraestructura (Solo si hay Docker)
 # Lo hacemos opcional y rápido
 echo "🐳 Verificando Docker..."
-node scripts/check-docker.js --quick
+node scripts/check-docker.js --quick --strict
 if [ $? -ne 0 ]; then
-  echo "⚠️  Advertencia: Docker detectó inconsistencias, pero permitimos el push."
+  echo "❌ Error: La infraestructura Docker no está en un estado válido."
+  exit 1
 fi
 
 echo "🚀 Validación completada en tiempo récord. ¡Buen viaje!"

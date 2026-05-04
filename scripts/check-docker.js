@@ -8,10 +8,52 @@
 
 import { execSync } from "child_process";
 import { request } from "http";
+import net from "net";
+
+const isStrict = process.argv.includes("--strict");
+const isQuick = process.argv.includes("--quick");
 
 const log  = (msg) => console.log(`[DOCKER] ✅ ${msg}`);
 const warn = (msg) => console.warn(`[DOCKER] ⚠️  ${msg}`);
-const fail = (msg) => { console.error(`[DOCKER] ❌ ${msg}`); process.exit(1); };
+const fail = (msg) => { 
+  console.error(`[DOCKER] ❌ ${msg}`); 
+  if (isStrict) {
+    process.exit(1); 
+  } else {
+    warn("Continuando porque no estamos en modo --strict...");
+  }
+};
+
+/**
+ * Verifica una conexión TCP básica.
+ */
+function checkTcpConnection(port, label) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    const timeout = 2000;
+
+    socket.setTimeout(timeout);
+    socket.once("connect", () => {
+      socket.destroy();
+      log(`${label} TCP :${port} está abierto.`);
+      resolve(true);
+    });
+
+    socket.once("timeout", () => {
+      socket.destroy();
+      warn(`${label} TCP :${port} timeout.`);
+      resolve(false);
+    });
+
+    socket.once("error", () => {
+      socket.destroy();
+      warn(`${label} TCP :${port} rechazado.`);
+      resolve(false);
+    });
+
+    socket.connect(port, "127.0.0.1");
+  });
+}
 
 // -------------------------------------------------------
 // 1. Verificar el daemon de Docker
@@ -21,7 +63,7 @@ try {
   log("Docker Engine está activo.");
 } catch {
   warn("Docker no está corriendo. Saltando chequeo de contenedores...");
-  process.exit(0); // No bloqueamos si no hay Docker local (ej: CI sin Docker)
+  process.exit(0); // No bloqueamos si no hay Docker local
 }
 
 // -------------------------------------------------------
@@ -43,58 +85,53 @@ let containers = [];
 try {
   const raw = execSync("docker compose ps --format json").toString().trim();
   if (!raw || raw === "[]" || raw === "") {
-    warn("No hay contenedores corriendo. Si es intencional, ignorá este aviso.");
+    warn("No hay contenedores corriendo.");
+    if (isStrict) fail("Se requiere que la infraestructura esté arriba en modo estricto.");
     process.exit(0);
   }
-  // docker compose ps --format json puede devolver NDJSON (una línea por servicio)
-  containers = raw.split("\n").filter(Boolean).map(line => JSON.parse(line));
-} catch {
-  warn("No se pudo parsear el estado de Docker Compose. Saltando...");
+  
+  // Docker Compose V2 puede devolver una lista de objetos o NDJSON
+  if (raw.startsWith("[")) {
+    containers = JSON.parse(raw);
+  } else {
+    containers = raw.split("\n").filter(Boolean).map(line => JSON.parse(line));
+  }
+} catch (e) {
+  warn(`Error parseando Docker Compose ps: ${e.message}`);
+  if (isStrict) fail("Error crítico de validación de infraestructura.");
   process.exit(0);
 }
 
 const total   = containers.length;
-const running = containers.filter(c => c.State === "running" || (c.Status || "").includes("Up")).length;
-const unhealthy = containers.filter(c => (c.Status || "").includes("unhealthy")).length;
+const running = containers.filter(c => c.State === "running" || (c.Status || "").toLowerCase().includes("up")).length;
+const unhealthy = containers.filter(c => (c.Status || "").toLowerCase().includes("unhealthy")).length;
 
 if (unhealthy > 0) {
-  fail(`${unhealthy} contenedor(es) en estado UNHEALTHY. Revisá los logs con: docker compose logs`);
+  fail(`${unhealthy} contenedor(es) en estado UNHEALTHY.`);
 }
 
 if (running < total) {
-  fail(`Tenés ${total - running} contenedores caídos de ${total}. ¡Ponete las pilas!`);
+  fail(`Tenés ${total - running} contenedores caídos de ${total}.`);
 }
 
 log(`Docker Compose: ${running}/${total} servicios en pie.`);
 
 // -------------------------------------------------------
-// 3.5 Verificar volúmenes persistentes
+// 3.5 Verificar conectividad TCP para servicios críticos
 // -------------------------------------------------------
-log("Verificando volúmenes persistentes...");
-try {
-  const volumesRaw = execSync("docker volume ls --format json").toString().trim();
-  const volumeNames = volumesRaw.split("\n").filter(Boolean).map(line => {
-    try {
-      return JSON.parse(line).Name;
-    } catch {
-      return "";
-    }
-  });
+if (!isQuick) {
+  log("Verificando conectividad TCP para servicios críticos...");
+  const dbOk = await checkTcpConnection(5432, "Postgres");
+  const redisOk = await checkTcpConnection(6379, "Redis");
+  const aiEngineOk = await checkTcpConnection(50051, "AI Engine (gRPC)");
 
-  const requiredVolumes = ["startup-autonoma_redis_data", "startup-autonoma_postgres_data"];
-  const missingVolumes = requiredVolumes.filter(v => !volumeNames.some(name => name.includes(v)));
-
-  if (missingVolumes.length > 0) {
-    warn(`Faltan volúmenes persistentes: ${missingVolumes.join(", ")}. ¡Ojo que no vas a tener persistencia!`);
-  } else {
-    log("Volúmenes de persistencia verificados.");
+  if (!dbOk || !redisOk || !aiEngineOk) {
+    fail("Fallo de conectividad TCP en servicios base.");
   }
-} catch {
-  warn("No se pudo verificar los volúmenes de Docker. Saltando...");
 }
 
 // -------------------------------------------------------
-// 4. Verificar que el backend responde el health endpoint
+// 4. Verificar que el backend y frontend responden vía HTTP
 // -------------------------------------------------------
 const backendPort = process.env.BACKEND_PORT || 4000;
 
@@ -105,12 +142,12 @@ function checkHttpHealth(port, path, label) {
         log(`${label} responde OK en :${port}${path}`);
         resolve(true);
       } else {
-        warn(`${label} devolvió status ${res.statusCode}. Puede estar arrancando.`);
+        warn(`${label} devolvió status ${res.statusCode}.`);
         resolve(false);
       }
     });
     req.on("error", () => {
-      warn(`${label} no responde en :${port}${path}. ¿Ya levantaste los servicios?`);
+      warn(`${label} no responde en :${port}${path}.`);
       resolve(false);
     });
     req.setTimeout(3000, () => { req.destroy(); resolve(false); });
@@ -118,12 +155,13 @@ function checkHttpHealth(port, path, label) {
   });
 }
 
-const backendOk  = await checkHttpHealth(backendPort, "/health", "Backend");
-const frontendOk = await checkHttpHealth(3000, "/", "Frontend");
+if (!isQuick) {
+  const backendOk  = await checkHttpHealth(backendPort, "/health", "Backend");
+  const frontendOk = await checkHttpHealth(3000, "/", "Frontend");
 
-if (!backendOk || !frontendOk) {
-  warn("Algunos servicios web no responden, pero los contenedores están arriba. Puede ser cold-start.");
-  // No bloqueamos: el compose healthcheck se encarga de esto en producción.
+  if (!backendOk || !frontendOk) {
+    fail("Algunos servicios web no responden.");
+  }
 }
 
 log("Verificación de Docker finalizada. ¡Dale que va!");
