@@ -8,6 +8,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 - Autónomos pero coordinados vía **LangGraph.js**.
 - Independientes pero colaborativos bajo una jerarquía estricta.
 - Capaces de tomar decisiones, delegar y aprender vía **Engram**.
+- **Obligatorio seguir el flujo definido en [workflow.md](file:///Users/mauroociappina/Desktop/Agentes Personales/openspec/workflow.md).**
 
 **Jerarquía Actualizada:**
 0.  **Agente Mirror (Aduana):** Entrada oficial del grafo. Refina la intención y valida con el humano.

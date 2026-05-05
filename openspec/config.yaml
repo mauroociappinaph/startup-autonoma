@@ -1,34 +1,33 @@
+# openspec/config.yaml
 schema: spec-driven
 
 context: |
-  Tech stack: Turborepo, Node.js (TS), LangGraph.js, Next.js 15, Python (FastAPI).
-  Architecture: Hexagonal/Clean (Chiefs/Workers), gRPC communication.
-  Testing: Jest (Backend), Turbo-driven scripts.
-  Style: ESLint, Prettier, strict typing (No Any).
+  Tech stack: Next.js 15, LangGraph.js, FastAPI, gRPC, Prisma.
+  Architecture: Hierarchical Agent Swarm (Mirror -> CEO -> Chiefs -> Workers).
+  Testing: Jest (Backend), Pytest (AI Engine).
+  Style: ESLint, Prettier, Ruff, Black.
 
 strict_tdd: true
+
+rules:
+  proposal:
+    - Identify affected modules (Frontend, Backend, AI Engine).
+    - Link to existing architectural backlog items.
+  specs:
+    - Must follow Sacred Laws (AGENTS.md).
+    - Define Gherkin scenarios for agent reasoning loops.
+  design:
+    - Include Mermaid sequence diagrams for gRPC/LangGraph flows.
+    - Document ADLs (Architecture Decision Logs).
+  tasks:
+    - Group by domain: Software, Business, Operations.
+    - Max 5 tasks per change batch.
 
 testing:
   runner:
     command: "npm run test"
-    framework: "jest"
-  linter:
-    command: "npm run lint"
-  type_checker:
-    command: "npm run check"
-
-rules:
-  proposal:
-    - Include path alias verification
-    - Identify affected modules
-  specs:
-    - Given/When/Then format
-  design:
-    - Document architecture changes
-  tasks:
-    - Small, atomic tasks
-  apply:
-    - Reasoning-first rule
-    - Strict XML formatting
-  verify:
-    - Compare against all spec scenarios
+    framework: "Jest/Pytest"
+  layers:
+    unit: true
+    integration: true
+    e2e: false
