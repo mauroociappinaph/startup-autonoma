@@ -206,6 +206,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /feat-105-observability-tracing
 │   │   ├── /feat-124-mcp-tool-standardization
 │   │   ├── /feat-143-sentinel-sse
+│   │   ├── /feat-202-aduana-gatekeeper
 │   │   ├── /feat-36-judgment-day
 │   │   ├── /fix
 │   │   ├── /issue-114-operations-chief
