@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # Asegurar que los binarios comunes estén en el PATH
 export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
 
