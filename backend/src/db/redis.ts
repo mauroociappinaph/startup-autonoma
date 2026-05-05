@@ -1,6 +1,5 @@
 import { Redis } from "ioredis";
-
-const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+import { REDIS_URL } from "@/config/env.js";
 
 /**
  * Conexión Redis compartida para BullMQ y el Checkpointer personalizado (via ioredis).

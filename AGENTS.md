@@ -200,6 +200,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 ├── /infra
 ├── /openspec
 │   ├── /changes
+│   │   ├── /arch
 │   │   ├── /archive
 │   │   ├── /feat
 │   │   ├── /feat-105-observability-tracing
