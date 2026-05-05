@@ -163,6 +163,8 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /test-project
 │   │   ├── /test-project-001
 │   │   ├── /test-project-1777478222266
+│   │   ├── /test-project-1777997968056
+│   │   ├── /test-project-1777997976659
 ├── backend_check.log
 ├── commitlint.config.js
 ├── docker-compose.yml

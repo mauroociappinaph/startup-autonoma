@@ -9,31 +9,6 @@ let redisConnection: Redis | null = null;
 let redisSubscriber: Redis | null = null;
 
 /**
- * Retorna la instancia de SacredLogger de forma dinámica para evitar dependencias circulares.
- */
-async function getLogger() {
-  const { SacredLogger } = await import("../helpers/logger.js");
-  return SacredLogger;
-}
-
-/**
- * Configura los límites de memoria de Redis si es posible.
- */
-async function enforceRedisLimits(redis: Redis) {
-  try {
-    // Intentamos configurar maxmemory y política de desalojo
-    // Esto es vital para entornos locales/dev sin configurar
-    await redis.config("SET", "maxmemory", "512mb");
-    await redis.config("SET", "maxmemory-policy", "allkeys-lru");
-    const logger = await getLogger();
-    logger.info("✅ Redis: límites de memoria configurados (256mb, allkeys-lru)", "INFRA");
-  } catch (e) {
-    const logger = await getLogger();
-    logger.warn("⚠️ Redis: no se pudo configurar maxmemory automáticamente. Asegúrate de configurarlo manualmente si es un entorno productivo.", "INFRA");
-  }
-}
-
-/**
  * Retorna la conexión principal de ioredis.
  */
 export const getRedisConnection = (): Redis => {
@@ -42,10 +17,7 @@ export const getRedisConnection = (): Redis => {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
     });
-    console.log("🔴 Redis: conexión establecida");
-    
-    // Lanzamos la configuración de límites de forma asíncrona
-    enforceRedisLimits(redisConnection).catch(console.error);
+    console.info("🔴 [INFRA] Redis: conexión establecida");
   }
   return redisConnection;
 };
@@ -73,5 +45,5 @@ export const closeRedisConnections = async (): Promise<void> => {
   ]);
   redisConnection = null;
   redisSubscriber = null;
-  console.log("🔴 Redis: conexiones cerradas");
+  console.info("🔴 [INFRA] Redis: conexiones cerradas");
 };
