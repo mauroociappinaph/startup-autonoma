@@ -1,4 +1,19 @@
 import 'dotenv/config';
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { SENTRY_DSN_BACKEND, SENTRY_ENABLED } from '@/config/env.js';
+
+if (SENTRY_ENABLED && SENTRY_DSN_BACKEND) {
+  Sentry.init({
+    dsn: SENTRY_DSN_BACKEND,
+    integrations: [
+      nodeProfilingIntegration(),
+    ],
+    tracesSampleRate: 1.0,
+    profilesSampleRate: 1.0,
+  });
+}
+
 import './services/telemetryService.js';
 import express from 'express';
 import cors from 'cors';

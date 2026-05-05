@@ -9,6 +9,19 @@ from fastapi import FastAPI
 
 from app.core.grpc_server import serve
 from app.helpers.telemetry import init_telemetry
+import sentry_sdk
+
+load_dotenv()
+
+sentry_dsn = os.getenv("SENTRY_DSN_AI_ENGINE")
+sentry_enabled = os.getenv("SENTRY_ENABLED", "true").lower() != "false"
+
+if sentry_enabled and sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
 
 # Iniciar Observabilidad Distribuida
 init_telemetry()
@@ -17,8 +30,6 @@ init_telemetry()
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, CURRENT_DIR)
 sys.path.insert(0, os.path.join(CURRENT_DIR, "grpc_generated"))
-
-load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
