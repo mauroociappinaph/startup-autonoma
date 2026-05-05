@@ -37,7 +37,7 @@ registerInstrumentations({
     new ExpressInstrumentation(),
     new GrpcInstrumentation(),
     new RedisInstrumentation(),
-    new PrismaInstrumentation(),
+    // new PrismaInstrumentation(),
   ],
 });
 
@@ -146,7 +146,14 @@ export class TelemetryService {
     const pattern = `${TelemetryService.KEY_PREFIX}${projectId}:node:*`;
     const keys = await redis.keys(pattern);
     
-    const nodes: Record<string, any> = {};
+    const nodes: Record<string, {
+      total_cost_usd: number;
+      total_tokens: number;
+      total_runs: number;
+      avg_latency_ms: number;
+      last_model: string;
+      last_latency: number;
+    }> = {};
     
     for (const key of keys) {
       const nodeName = key.split(":").pop() || "unknown";
