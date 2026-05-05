@@ -2,6 +2,7 @@ import 'dotenv/config';
 import './services/telemetryService.js';
 import express from 'express';
 import cors from 'cors';
+import { PORT, AGENT_CONCURRENCY } from '@/config/env.js';
 import agentRoutes from '@/routes/agentRoutes.js';
 import projectRoutes from '@/routes/projectRoutes.js';
 import telemetryRoutes from '@/routes/telemetryRoutes.js';
@@ -16,7 +17,7 @@ initializeSkills();
 import { tracingMiddleware } from '@/middleware/tracingMiddleware.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+
 
 // Middlewares Globales
 app.use(tracingMiddleware);
@@ -40,8 +41,8 @@ app.listen(PORT, () => {
   SacredLogger.info('==========================================================');
 
   // Iniciamos el worker de BullMQ al arrancar el servidor
-  const concurrency = parseInt(process.env.AGENT_CONCURRENCY || '2', 10);
-  agentWorker.start(concurrency);
+  agentWorker.start(AGENT_CONCURRENCY);
+
 
   // Iniciamos el Janitor de Redis (Gap 144)
   setupRedisJanitor().catch(err => SacredLogger.error(`Error al programar Janitor: ${err.message}`, "INFRA"));
