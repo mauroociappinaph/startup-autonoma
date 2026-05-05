@@ -26,6 +26,13 @@ Este documento define el ciclo de vida de una tarea en el ecosistema de la Start
 
 ## Fase 5: Cierre y Merge
 1. **Review Final**: El humano (o agente senior) valida el resultado.
-2. **Merge a Develop**: 
+2. **Merge a Develop**:
    - `git checkout develop && git merge --no-ff feat/issue-[ID]-[slug]`
-3. **Cierre de Issue**: Cerrar la issue en GitHub referenciando el commit de merge.
+3. ** Borrar rama remota y local  **:
+   - `git push origin --delete feat/issue-[ID]-[slug]`
+   - `git branch -d feat/issue-[ID]-[slug]`
+   4. Hacer pull en develop
+   - `git checkout develop && git pull origin develop`
+5. **Cierre de Issue**: Cerrar la issue en GitHub referenciando el commit de merge.
+
+

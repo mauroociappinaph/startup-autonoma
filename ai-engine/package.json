@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "([ -f .venv/bin/ruff ] && .venv/bin/ruff check .) || python3 -m ruff check .",
     "format": "([ -f .venv/bin/ruff ] && .venv/bin/ruff format .) || python3 -m ruff format .",
-    "test": "([ -f .venv/bin/pytest ] && .venv/bin/pytest) || python3 -m pytest",
+    "test": "PYTHONPATH=. ([ -f .venv/bin/pytest ] && .venv/bin/pytest) || PYTHONPATH=. python3 -m pytest",
     "check": "([ -f .venv/bin/ruff ] && .venv/bin/ruff check .) || python3 -m ruff check ."
   }
 }
