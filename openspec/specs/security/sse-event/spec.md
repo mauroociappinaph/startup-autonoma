@@ -9,6 +9,7 @@
   `agent`, `threat_level`, `decision`, `reasoning`, `threadId`.
 - **RF-3**: En caso de error interno del Sentinel, el nodo DEBE loguear via
   `SacredLogger.error` (NO `console.error`) y devolver un estado de `pass` conservador.
+- **RF-4**: TODO el flujo de seguridad y entrega de eventos SSE DEBE estar validado mediante tests automatizados (Unit/Integration) para garantizar la integridad del perímetro.
 
 ## Escenarios de Prueba
 
