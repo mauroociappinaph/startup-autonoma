@@ -1,56 +1,29 @@
-import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
-import { HumanMessage } from '@langchain/core/messages';
-import { AgentStateType } from '@startup/shared';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 
-// Mockeamos ioredis
-jest.mock('ioredis', () => {
-  const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: (jest.fn() as any).mockImplementation(() => ({ 
-      rpush: (jest.fn() as any).mockReturnThis(), 
-      ltrim: (jest.fn() as any).mockReturnThis(), 
-      expire: (jest.fn() as any).mockReturnThis(), 
-      hincrbyfloat: (jest.fn() as any).mockReturnThis(), 
-      hincrby: (jest.fn() as any).mockReturnThis(), 
-      exec: (jest.fn() as any).mockResolvedValue([]) 
-    })),
-    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
-    hincrby: (jest.fn() as any).mockReturnThis(),
-    rpush: (jest.fn() as any).mockReturnThis(),
-    ltrim: (jest.fn() as any).mockReturnThis(),
-    expire: (jest.fn() as any).mockReturnThis(),
-    lrange: (jest.fn() as any).mockResolvedValue([]),
-    exec: (jest.fn() as any).mockResolvedValue([]),
-    hgetall: (jest.fn() as any).mockResolvedValue({}),
-    set: (jest.fn() as any).mockResolvedValue("OK"),
-    get: (jest.fn() as any).mockResolvedValue(null),
-    publish: (jest.fn() as any).mockResolvedValue(1),
-    lpush: (jest.fn() as any).mockResolvedValue(1),
-    on: jest.fn() as any,
-    quit: (jest.fn() as any).mockResolvedValue("OK")
-  }));
-  return {
-    Redis: MockRedis,
-    default: MockRedis
-  };
-});
+// 1. Mockeamos módulos usando unstable_mockModule (requerido para ESM)
+jest.unstable_mockModule('../services/eventBus.js', () => ({
+  EventBus: {
+    publish: jest.fn()
+  }
+}));
 
-// Para poder trackear las llamadas, lo importamos y espiamos
-import { EventBus } from '../services/eventBus.js';
+jest.unstable_mockModule('../helpers/logger.js', () => ({
+  SacredLogger: {
+    node: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn()
+  }
+}));
+
+// 2. Importamos los módulos después de definir los mocks
+const { aduana_sentinel_node } = await import('../nodes/mirror/aduana_sentinel_node.js');
+const { EventBus } = await import('../services/eventBus.js') as any;
+const { SacredLogger } = await import('../helpers/logger.js') as any;
+const { LLMService } = await import('../services/llmService.js') as any;
 
 describe('AduanaSentinel Node', () => {
-  let aduana_sentinel_node: any;
-  let LLMService: any;
-  let EventBus: any;
-  let initialState: AgentStateType;
-
-  beforeAll(async () => {
-    const sentinelModule = await import('../nodes/mirror/aduana_sentinel_node.js');
-    const llmModule = await import('../services/llmService.js');
-    const ebModule = await import('../services/eventBus.js');
-    aduana_sentinel_node = sentinelModule.aduana_sentinel_node;
-    LLMService = llmModule.LLMService;
-    EventBus = ebModule.EventBus;
-  });
+  let initialState: any;
 
   beforeEach(() => {
     initialState = {
@@ -61,97 +34,153 @@ describe('AduanaSentinel Node', () => {
       retry_count: 0,
       token_usage: { total: 0, prompt: 0, completion: 0 },
       executive_summary: ""
-    } as any;
+    };
     jest.clearAllMocks();
-    jest.spyOn(EventBus, 'publish').mockResolvedValue(undefined);
   });
 
-  it('debería emitir SecurityAnalysisEvent cuando el prompt es limpio', async () => {
-    jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
-      data: {
-        is_injection: false,
-        threat_level: "none",
-        reasoning: "Prompt legítimo.",
-        sanitized_input: "Hola mundo"
-      },
-      usage: { total: 10, prompt: 5, completion: 5 },
-      cost: 0.0001,
-      latency: 100,
-      model: "test-model"
+  describe('Flujo Estándar y Eventos', () => {
+    it('debería emitir SecurityAnalysisEvent cuando el prompt es limpio (Consenso)', async () => {
+      const mockOutput = {
+        data: {
+          is_injection: false,
+          threat_level: "none",
+          reasoning: "Prompt legítimo.",
+          sanitized_input: "Hola mundo"
+        },
+        usage: { total: 10, prompt: 5, completion: 5 },
+        cost: 0.0001,
+        latency: 100,
+        model: "test-model"
+      };
+
+      jest.spyOn(LLMService, 'getStructuredData')
+        .mockResolvedValueOnce(mockOutput as any) // Prosecutor
+        .mockResolvedValueOnce(mockOutput as any); // Defender
+
+      const result = await aduana_sentinel_node(initialState);
+
+      expect(result.is_malicious).toBe(false);
+      expect(result.threat_level).toBe("none");
+      expect(EventBus.publish).toHaveBeenCalledWith("test-trace-123", expect.objectContaining({
+        type: "SECURITY_ANALYSIS",
+        decision: "pass",
+        threat_level: "none"
+      }));
     });
 
-    const result = await aduana_sentinel_node(initialState);
+    it('debería bloquear y emitir SecurityAnalysisEvent cuando se detecta inyección (Consenso)', async () => {
+      const mockOutput = {
+        data: {
+          is_injection: true,
+          threat_level: "high",
+          reasoning: "Intento de jailbreak detectado.",
+          sanitized_input: ""
+        },
+        usage: { total: 10, prompt: 5, completion: 5 },
+        cost: 0.0001,
+        latency: 150,
+        model: "test-model"
+      };
 
-    expect(result.is_malicious).toBe(false);
-    expect(result.threat_level).toBe("none");
-    expect(EventBus.publish).toHaveBeenCalledWith("test-trace-123", expect.objectContaining({
-      type: "SECURITY_ANALYSIS",
-      decision: "pass",
-      threat_level: "none"
-    }));
-  });
+      jest.spyOn(LLMService, 'getStructuredData')
+        .mockResolvedValueOnce(mockOutput as any)
+        .mockResolvedValueOnce(mockOutput as any);
 
-  it('debería bloquear y emitir SecurityAnalysisEvent cuando se detecta inyección', async () => {
-    jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
-      data: {
-        is_injection: true,
-        threat_level: "high",
-        reasoning: "Intento de jailbreak detectado.",
-        sanitized_input: ""
-      },
-      usage: { total: 10, prompt: 5, completion: 5 },
-      cost: 0.0001,
-      latency: 150,
-      model: "test-model"
+      const result = await aduana_sentinel_node(initialState);
+
+      expect(result.is_malicious).toBe(true);
+      expect(result.threat_level).toBe("high");
+      expect(result.next_node).toBe("security_blocked");
+      expect(EventBus.publish).toHaveBeenCalledWith("test-trace-123", expect.objectContaining({
+        type: "SECURITY_ANALYSIS",
+        decision: "block",
+        threat_level: "high"
+      }));
     });
 
-    const result = await aduana_sentinel_node(initialState);
+    it('debería usar threadId "unknown" si trace_id no está presente', async () => {
+      delete initialState.trace_id;
+      
+      const mockOutput = {
+        data: { is_injection: false, threat_level: "none", reasoning: "OK", sanitized_input: "hi" },
+        usage: { total: 10, prompt: 5, completion: 5 }, cost: 0, latency: 10, model: "m"
+      };
 
-    expect(result.is_malicious).toBe(true);
-    expect(result.threat_level).toBe("high");
-    expect(result.next_node).toBe("security_blocked");
-    expect(EventBus.publish).toHaveBeenCalledWith("test-trace-123", expect.objectContaining({
-      type: "SECURITY_ANALYSIS",
-      decision: "block",
-      threat_level: "high"
-    }));
-  });
+      jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue(mockOutput as any);
 
-  it('debería usar threadId "unknown" si trace_id no está presente', async () => {
-    delete initialState.trace_id;
-    
-    jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
-      data: {
-        is_injection: false,
-        threat_level: "none",
-        reasoning: "Prompt legítimo.",
-        sanitized_input: "Hola mundo"
-      },
-      usage: { total: 10, prompt: 5, completion: 5 },
-      cost: 0.0001,
-      latency: 100,
-      model: "test-model"
+      await aduana_sentinel_node(initialState);
+
+      expect(EventBus.publish).toHaveBeenCalledWith("unknown", expect.objectContaining({
+        threadId: "unknown"
+      }));
     });
 
-    await aduana_sentinel_node(initialState);
+    it('debería loguear via SacredLogger.error cuando el LLM falla y permitir flujo por defecto', async () => {
+      jest.spyOn(LLMService, 'getStructuredData').mockRejectedValue(new Error('LLM timeout'));
 
-    expect(EventBus.publish).toHaveBeenCalledWith("unknown", expect.objectContaining({
-      threadId: "unknown"
-    }));
+      const result = await aduana_sentinel_node(initialState);
+
+      expect(SacredLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining("Error en Aduana Sentinel"),
+        "SENTINEL",
+        expect.any(Error)
+      );
+      expect(result.is_malicious).toBe(false); 
+      expect(result.next_node).toBe("mirror");
+    });
   });
 
-  it('debería loguear via SacredLogger.error (no console.error) cuando el LLM falla', async () => {
-    jest.spyOn(LLMService, 'getStructuredData').mockRejectedValue(new Error('LLM timeout'));
-    const loggerModule = await import('@/helpers/logger.js');
-    const errorSpy = jest.spyOn(loggerModule.SacredLogger, 'error').mockImplementation(() => {});
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  describe('Judgment Day Protocol (Contradicciones)', () => {
+    it('debe usar al Judge para desempatar si hay contradicción (Judge decide bloquear)', async () => {
+      const prosecutorOutput = {
+        data: { is_injection: true, threat_level: "high", reasoning: "Bad", sanitized_input: "" },
+        usage: { total: 10, prompt: 5, completion: 5 }, cost: 0.01, latency: 100, model: "p"
+      };
+      const defenderOutput = {
+        data: { is_injection: false, threat_level: "none", reasoning: "Good", sanitized_input: "hi" },
+        usage: { total: 10, prompt: 5, completion: 5 }, cost: 0.01, latency: 100, model: "d"
+      };
+      const judgeOutput = {
+        data: { is_injection: true, threat_level: "medium", reasoning: "Prosecutor is right", sanitized_input: "" },
+        usage: { total: 10, prompt: 5, completion: 5 }, cost: 0.02, latency: 200, model: "j"
+      };
 
-    const result = await aduana_sentinel_node(initialState);
+      jest.spyOn(LLMService, "getStructuredData")
+        .mockResolvedValueOnce(prosecutorOutput as any)
+        .mockResolvedValueOnce(defenderOutput as any)
+        .mockResolvedValueOnce(judgeOutput as any);
 
-    expect(errorSpy).toHaveBeenCalled();
-    expect(consoleSpy).not.toHaveBeenCalled();
-    expect(result.is_malicious).toBe(false); // Conservador ante fallos
-    errorSpy.mockRestore();
-    consoleSpy.mockRestore();
+      const updates = await aduana_sentinel_node(initialState);
+
+      expect(LLMService.getStructuredData).toHaveBeenCalledTimes(3);
+      expect(updates.is_malicious).toBe(true);
+      expect(updates.security_report).toContain("[Desempate Judge]");
+    });
+
+    it('debe usar al Judge para desempatar si hay contradicción (Judge decide permitir)', async () => {
+      const prosecutorOutput = {
+        data: { is_injection: true, threat_level: "low", reasoning: "Suspicious", sanitized_input: "" },
+        usage: { total: 10, prompt: 5, completion: 5 }, cost: 0.01, latency: 100, model: "p"
+      };
+      const defenderOutput = {
+        data: { is_injection: false, threat_level: "none", reasoning: "Safe", sanitized_input: "hi" },
+        usage: { total: 10, prompt: 5, completion: 5 }, cost: 0.01, latency: 100, model: "d"
+      };
+      const judgeOutput = {
+        data: { is_injection: false, threat_level: "none", reasoning: "Defender is right", sanitized_input: "hi" },
+        usage: { total: 10, prompt: 5, completion: 5 }, cost: 0.02, latency: 200, model: "j"
+      };
+
+      jest.spyOn(LLMService, "getStructuredData")
+        .mockResolvedValueOnce(prosecutorOutput as any)
+        .mockResolvedValueOnce(defenderOutput as any)
+        .mockResolvedValueOnce(judgeOutput as any);
+
+      const updates = await aduana_sentinel_node(initialState);
+
+      expect(LLMService.getStructuredData).toHaveBeenCalledTimes(3);
+      expect(updates.is_malicious).toBe(false);
+      expect(updates.security_report).toContain("[Desempate Judge]");
+    });
   });
 });
