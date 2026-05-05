@@ -33,6 +33,8 @@ Este documento define el ciclo de vida de una tarea en el ecosistema de la Start
    - `git branch -d feat/issue-[ID]-[slug]`
    4. Hacer pull en develop
    - `git checkout develop && git pull origin develop`
+   5- Hacer git push en develop
+   - `git push origin develop`
 5. **Cierre de Issue**: Cerrar la issue en GitHub referenciando el commit de merge.
 
 
