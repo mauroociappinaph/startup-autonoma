@@ -1,24 +1,23 @@
-import PrismaClientPkg from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
-// Lógica de detección de constructor para compatibilidad ESM/CJS en Jest
-const PrismaClient = (() => {
-  if (typeof PrismaClientPkg === 'function') return PrismaClientPkg;
-  const anyPkg = PrismaClientPkg as any;
-  if (anyPkg.PrismaClient) return anyPkg.PrismaClient;
-  if (anyPkg.default && anyPkg.default.PrismaClient) return anyPkg.default.PrismaClient;
-  throw new Error("Antigravity Error: No se pudo encontrar el constructor de PrismaClient en el paquete importado.");
-})();
+// Declaramos el tipo para el objeto global de forma segura
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
 
 /**
- * Singleton del cliente de Prisma para evitar agotar el pool de conexiones en desarrollo.
+ * Singleton del cliente de Prisma.
+ * En entornos de no-producción, se persiste en el objeto global para sobrevivir
+ * a los reinicios de Hot Reload (tsx/next.js).
  */
-const globalForPrisma = global as unknown as { prisma: any };
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+  });
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({
-  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-});
-
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
 
 export * from "@prisma/client";

@@ -64,7 +64,12 @@ async def serve():
     server.add_insecure_port(server_address)
     await server.start()
     print(f"🚀 Servidor gRPC asíncrono iniciado. Escuchando en {server_address}")
-    await server.wait_for_termination()
+    try:
+        await server.wait_for_termination()
+    except asyncio.CancelledError:
+        print("🛑 Deteniendo servidor gRPC asíncrono...")
+        await server.stop(10)
+        print("✅ Servidor gRPC detenido limpiamente.")
 
 if __name__ == '__main__':
     # Para ejecución aislada del servidor gRPC

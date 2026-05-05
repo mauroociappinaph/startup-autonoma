@@ -25,8 +25,14 @@ async def lifespan(app: FastAPI):
     # Iniciar servidor gRPC como una tarea del event loop en background
     grpc_task = asyncio.create_task(serve())
     yield
-    # Opción de detener gracefully si implementamos server.stop()
+    # Detener gracefully: cancelamos la tarea y esperamos a que el handler limpie
+    print("📢 Iniciando shutdown del AI Engine...")
     grpc_task.cancel()
+    try:
+        await grpc_task
+    except asyncio.CancelledError:
+        pass
+    print("✨ AI Engine apagado con éxito.")
 
 app = FastAPI(title="AI Engine - Startup Autónoma", lifespan=lifespan)
 

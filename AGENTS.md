@@ -29,7 +29,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 ---
 
 ## --- Fase C: Infraestructura, Operaciones y Resiliencia ---
-- **Resiliencia:** Rewind de estado y persistencia de checkpoints. ✅
+- **Resiliencia:** Rewind de estado, persistencia de checkpoints, Singleton de Prisma y Graceful Shutdown en gRPC. ✅
 - **Dockerization:** Ecosistema completo en contenedores con validación automática via Husky. 🚧
 - **Operations Chief:** Nuevo agente para mantenimiento de infraestructura y despliegues. ✅
 - **Graph Visibility:** Visualización avanzada de la topología y trazas del grafo. 🚧
