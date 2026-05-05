@@ -211,6 +211,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /issue-144-redis-janitor
 │   │   ├── /optimize-entry-flow
 │   │   ├── /optimize-system-performance
+│   │   ├── /refactor
 │   ├── /specs
 │   │   ├── /core
 │   │   ├── /observability
