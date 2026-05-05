@@ -10,7 +10,7 @@ CHANGED_FILES=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)
 
 if echo "$CHANGED_FILES" | grep -q "package-lock.json"; then
   echo "📦 Se detectaron cambios en las dependencias. Instalando..."
-  npm install --legacy-peer-deps
+  npm install --legacy-peer-deps --prefer-offline --no-audit --no-fund
   echo "✅ Entorno actualizado."
 else
   echo "✨ No hay cambios en dependencias. Todo listo."
