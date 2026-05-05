@@ -49,3 +49,10 @@ export const OTEL_ENDPOINT =
 
 /** Flag para activar/desactivar OpenTelemetry. */
 export const OTEL_ENABLED = process.env.OTEL_ENABLED === "true";
+
+/** DSN de Sentry para el Backend (Node.js). */
+export const SENTRY_DSN_BACKEND = process.env.SENTRY_DSN_BACKEND;
+
+/** Flag para activar/desactivar Sentry a nivel global (Default: true si hay DSN). */
+export const SENTRY_ENABLED = process.env.SENTRY_ENABLED !== "false";
+

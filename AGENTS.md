@@ -185,6 +185,9 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── package-lock.json
 │   ├── package.json
 │   ├── /public
+│   ├── sentry.client.config.ts
+│   ├── sentry.edge.config.ts
+│   ├── sentry.server.config.ts
 │   ├── /src
 │   │   ├── /api
 │   │   ├── /app
@@ -206,6 +209,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /feat-105-observability-tracing
 │   │   ├── /feat-124-mcp-tool-standardization
 │   │   ├── /feat-143-sentinel-sse
+│   │   ├── /feat-186-sentry-integration
 │   │   ├── /feat-202-aduana-gatekeeper
 │   │   ├── /feat-36-judgment-day
 │   │   ├── /fix
