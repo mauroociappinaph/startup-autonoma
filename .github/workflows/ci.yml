@@ -57,3 +57,26 @@ jobs:
 
       - name: 🚀 Run Monorepo Validation (Turbo-Differential)
         run: npx turbo run lint check test build --filter="...[origin/${{ github.base_ref || 'develop' }}]" --concurrency=100%
+
+  aduana-gatekeeper:
+    name: "Aduana Gatekeeper (Review Routing)"
+    needs: validate
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: 🟢 Route to Needs Review (Pass)
+        if: ${{ needs.validate.result == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --add-label "👀 status:needs-review" --remove-label "⚠️ status:needs-changes" || true
+          
+      - name: 🔴 Route to Needs Changes (Fail)
+        if: ${{ needs.validate.result != 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --add-label "⚠️ status:needs-changes" --remove-label "👀 status:needs-review" || true
+          gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "🚨 **Aduana Gatekeeper:** El pipeline ha fallado. Revisa los logs del CI y corrige los errores antes de solicitar revisión humana." || true
