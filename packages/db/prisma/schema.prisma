@@ -18,6 +18,7 @@ model Project {
   engramNamespace String
   maxTokenBudget  Int      @default(1000000)
   maxUsdBudget    Float    @default(10.0)
+  metadata        Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   auditLogs       AuditLog[]

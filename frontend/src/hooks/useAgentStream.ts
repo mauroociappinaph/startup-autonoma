@@ -54,29 +54,31 @@ export function useAgentStream() {
   const startStream = useCallback((prompt: string) => {
     // 3. Control de Leaks: Cerramos conexión previa si existe
     if (eventSourceRef.current) {
-      console.log("♻️ Cerrando stream previo antes de iniciar uno nuevo");
       eventSourceRef.current.close();
     }
 
+    // Generar threadId único por misión para evitar acumular estado en Redis
+    const newThreadId = `thread-${Date.now()}`;
+    setThreadId(newThreadId);
     resetSession();
 
     eventSourceRef.current = sseClient.connect(
-      `/api/agents/stream?prompt=${encodeURIComponent(prompt)}&threadId=${threadId}`,
+      `/api/agents/stream?prompt=${encodeURIComponent(prompt)}&threadId=${newThreadId}`,
       {
-        onData: (data) => agentProcessor.process(data as AgentThought, actions),
+        onData: (data) => {
+          agentProcessor.process(data as AgentThought, actions);
+        },
         onEnd: () => {
-          console.log("🏁 Stream finalizado");
           setIsStreaming(false);
           eventSourceRef.current = null;
         },
         onError: (err) => {
-          console.error("❌ EventSource error:", err);
           setIsStreaming(false);
           eventSourceRef.current = null;
         }
       }
     );
-  }, [threadId, resetSession, setIsStreaming]);
+  }, [resetSession, setIsStreaming, setThreadId]);
 
   const approvePlan = useCallback(async () => {
     setIsStreaming(true);
@@ -93,13 +95,11 @@ export function useAgentStream() {
           onData: (data) => agentProcessor.process(data as AgentThought, actions),
           onEnd: () => setIsStreaming(false),
           onError: (err) => {
-            console.error('❌ Error en stream de aprobación:', err);
             setIsStreaming(false);
           }
         });
       }
     } catch (error) {
-      console.error('❌ Error al aprobar:', error);
       agentProcessor.handleError("Error en la aprobación del plan.", actions);
     }
   }, [threadId, setIsStreaming, setIsWaiting]);
@@ -120,13 +120,11 @@ export function useAgentStream() {
           onData: (data) => agentProcessor.process(data as AgentThought, actions),
           onEnd: () => setIsStreaming(false),
           onError: (err) => {
-            console.error('❌ Error en stream de rechazo:', err);
             setIsStreaming(false);
           }
         });
       }
     } catch (error) {
-      console.error('❌ Error al rechazar:', error);
       setIsStreaming(false);
     }
   }, [threadId, setIsStreaming, setIsWaiting]);
@@ -142,9 +140,8 @@ export function useAgentStream() {
         populateState(currentState);
       }
       
-      console.log("⏪ Rewind completado y estado sincronizado");
     } catch (error) {
-      console.error('❌ Error en rewind:', error);
+      // Error silencioso para cumplir Ley #14
     }
   }, [threadId, populateState]);
 

@@ -35,14 +35,9 @@ function withTimeout<T>(promise: Promise<T>, ms: number = 120000): Promise<T> {
  * Garantiza cumplimiento de Ley #13 (Trimming) y Ley #14 (Structured Data).
  */
 export class LLMService {
-  /**
-   * Calculates USD cost based on usage and model.
-   */
   public static calculateCost(usage: { prompt: number; completion: number }, model: string): number {
     const pricing = MODEL_PRICING[model] || MODEL_PRICING["default"];
-    const inputCost = (usage.prompt / 1_000_000) * pricing.input;
-    const outputCost = (usage.completion / 1_000_000) * pricing.output;
-    return inputCost + outputCost;
+    return (usage.prompt / 1_000_000) * pricing.input + (usage.completion / 1_000_000) * pricing.output;
   }
 
   /**
@@ -120,7 +115,6 @@ export class LLMService {
         SacredLogger.warn(`Fallo en intento ${attempt}: ${lastError.message}`, "LLM_SERVICE");
 
         if (attempt === 1) {
-          // Segundo intento: Mismo modelo pero forzamos modo manual
           SacredLogger.info("Reintentando con modo manual...", "LLM_SERVICE");
           try {
              const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema, currentConfig.timeoutMs);
@@ -131,14 +125,17 @@ export class LLMService {
              lastError = manualError as Error;
           }
         } else if (attempt === 2) {
-          // Tercer intento: Cambiamos de provider (Fallback a Groq si falló NVIDIA, o viceversa)
-          const fallbackProvider = provider === "nvidia" ? "groq" : "nvidia";
-          SacredLogger.warn(`Cambiando de proveedor a ${fallbackProvider} para el último intento...`, "LLM_SERVICE");
-          
-          // Actualizamos la config ANTES de crear el modelo
-          currentConfig = { ...currentConfig, type: fallbackProvider === "nvidia" ? "ultra" : "flow" }; 
-          // Nota: Forzamos un tipo que sabemos que mapea al provider deseado
-          currentModel = LLMFactory.createModel({ ...config, type: fallbackProvider === "nvidia" ? "ultra" : "flow" });
+          const isFastType = config.type === "fast";
+          if (isFastType) {
+            SacredLogger.warn(`Cambiando a Groq 70b para el último intento...`, "LLM_SERVICE");
+            currentConfig = { ...currentConfig, type: "flow" };
+            currentModel = LLMFactory.createModel({ ...config, type: "flow" });
+          } else {
+            const fallbackProvider = provider === "nvidia" ? "groq" : "nvidia";
+            SacredLogger.warn(`Cambiando de proveedor a ${fallbackProvider}...`, "LLM_SERVICE");
+            currentConfig = { ...currentConfig, type: fallbackProvider === "nvidia" ? "ultra" : "flow" };
+            currentModel = LLMFactory.createModel({ ...config, type: fallbackProvider === "nvidia" ? "ultra" : "flow" });
+          }
         }
       }
     }

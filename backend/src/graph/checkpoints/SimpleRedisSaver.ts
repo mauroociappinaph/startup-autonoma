@@ -42,12 +42,15 @@ export class SimpleRedisSaver extends BaseCheckpointSaver {
 
     if (!targetId) return undefined;
 
-    const data = await this.client.hgetall(this.getCheckpointKey(thread_id, checkpoint_ns, targetId));
-    if (!data || !data.checkpoint) return undefined;
+    const keys = ["checkpoint", "checkpoint_type", "metadata", "metadata_type"];
+    const [cBuffer, cType, mBuffer, mType] = await this.client.hmgetBuffer(this.getCheckpointKey(thread_id, checkpoint_ns, targetId), ...keys);
+    
+    if (!cBuffer) return undefined;
 
-    // Usar loadsTyped para compatibilidad con SerializerProtocol de LangGraph
-    const checkpoint = await this.serde.loadsTyped(data.checkpoint_type || "json", data.checkpoint) as Checkpoint;
-    const metadata = await this.serde.loadsTyped(data.metadata_type || "json", data.metadata) as CheckpointMetadata;
+    const checkpoint = await this.serde.loadsTyped(cType?.toString() || "json", cBuffer) as Checkpoint;
+    const metadata = mBuffer 
+      ? await this.serde.loadsTyped(mType?.toString() || "json", mBuffer) as CheckpointMetadata
+      : { source: "input", step: 0, parents: {} as Record<string, string> } as CheckpointMetadata;
 
     return {
       config: {

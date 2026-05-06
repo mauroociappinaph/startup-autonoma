@@ -44,13 +44,19 @@ export const agentProcessor = {
     // 4. Gestión de la lista de pensamientos (Streaming dinámico)
     this.updateThoughts(data, store);
 
-    // 5. Soporte para métricas parciales (Issue #128)
+    // 5. Soporte para eventos de Sistema (Issue #128 + Security Audit)
     if (data.type === "METRIC_PARTIAL" && data.metadata) {
       store.updateTelemetry({
         tokens: data.metadata.estimated_tokens,
         cost: data.metadata.estimated_cost,
-        // No incrementamos iteraciones aquí
       });
+      return true;
+    }
+
+    if (data.type === "SECURITY_ANALYSIS" && data.security_audit) {
+      data.text = `Análisis de seguridad completado: ${data.security_audit.verdict === 'safe' ? 'Permitido' : 'Bloqueado'}`;
+      this.updateThoughts(data, store);
+      return true;
     }
 
     return true;
@@ -59,7 +65,7 @@ export const agentProcessor = {
   handleError(error: string, store: AgentActions) {
     store.setThoughts((prev: AgentThought[]) => [
       ...prev, 
-      { agent: "ERROR", text: error, time: new Date().toLocaleTimeString() }
+      { id: crypto.randomUUID(), agent: "ERROR", text: error, time: new Date().toLocaleTimeString() }
     ]);
     store.setIsStreaming(false);
     store.setIsWaiting(false);
@@ -81,9 +87,9 @@ export const agentProcessor = {
       } else {
         const last = prev[prev.length - 1];
         if (last && last.isPartial && last.agent === data.agent) {
-          next = [...prev.slice(0, -1), { ...data, id: last.id }];
+          next = [...prev.slice(0, -1), { ...data, id: last.id, time: last.time || new Date().toLocaleTimeString() }];
         } else {
-          next = [...prev, { ...data, id: crypto.randomUUID() }];
+          next = [...prev, { ...data, id: crypto.randomUUID(), time: data.time || new Date().toLocaleTimeString() }];
         }
       }
 

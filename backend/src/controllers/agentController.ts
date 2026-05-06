@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { GraphService } from '@/services/graphService.js';
 import { enqueueAgentJob } from '@/jobs/index.js';
 import { EventBus } from '@/services/eventBus.js';
+import { SacredLogger } from '@/helpers/logger.js';
 
 /**
  * Controlador para las acciones de los Agentes.
@@ -57,15 +58,26 @@ export class AgentController {
       return res.status(400).json({ error: 'Falta "prompt" o "sessionId"' });
     }
 
-    // Configuración SSE
+    // 3. Headers para SSE (Server-Sent Events)
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Desactiva buffering en Nginx
+    
+    // Trick: Mandamos 2KB de comentarios iniciales para "despertar" al navegador y evitar buffering
+    res.write(`: ${' '.repeat(2048)}\n\n`);
+    res.write(': heartbeat\n\n');
+    (res as Response & { flush?: () => void }).flush?.(); 
+
+    SacredLogger.info(`Conexión SSE abierta para sessionId: ${resolvedSessionId}`, "STREAM");
 
     // Suscripción al EventBus para eventos generados por el Worker (Gap 4)
     const unsubscribe = await EventBus.subscribe(resolvedSessionId, (data) => {
+      SacredLogger.info(`Evento recibido del EventBus para ${resolvedSessionId}`, "STREAM");
       res.write(`data: ${JSON.stringify(data)}\n\n`);
     });
+
+    SacredLogger.info(`Suscripción al EventBus activa. Esperando eventos...`, "STREAM");
 
     // Manejar desconexión del cliente
     req.on('close', async () => {

@@ -11,6 +11,7 @@ import { prepareNodeUpdate } from "@/helpers/index.js";
  */
 export async function mirror_node(state: AgentStateType) {
   SacredLogger.node("MIRROR (INTROSPECCIÓN)");
+  SacredLogger.info(`Iniciando ejecución para thread_id: ${state.trace_id}`, "MIRROR");
 
   // Buscamos el prompt original del usuario en los mensajes
   const originalPrompt = state.messages.find((m: BaseMessage) => m._getType() === 'human')?.content || "";
@@ -35,11 +36,13 @@ export async function mirror_node(state: AgentStateType) {
   `);
 
   try {
+    SacredLogger.info("Llamando a LLMService para optimización de intención...", "MIRROR");
     const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
       { type: "reasoning", temperature: 0 },
       [system_prompt, new HumanMessage(`Optimiza esta petición: "${originalPrompt}"`)],
       MirrorResponseSchema
     );
+    SacredLogger.info(`Respuesta recibida correctamente. Latencia: ${latency}ms`, "MIRROR");
 
     SacredLogger.info(`Intenciones detectadas: ${response.intentions.join(', ')}`, "MIRROR");
     SacredLogger.info(`Prompt refinado: ${response.refined_prompt}`, "MIRROR");
@@ -55,6 +58,7 @@ export async function mirror_node(state: AgentStateType) {
     });
 
     // Preparamos la respuesta para el grafo
+    SacredLogger.info("Nodo finalizado. Devolviendo estado actualizado.", "MIRROR");
     return {
       ...metricsUpdate,
       refined_prompt: response.refined_prompt, // Guardamos el prompt limpio en el estado

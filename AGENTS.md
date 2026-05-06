@@ -117,6 +117,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /__pycache__
 ├── architecture.md
 ├── /backend
+│   ├── debug_prisma.ts
 │   ├── /docs
 │   │   ├── /architecture
 │   │   │   ├── /sequences

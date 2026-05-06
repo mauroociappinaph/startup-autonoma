@@ -6,9 +6,10 @@ import type { AIEngineClient as _AIEngineClient } from '@startup/protos/src/gene
 import type { WorkerTaskResponse__Output } from '@startup/protos/src/generated/ai_engine/WorkerTaskResponse.js';
 import type { WorkerProgressUpdate__Output } from '@startup/protos/src/generated/ai_engine/WorkerProgressUpdate.js';
 import * as opentelemetry from "@opentelemetry/api";
+import { SacredLogger } from "@/helpers/logger.js";
 
 const require = createRequire(import.meta.url);
-const PROTO_PATH = require.resolve('@startup/protos/src/ai_engine.proto');
+const PROTO_PATH = require.resolve('@startup/protos/proto/ai_engine.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
@@ -53,7 +54,7 @@ export class AIEngineClient {
     const tracer = opentelemetry.trace.getTracer("grpc-client");
     
     return tracer.startActiveSpan(`GRPC_CALL:${input.worker_name}`, async (span): Promise<WorkerTaskResponse__Output> => {
-      console.log(`--- [gRPC CLIENT] Enviando tarea: ${input.worker_name} ---`);
+      SacredLogger.info(`Enviando tarea: ${input.worker_name}`, "GRPC_CLIENT");
       
       const metadata = new grpc.Metadata();
       opentelemetry.propagation.inject(opentelemetry.context.active(), metadata, {
@@ -77,7 +78,7 @@ export class AIEngineClient {
       return new Promise((resolve, reject) => {
         this.client.ExecuteWorkerTask(grpcInput, metadata, (error: grpc.ServiceError | null, output?: WorkerTaskResponse__Output) => {
           if (error) {
-            console.error(`❌ Error en llamada gRPC (ExecuteTask): ${error.message}`);
+            SacredLogger.error(`Error en llamada gRPC (ExecuteTask): ${error.message}`, "GRPC_CLIENT", error);
             span.recordException(error);
             span.setStatus({ code: opentelemetry.SpanStatusCode.ERROR });
             reject(error);
@@ -87,7 +88,7 @@ export class AIEngineClient {
             span.setStatus({ code: opentelemetry.SpanStatusCode.ERROR });
             reject(err);
           } else {
-            console.log(`✅ Tarea ${input.worker_name} completada.`);
+            SacredLogger.info(`Tarea ${input.worker_name} completada.`, "GRPC_CLIENT");
             span.setStatus({ code: opentelemetry.SpanStatusCode.OK });
             resolve(output);
           }
@@ -101,7 +102,7 @@ export class AIEngineClient {
    * Inicia un flujo de streaming para ver el progreso del worker.
    */
   streamProgress(input: { worker_name: string; task_description: string; trace_id: string; payload?: object }): grpc.ClientReadableStream<WorkerProgressUpdate__Output> {
-    console.log(`--- [gRPC CLIENT] Iniciando stream de progreso para: ${input.worker_name} ---`);
+    SacredLogger.info(`Iniciando stream de progreso para: ${input.worker_name}`, "GRPC_CLIENT");
 
     const grpcInput = {
       worker_name: input.worker_name,
@@ -120,7 +121,7 @@ export class AIEngineClient {
     return new Promise((resolve) => {
       this.client.Ping({}, { deadline: Date.now() + 2000 }, (error, response) => {
         if (error || !response || response.status !== 'healthy') {
-          console.error(`❌ AI-Engine Health Check falló: ${error?.message}`);
+          SacredLogger.error(`AI-Engine Health Check falló: ${error?.message}`, "GRPC_CLIENT", error || undefined);
           resolve(false);
         } else {
           resolve(true);
@@ -134,7 +135,7 @@ export class AIEngineClient {
    */
   public close(): void {
     this.client.close();
-    console.log("🔌 [gRPC CLIENT] Conexión cerrada.");
+    SacredLogger.info("Conexión cerrada.", "GRPC_CLIENT");
   }
 }
 

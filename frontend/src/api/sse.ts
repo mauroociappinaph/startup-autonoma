@@ -32,6 +32,7 @@ export const sseClient = {
     });
 
     eventSource.onerror = (err: Event) => {
+      console.error("❌ [SSE Client] EventSource error crítico:", err);
       options.onError?.(err);
       eventSource.close();
     };

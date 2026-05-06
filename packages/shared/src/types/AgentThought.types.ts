@@ -31,6 +31,14 @@ export interface AgentThought {
     [key: string]: any;
   };
   checkpointId?: string; // ID único del estado en Redis para Time-Travel
+  security_audit?: {
+    prosecutor: string;
+    prosecutor_is_injection: boolean;
+    defender: string;
+    defender_is_injection: boolean;
+    judge?: string;
+    verdict: 'safe' | 'unsafe';
+  };
 }
 
 /**

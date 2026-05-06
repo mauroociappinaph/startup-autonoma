@@ -6,7 +6,7 @@ import { z } from "zod";
 export const ProjectContextSchema = z.object({
   projectId: z.string().uuid(),
   name: z.string().min(1, "El nombre del proyecto es requerido"),
-  repoUrl: z.string().url().optional(),
+  repoUrl: z.string().url().nullish(),
   workDir: z.string().min(1, "El directorio de trabajo es requerido"),
   engramNamespace: z.string().min(1, "El namespace de Engram es requerido"),
   maxTokenBudget: z.number().int().positive().default(1000000),
