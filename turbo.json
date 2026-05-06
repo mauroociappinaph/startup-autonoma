@@ -3,9 +3,13 @@
   "globalEnv": ["PATH", "PYTHONPATH", "PYTHONHOME"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@startup/protos#generate"],
       "inputs": ["src/**", "package.json", "tsconfig.json", "next.config.js"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "@startup/protos#generate": {
+      "inputs": ["proto/**/*.proto", "scripts/generate.sh"],
+      "outputs": ["src/generated/**", "../../ai-engine/app/grpc_generated/**"]
     },
     "test": {
       "inputs": ["src/**", "package.json", "tsconfig.json", "jest.config.js"],

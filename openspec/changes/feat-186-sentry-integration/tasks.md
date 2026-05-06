@@ -14,4 +14,4 @@
 - [x] T7: Frontend (Next.js)
   - [x] Ejecutar el comando del wizard para inicializar Sentry en Next.js (Manual)
 - [x] T8: Pruebas unitarias/verificación SDD (`/sdd-verify`)
-- [ ] T9: Commit, Push y Merge a develop
+- [x] T9: Commit, Push y Merge a develop

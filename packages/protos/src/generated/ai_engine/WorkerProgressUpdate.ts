@@ -1,4 +1,4 @@
-// Original file: src/ai_engine.proto
+// Original file: proto/ai_engine.proto
 
 
 export interface WorkerProgressUpdate {

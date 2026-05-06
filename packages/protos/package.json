@@ -9,8 +9,8 @@
     "src/**/*.proto"
   ],
   "scripts": {
-    "build": "npm run generate:ts",
-    "generate:ts": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=src/generated src/*.proto",
+    "generate": "./scripts/generate.sh",
+    "build": "npm run generate && tsc",
     "clean": "rm -rf dist src/generated"
   },
   "keywords": [

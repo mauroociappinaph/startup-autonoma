@@ -3,13 +3,13 @@ import os
 import sys
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from app.core.grpc_server import serve
 from app.helpers.telemetry import init_telemetry
-import sentry_sdk
 
 load_dotenv()
 

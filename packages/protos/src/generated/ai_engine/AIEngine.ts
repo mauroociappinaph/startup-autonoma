@@ -1,4 +1,4 @@
-// Original file: src/ai_engine.proto
+// Original file: proto/ai_engine.proto
 
 import type * as grpc from '@grpc/grpc-js'
 import type { MethodDefinition } from '@grpc/proto-loader'
