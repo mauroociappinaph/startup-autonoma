@@ -23,11 +23,18 @@ if [ $? -ne 0 ]; then
 fi
 
 # 2. Healthcheck de Infraestructura (Solo si hay Docker)
-# Lo hacemos opcional y rápido
 echo "🐳 Verificando Docker..."
 node scripts/check-docker.js --quick --strict
 if [ $? -ne 0 ]; then
   echo "❌ Error: La infraestructura Docker no está en un estado válido."
+  exit 1
+fi
+
+# 3. Validar Leyes Sagradas de Arquitectura (La Ley 14 y compañía)
+echo "🛡️  Validando Leyes Sagradas de Arquitectura..."
+npm run check-laws
+if [ $? -ne 0 ]; then
+  echo "❌ Leyes Sagradas violadas. Corregí el diseño antes de pushear."
   exit 1
 fi
 

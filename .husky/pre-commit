@@ -10,14 +10,7 @@ echo "📚 Sincronizando estructura..."
 npm run sync-docs 2>/dev/null
 git add docs/ AGENTS.md architecture.md 2>/dev/null
 
-# 2. Validar leyes de arquitectura solo en archivos STAGED (Muy rápido ahora)
-npm run check-laws
-if [ $? -ne 0 ]; then
-  echo "❌ Leyes Sagradas violadas. Abortando commit."
-  exit 1
-fi
-
-# 3. Validación de tipos LIGERA (opcional, podrías moverla a pre-push para máxima velocidad)
+# 2. Validación de tipos LIGERA (opcional, podrías moverla a pre-push para máxima velocidad)
 # Pero como tenemos cache de Turbo, suele ser rápida
 echo "🔍 Verificando integridad de tipos (Differential)..."
 npx turbo run check --filter=[HEAD]
