@@ -74,8 +74,27 @@ const workflow = new StateGraph(AgentAnnotation)
 workflow.addConditionalEdges(
     "circuit_breaker",
     (state: AgentStateType) => {
-        if (state.max_budget_reached) return END;
-        return (state.next_node as NodeName) || (state.active_chief as NodeName) || "ceo";
+        if (state.max_budget_reached) return "end";
+        const destination = (state.next_node as string) || (state.active_chief as string) || "ceo";
+        return destination;
+    },
+    {
+        end: END,
+        ceo: "ceo",
+        software_chief: "software_chief",
+        business_chief: "business_chief",
+        operations_chief: "operations_chief",
+        researcher: "researcher",
+        git_worker: "git_worker",
+        test_runner: "test_runner",
+        ai_engine_worker: "ai_engine_worker",
+        persistence_worker: "persistence_worker",
+        code_researcher: "code_researcher",
+        review_worker: "review_worker",
+        security_worker: "security_worker",
+        documentation_worker: "documentation_worker",
+        code_writer: "code_writer",
+        operations_worker: "operations_worker"
     }
 );
 
