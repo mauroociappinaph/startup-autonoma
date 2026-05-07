@@ -12,10 +12,10 @@ echo "=========================================================="
 echo "⚡ Validando cambios respecto a origin/develop..."
 
 # Turbo se encarga de:
-# - Solo correr 'check' y 'test' en paquetes que cambiaron (filter)
+# - Solo correr 'check' y 'test:fast' en paquetes que cambiaron (filter)
 # - Usar el cache local si no hubo cambios (velocidad instantánea)
 # - Correr en paralelo (concurrence)
-npx turbo run check test --filter="...[origin/develop]" --concurrency=100%
+npx turbo run check test:fast --filter="...[origin/develop]" --concurrency=100%
 
 if [ $? -ne 0 ]; then
   echo "❌ Error en validaciones (Tipos o Tests). Revisá el reporte de Turbo."

@@ -8,6 +8,7 @@
     "start": "node dist/index.js",
     "build": "tsc && tsc-alias",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles",
+    "test:fast": "NODE_OPTIONS='--experimental-vm-modules' jest --changedSince=origin/develop --passWithNoTests",
     "lint": "eslint 'src/**/*.ts' --max-warnings=0",
     "format": "prettier --write 'src/**/*.ts'",
     "test:business": "tsx src/test-business-workflow.ts",
