@@ -20,7 +20,7 @@ describe('GraphFormatter', () => {
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({
       agent: "SOFTWARE_CHIEF",
-      text: "Trabajando en el código",
+      text: "[SOFTWARE_CHIEF] Trabajando en el código",
       activeNode: "software_chief",
       threadId,
       checkpointId
@@ -62,6 +62,7 @@ describe('GraphFormatter', () => {
 
     expect(events).toHaveLength(2);
     expect(events[0].agent).toBe("MIRROR");
+    expect(events[0].text).toBe("[MIRROR] Analizando...");
     expect(events[1].agent).toBe("ADUANA_SENTINEL");
     expect(events[1].text).toBe("Todo limpio");
   });
@@ -78,6 +79,6 @@ describe('GraphFormatter', () => {
 
     expect(events).toHaveLength(1);
     expect(events[0].agent).toBe("CEO");
-    expect(events[0].text).toContain("Pensando...");
+    expect(events[0].text).toContain("[CEO] Pensando...");
   });
 });

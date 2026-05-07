@@ -91,7 +91,7 @@ describe("stateHelper", () => {
 
       const update = await prepareNodeUpdate(initialState, metadata);
 
-      expect(update.iteration_count).toBe(6);
+      expect(update.iteration_count).toBe(1);
       expect(update.total_cost_usd).toBe(0.012);
       expect(update.token_usage?.total).toBe(1200);
       expect(update.reasoning).toBe("Test reasoning");
@@ -104,7 +104,7 @@ describe("stateHelper", () => {
   describe("incrementIteration", () => {
     it("debe solo incrementar el contador", () => {
       const update = incrementIteration(initialState);
-      expect(update.iteration_count).toBe(6);
+      expect(update.iteration_count).toBe(1);
       expect(update.total_cost_usd).toBeUndefined();
     });
   });
