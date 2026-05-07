@@ -5,3 +5,4 @@ export * from "./researcher.js";
 export * from "./review_worker.js";
 export * from "./security_worker.js";
 export * from "./operations_worker.js";
+export * from "./worker_protocol.js";

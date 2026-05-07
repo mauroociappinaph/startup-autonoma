@@ -3,6 +3,8 @@ import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import { write_file, patch_file } from "@/tools/fs.js";
 import { CodeWriterInstructionSchema } from "@/types/code-writer.types.js";
 import { incrementIteration } from "@/helpers/index.js";
+import { ProtocolHelper } from "@/helpers/protocol_helper.js";
+import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Nodo CodeWriter: Ejecutor atómico "manos en la masa".
@@ -12,22 +14,19 @@ import { incrementIteration } from "@/helpers/index.js";
  * las Tools nativas para aplicarlo. No genera planes, sólo ejecuta e informa.
  */
 export async function code_writer_node(state: AgentStateType) {
-  console.log("--- EJECUTANDO NODO CODE WRITER ---");
+  SacredLogger.node("CODE WRITER");
 
   try {
-    // 1. Encontrar la instrucción de escritura en los mensajes más recientes
-    const instructionMessage = state.messages.find(
-      (m: BaseMessage): m is AIMessage => m instanceof AIMessage && typeof m.content === "string" && m.content.includes("[CHIEF_DELEGATION] Delegando capacidad de escritura")
-    );
+    const instruction = ProtocolHelper.getInstruction(state.messages);
 
-    if (!instructionMessage || !("code_writer_instruction" in instructionMessage.additional_kwargs)) {
+    if (!instruction) {
       throw new Error("No se encontró una instrucción válida de escritura en los mensajes recientes.");
     }
 
-    const rawInstruction = instructionMessage.additional_kwargs.code_writer_instruction;
+    const rawPayload = instruction.payload;
     
-    // Parseo seguro usando el esquema
-    const result = CodeWriterInstructionSchema.safeParse(rawInstruction);
+    // Parseo seguro usando el esquema (ya viene validado pero reforzamos)
+    const result = CodeWriterInstructionSchema.safeParse({ payload: rawPayload });
     if (!result.success) {
       throw new Error(`Instrucción malformada: ${JSON.stringify(result.error.format())}`);
     }
@@ -94,14 +93,19 @@ export async function code_writer_node(state: AgentStateType) {
     }
 
     // 3. Resultado Exitoso
+    SacredLogger.success(`Escritura en ${payload.file_path} completada.`, "WRITER");
     return {
       ...incrementIteration(state),
       messages: state.messages.concat([
         new AIMessage({
-          content: `[WORKER_REPLY] Operación ${payload.action} en ${payload.file_path} completada exitosamente. \nResultado interno: ${toolResultStr}`
+          content: `[WORKER_REPLY] Operación ${payload.action} en ${payload.file_path} completada exitosamente. \nResultado interno: ${toolResultStr}`,
+          additional_kwargs: ProtocolHelper.packResult({
+            status: "success",
+            payload: { file_path: payload.file_path, tool_result: toolResultStr },
+            reasoning: `La escritura en ${payload.file_path} fue exitosa.`
+          })
         })
       ]),
-      active_chief: "software_chief", // Devuelve el control
       executive_summary: `Escritura en archivo ${payload.file_path} completada con éxito.`
     };
 
@@ -111,10 +115,14 @@ export async function code_writer_node(state: AgentStateType) {
       ...incrementIteration(state),
       messages: state.messages.concat([
         new AIMessage({
-          content: `[WORKER_ERROR] El Code Writer falló intentando mutar el código: ${error instanceof Error ? error.message : String(error)}`
+          content: `[WORKER_ERROR] El Code Writer falló intentando mutar el código: ${error instanceof Error ? error.message : String(error)}`,
+          additional_kwargs: ProtocolHelper.packResult({
+            status: "failure",
+            payload: { error: error instanceof Error ? error.message : String(error) },
+            reasoning: "Error crítico durante la escritura de archivos."
+          })
         })
       ]),
-      active_chief: "software_chief",
       executive_summary: `Error crítico al escribir código: ${error instanceof Error ? error.message : String(error)}`
     };
   }

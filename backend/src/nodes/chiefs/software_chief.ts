@@ -11,6 +11,9 @@ import { SacredLogger } from "@/helpers/logger.js";
 import { TraceContext } from "@/services/traceContext.js";
 import { ImpactAnalysisOutput } from "@/types/skills.types.js";
 import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
+import { ProtocolHelper } from "@/helpers/protocol_helper.js";
+import { CodeResearcherActionSchema } from "@/types/code-researcher.types.js";
+import { CodeWriterPayloadSchema } from "@/types/code-writer.types.js";
 
 /**
  * Esquema de decisión interna del Software Chief.
@@ -18,8 +21,8 @@ import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
 const SoftwareChiefDecisionSchema = z.object({
   reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
   decision: z.enum([
-    "delegate_to_code_researcher", // Worker de lectura estática
-    "delegate_to_code_writer",     // Worker de modificación de código
+    "delegate_to_code_researcher",
+    "delegate_to_code_writer",
     "delegate_to_git_worker",
     "delegate_to_test_runner",
     "delegate_to_documentation_worker",
@@ -29,8 +32,8 @@ const SoftwareChiefDecisionSchema = z.object({
   worker_instruction: z.string().nullable().optional().describe("Instrucción en lenguaje natural para el worker (si aplica)."),
   git_payload: GitActionSchema.nullable().optional().describe("Carga útil estructurada si se delega al Git Worker."),
   test_payload: TestRunnerInputSchema.nullable().optional().describe("Carga útil estructurada si se delega al Test Runner."),
-  code_researcher_payload: z.any().optional().describe("Carga útil estructurada para el Code Researcher."),
-  code_writer_instruction: z.any().optional().describe("Carga útil estructurada del tipo CodeWriterPayload si se delega al Code Writer.")
+  code_researcher_payload: CodeResearcherActionSchema.nullable().optional().describe("Acción estructurada para el Code Researcher."),
+  code_writer_payload: CodeWriterPayloadSchema.nullable().optional().describe("Carga útil estructurada para el Code Writer.")
 });
 
 /**
@@ -128,10 +131,12 @@ export async function software_chief_node(state: AgentStateType) {
       updates.plan = ["code_research"];
       updates.next_node = "code_researcher";
       updates.messages?.push(new AIMessage({
-        content: `[CHIEF_DELEGATION] Delegando exploración técnica determinista: ${response.reasoning}`,
-        additional_kwargs: {
-          code_researcher_instruction: response.code_researcher_payload
-        }
+        content: `[CHIEF_DELEGATION] Delegando exploración técnica: ${response.reasoning}`,
+        additional_kwargs: ProtocolHelper.packInstruction({
+          action: "code_research",
+          payload: response.code_researcher_payload!,
+          reasoning: response.reasoning
+        })
       }));
     }
     else if (response.decision === "delegate_to_code_writer") {
@@ -139,11 +144,11 @@ export async function software_chief_node(state: AgentStateType) {
       updates.next_node = "code_writer";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando capacidad de escritura: ${response.reasoning}`,
-        additional_kwargs: {
-          code_writer_instruction: {
-            payload: response.code_writer_instruction!
-          }
-        }
+        additional_kwargs: ProtocolHelper.packInstruction({
+          action: "code_write",
+          payload: response.code_writer_payload!,
+          reasoning: response.reasoning
+        })
       }));
     }
     else if (response.decision === "delegate_to_git_worker") {
@@ -151,12 +156,11 @@ export async function software_chief_node(state: AgentStateType) {
       updates.next_node = "git_worker";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando operación Git: ${response.reasoning}`,
-        additional_kwargs: {
-          git_instruction: {
-            payload: response.git_payload!,
-            repoPath: process.cwd()
-          }
-        }
+        additional_kwargs: ProtocolHelper.packInstruction({
+          action: "git_operation",
+          payload: response.git_payload!,
+          reasoning: response.reasoning
+        })
       }));
     }
     else if (response.decision === "delegate_to_test_runner") {
@@ -164,9 +168,11 @@ export async function software_chief_node(state: AgentStateType) {
       updates.next_node = "test_runner";
       updates.messages?.push(new AIMessage({
         content: `[CHIEF_DELEGATION] Delegando validación de tests: ${response.reasoning}`,
-        additional_kwargs: {
-          test_instruction: response.test_payload!
-        }
+        additional_kwargs: ProtocolHelper.packInstruction({
+          action: "test_operation",
+          payload: response.test_payload!,
+          reasoning: response.reasoning
+        })
       }));
     }
     else if (response.decision === "delegate_to_documentation_worker") {

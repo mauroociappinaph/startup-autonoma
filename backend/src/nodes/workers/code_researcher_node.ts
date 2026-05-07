@@ -1,50 +1,56 @@
 import { AgentStateType } from "@startup/shared";
 import { codeResearcher } from "./codeResearcher.js";
 import { AIMessage } from "@langchain/core/messages";
-import { CodeResearcherInput } from "@/types/code-researcher.types.js";
+import { ProtocolHelper } from "@/helpers/protocol_helper.js";
+import { SacredLogger } from "@/helpers/logger.js";
 import { incrementIteration } from "@/helpers/index.js";
+import { CodeResearcherInput } from "@/types/code-researcher.types.js";
 
 /**
  * Nodo CodeResearcherWorker: Agente especializado en explorar y leer el código fuente.
- * Cumple con la Ley #8 (Reasoning-First) al esperar una justificación técnica previa.
  */
 export async function code_researcher_node(state: AgentStateType) {
-  console.log("--- [NODE] EJECUTANDO CODE RESEARCHER WORKER ---");
+  SacredLogger.node("CODE RESEARCHER");
 
-  const lastMessage = state.messages[state.messages.length - 1];
+  const instruction = ProtocolHelper.getInstruction(state.messages);
   
-  if (!lastMessage || !lastMessage.additional_kwargs?.code_researcher_instruction) {
-    console.error("❌ No se encontró una instrucción válida para el Code Researcher.");
+  if (!instruction) {
+    SacredLogger.error("No se encontró una instrucción válida para el Code Researcher.", "RESEARCHER");
     return {
       executive_summary: "Error: No se recibió una instrucción de investigación válida.",
+      ...incrementIteration(state)
     };
   }
 
-  const instruction = lastMessage.additional_kwargs.code_researcher_instruction as CodeResearcherInput;
+  const payload = instruction.payload as CodeResearcherInput;
 
   try {
-    const result = await codeResearcher(instruction);
+    const result = await codeResearcher(payload as any);
 
     if (result.success) {
-      console.log(`✅ Investigación [${result.action}] completada.`);
+      SacredLogger.success(`Investigación [${result.action}] completada.`, "RESEARCHER");
       return {
-        ...incrementIteration(state),
         executive_summary: `Code Researcher ejecutó con éxito: ${result.action}.`,
-        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[RESEARCH_REPORT] Resultado de ${result.action}:\n${result.data}`,
-          additional_kwargs: { research_result: result }
+          additional_kwargs: ProtocolHelper.packResult({
+            status: "success",
+            payload: result,
+            reasoning: `La investigación de ${result.action} fue exitosa.`
+          })
         })]
       };
     } else {
-      console.error(`❌ Investigación [${result.action}] fallida: ${result.errorMessage}`);
+      SacredLogger.error(`Investigación [${result.action}] fallida: ${result.errorMessage}`, "RESEARCHER");
       return {
-        ...incrementIteration(state),
         executive_summary: `Error en Code Researcher: ${result.errorMessage}`,
-        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[RESEARCH_ERROR] Falló ${result.action}: ${result.errorMessage}`,
-          additional_kwargs: { research_result: result }
+          additional_kwargs: ProtocolHelper.packResult({
+            status: "failure",
+            payload: result,
+            reasoning: result.errorMessage || "Fallo desconocido en la investigación."
+          })
         })]
       };
     }

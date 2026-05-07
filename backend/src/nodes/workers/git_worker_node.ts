@@ -2,21 +2,19 @@ import { AgentStateType } from "@startup/shared";
 import { gitWorker } from "./gitWorker.js";
 import { AIMessage } from "@langchain/core/messages";
 import { GitCommandInput } from "@/types/git-worker.types.js";
+import { ProtocolHelper } from "@/helpers/protocol_helper.js";
 import { SacredLogger } from "@/helpers/logger.js";
 import { incrementIteration } from "@/helpers/index.js";
 
 /**
  * Nodo GitWorker: Brazo ejecutor de operaciones Git dentro del grafo.
- * Recibe instrucciones estructuradas y devuelve el resultado de la operación.
  */
 export async function git_worker_node(state: AgentStateType) {
   SacredLogger.node("GIT WORKER");
 
-  // Buscamos la última instrucción para el Git Worker en los mensajes
-  // El Software Chief debería haber dejado un mensaje con la instrucción
-  const lastMessage = state.messages[state.messages.length - 1];
+  const instruction = ProtocolHelper.getInstruction(state.messages);
   
-  if (!lastMessage || !lastMessage.additional_kwargs?.git_instruction) {
+  if (!instruction) {
     SacredLogger.error("No se encontró una instrucción válida para el Git Worker.", "GIT_NODE");
     return {
       executive_summary: "Error: No se recibió una instrucción Git válida.",
@@ -24,23 +22,24 @@ export async function git_worker_node(state: AgentStateType) {
     };
   }
 
-  const gitInstruction = lastMessage.additional_kwargs.git_instruction as GitCommandInput;
+  const gitInstruction = instruction.payload as GitCommandInput;
 
   try {
-    // Gap 2: Forzamos el uso del workspace del proyecto
-    const repoPath = state.project_context?.workDir;
+    const repoPath = state.project_context?.workDir || process.cwd();
     const result = await gitWorker({ ...gitInstruction, repoPath });
 
     if (result.success) {
       SacredLogger.success(`Operación Git [${result.action}] exitosa.`, "GIT_NODE");
       return {
-        executive_summary: `Git Worker ejecutó con éxito: ${result.action}. Stdout: ${result.stdout || 'N/A'}`,
-        completed_steps: ["git_operation"],
+        executive_summary: `Git Worker ejecutó con éxito: ${result.action}.`,
         ...incrementIteration(state),
-        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[GIT_REPORT] Operación ${result.action} completada.`,
-          additional_kwargs: { git_result: result }
+          additional_kwargs: ProtocolHelper.packResult({
+            status: "success",
+            payload: result,
+            reasoning: `Operación git ${result.action} completada sin conflictos.`
+          })
         })]
       };
     } else {
@@ -48,10 +47,13 @@ export async function git_worker_node(state: AgentStateType) {
       return {
         executive_summary: `Error en Git Worker: ${result.errorMessage}`,
         ...incrementIteration(state),
-        next_node: state.active_chief || "ceo",
         messages: [new AIMessage({
           content: `[GIT_ERROR] Falló ${result.action}: ${result.errorMessage}`,
-          additional_kwargs: { git_result: result }
+          additional_kwargs: ProtocolHelper.packResult({
+            status: "failure",
+            payload: result,
+            reasoning: result.errorMessage || "Fallo desconocido en git."
+          })
         })]
       };
     }
@@ -60,7 +62,15 @@ export async function git_worker_node(state: AgentStateType) {
     SacredLogger.error(`Fallo crítico en el Nodo GitWorker: ${err.message}`, "GIT_NODE");
     return {
       executive_summary: `Fallo crítico en Git Worker: ${err.message}`,
-      ...incrementIteration(state)
+      ...incrementIteration(state),
+      messages: [new AIMessage({
+        content: `[GIT_CRITICAL_ERROR] ${err.message}`,
+        additional_kwargs: ProtocolHelper.packResult({
+          status: "error",
+          payload: { error: err.message },
+          reasoning: "Excepción crítica en el nodo git."
+        })
+      })]
     };
   }
 }
