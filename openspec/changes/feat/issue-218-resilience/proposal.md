@@ -1,16 +1,26 @@
-# Change Proposal: Process Resilience (Issue #218)
+# Change Proposal: Process Resilience & Singleton Enforcement (Issue #218)
 
-## Intent
-Asegurar que el sistema sea resiliente a fugas de conexiones y cierres abruptos. Actualmente, el cliente de Prisma podría instanciarse múltiples veces en entornos de desarrollo/test, y el motor de IA en Python no maneja señales de terminación, lo que puede dejar sockets gRPC colgados.
+## Problem
+1. **Prisma Connection Leak**: In development with hot-reloading (tsx watch), multiple `PrismaClient` instances can be created, exhausting the database connection pool.
+2. **AI Engine Hanging Sockets**: The Python gRPC server (ai-engine) does not always release sockets cleanly when the container restarts or the process is killed, leading to `EADDRINUSE` errors.
+3. **Implicit Type Risks**: Current Singleton implementation in `packages/db` uses `any`, violating the "No Any" Sacred Law.
 
-## Scope
-- **Backend**: Refactorización del cliente de Prisma en `packages/db`.
-- **AI Engine**: Implementación de handlers de señales (SIGTERM/SIGINT) en el servidor gRPC.
+## Goals
+- Enforce a strict Singleton pattern for Prisma with proper TypeScript typing.
+- Implement a robust Graceful Shutdown for the AI Engine (Python/gRPC).
+- Verify resilience through automated scripts that simulate process termination.
 
 ## Proposed Approach
-1.  **Prisma Singleton**: Refinar el `packages/db/src/index.ts` para asegurar que el objeto `prisma` sea verdaderamente único en el espacio de nombres global de Node.js.
-2.  **Graceful Shutdown**: Modificar el punto de entrada del `ai-engine` para interceptar señales del OS y cerrar el servidor gRPC de forma ordenada, esperando a que las tareas en curso terminen o se cancelen limpiamente.
+- **Backend (Prisma)**:
+  - Define a global type for the Prisma singleton to eliminate `any`.
+  - Use `globalThis` for cross-module persistence in development.
+- **AI Engine (Python)**:
+  - Refine the `lifespan` handler in `app/main.py`.
+  - Ensure the gRPC `serve()` function catches `asyncio.CancelledError` and closes the server with a grace period.
 
 ## Risks
-- Interrupción de tareas de IA largas si el timeout de shutdown es muy corto.
-- Incompatibilidades de tipos en el Singleton de Prisma si se usan múltiples versiones del cliente (poco probable en este monorepo).
+- **Testing Interference**: Global singletons can sometimes share state between parallel tests if not handled carefully (though Prisma is stateless regarding the client object).
+
+## User Review Required
+> [!NOTE]
+> We are using `globalThis` (via `global` casting) to maintain the Prisma instance across hot-reloads. This is a standard pattern for Prisma in Next.js/Node environments.

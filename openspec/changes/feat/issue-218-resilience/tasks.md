@@ -1,12 +1,12 @@
-# Implementation Tasks: Process Resilience (Issue #218)
+# Tasks - Issue #218 Process Resilience
 
-- [x] **Prisma Singleton**
-    - [x] Refactorizar `packages/db/src/index.ts` con el patrón global singleton.
-    - [x] Validar tipado estricto (No Any) en el objeto global.
-- [x] **AI Engine Graceful Shutdown**
-    - [x] Importar el módulo `signal` en `ai-engine/app/main.py` (Manejado via lifespan de FastAPI).
-    - [x] Registrar handlers para `SIGINT` y `SIGTERM` (Manejado via lifespan y CancelledError).
-    - [x] Implementar el método de stop del servidor gRPC con timeout de 10s.
-- [x] **Verification**
-    - [x] Ejecutar `test-db.ts` para asegurar integridad de Prisma.
-    - [x] Simular señales en el entorno de desarrollo de Python.
+- [x] **Phase 1: Prisma Type Safety**
+    - [x] Refactor `packages/db/src/index.ts` to remove `any`.
+    - [x] Ensure `globalThis` is used for the singleton.
+- [x] **Phase 2: AI Engine Resilience**
+    - [x] Verify `ai-engine/app/core/grpc_server.py` supports graceful stop.
+    - [x] Add explicit logs for connection closing in Python.
+- [x] **Phase 3: Verification**
+    - [x] Run backend DB tests.
+    - [x] Verify AI Engine shutdown logs.
+    - [x] Audit logs for `EADDRINUSE` after multiple restarts.

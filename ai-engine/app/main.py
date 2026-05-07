@@ -37,13 +37,16 @@ async def lifespan(app: FastAPI):
     grpc_task = asyncio.create_task(serve())
     yield
     # Detener gracefully: cancelamos la tarea y esperamos a que el handler limpie
-    print("📢 Iniciando shutdown del AI Engine...")
+    print("\n[AI_ENGINE] 🛡️  Señal de apagado recibida")
+    print("[AI_ENGINE] 📢 Iniciando shutdown del servidor gRPC...")
     grpc_task.cancel()
     try:
-        await grpc_task
+        await asyncio.wait_for(grpc_task, timeout=12.0)
+    except asyncio.TimeoutError:
+        print("[AI_ENGINE] ⚠️  Shutdown excedió el tiempo límite. Forzando cierre.")
     except asyncio.CancelledError:
         pass
-    print("✨ AI Engine apagado con éxito.")
+    print("[AI_ENGINE] ✨ AI Engine apagado con éxito.")
 
 app = FastAPI(title="AI Engine - Startup Autónoma", lifespan=lifespan)
 
