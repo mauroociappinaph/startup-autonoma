@@ -49,6 +49,8 @@ export class AgentController {
    */
   static async stream(req: Request, res: Response) {
     const { prompt, threadId, sessionId } = req.query;
+    
+    SacredLogger.info(`🚀 INICIANDO MISIÓN: prompt="${prompt}", threadId="${threadId}"`, "STREAM");
 
     // Soporte para ambos modos: legacy (prompt) y encolado (sessionId)
     const resolvedPrompt = prompt ? String(prompt) : null;

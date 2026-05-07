@@ -13,8 +13,8 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
-      "@startup/shared": ["../packages/shared/src/index.ts"],
-      "@startup/shared/*": ["../packages/shared/src/*"]
+      "@startup/shared": ["../packages/shared/dist/index.d.ts"],
+      "@startup/shared/*": ["../packages/shared/dist/*"]
     }
   },
   "references": [

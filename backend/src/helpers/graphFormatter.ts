@@ -15,25 +15,24 @@ export class GraphFormatter {
         ? lastMsg.content 
         : JSON.stringify(lastMsg.content);
 
-      const tagMatch = content.match(/\[(.*?)\]/);
+      // Limpiamos el nombre del nodo para el agente (e.g. "ceo_node" -> "CEO")
+      const agentName = nodeName.replace(/_node$/, "").toUpperCase();
       
-      if (tagMatch) {
-        yield {
-          agent: tagMatch[1],
-          text: content.replace(/\[.*?\]/g, "").trim(),
-          time: new Date().toLocaleTimeString(),
-          activeNode: nodeName,
-          plan: nodeData.plan || undefined,
-          completedSteps: nodeData.completed_steps || undefined,
-          executiveSummary: nodeData.executive_summary || undefined,
-          token_usage: nodeData.token_usage || undefined,
-          iteration_count: nodeData.iteration_count || undefined,
-          total_cost_usd: nodeData.total_cost_usd || undefined,
-          reasoning: nodeData.reasoning || undefined,
-          checkpointId,
-          threadId
-        } as StreamEvent;
-      }
+      yield {
+        agent: agentName,
+        text: content,
+        time: new Date().toLocaleTimeString(),
+        activeNode: nodeName,
+        plan: nodeData.plan || undefined,
+        completedSteps: nodeData.completed_steps || undefined,
+        executiveSummary: nodeData.executive_summary || undefined,
+        token_usage: nodeData.token_usage || undefined,
+        iteration_count: nodeData.iteration_count || undefined,
+        total_cost_usd: nodeData.total_cost_usd || undefined,
+        reasoning: nodeData.reasoning || undefined,
+        checkpointId,
+        threadId
+      } as StreamEvent;
     }
 
     // Fallback: Si el update contiene campos de seguridad, emitimos un evento de sistema
