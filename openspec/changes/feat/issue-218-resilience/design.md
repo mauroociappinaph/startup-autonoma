@@ -1,35 +1,27 @@
 # Technical Design: Process Resilience (Issue #218)
 
-## Architecture Decisions
+## Architecture
 
-### D1: Pattern Singleton en TypeScript
-Usaremos la técnica estándar de Next.js/Prisma para el singleton global:
-```typescript
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-export const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-```
+### 1. Prisma Singleton (Backend)
+- **Location**: `packages/db/src/index.ts`.
+- **Logic**:
+  ```typescript
+  import { PrismaClient } from "@prisma/client";
+  const globalForPrisma = globalThis as unknown as {
+    prisma: PrismaClient | undefined;
+  };
+  export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+  ```
+- **Benefit**: Strictly typed via the exported `PrismaClient` type.
 
-### D2: Async Shutdown en Python
-Utilizaremos el método `server.stop(grace)` de `grpc.aio` (o el servidor síncrono si aplica) para manejar el cierre.
-Implementaremos un handler genérico:
-```python
-def handle_exit(sig, frame):
-    print(f"Received signal {sig}, shutting down...")
-    server.stop(10).wait()
-```
-
-## Component Breakdown
-### backend/packages/db
-- Actualizar `src/index.ts` para asegurar el Singleton y manejar los tipos de `global`.
-
-### ai-engine/app
-- Modificar `main.py` o `grpc_server.py` para registrar los handlers de `signal`.
+### 2. AI Engine Graceful Shutdown (Python)
+- **Location**: `ai-engine/app/main.py` and `ai-engine/app/core/grpc_server.py`.
+- **Logic**:
+  - `main.py`: Uses FastAPI `lifespan` to manage the event loop lifecycle.
+  - `grpc_server.py`: The `serve()` function must be awaitable and handle cancellation.
+- **Signal Handling**: Uvicorn automatically handles signals and triggers the FastAPI `lifespan` shutdown.
 
 ## Verification Plan
-### Automated Tests
-- Scripts de stress test para validar conexiones de Prisma.
-- Mock de señales en Python para verificar el flujo de shutdown.
-
-### Manual Verification
-- Levantar Docker y correr `docker stop ai-engine`, verificando los logs de salida.
+- **Scripted Check**: `backend/src/test-db.ts` to ensure Prisma is working.
+- **Manual Check**: Send `kill -TERM` to the AI Engine process and verify logs.
