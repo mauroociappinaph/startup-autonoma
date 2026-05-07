@@ -16,15 +16,16 @@ export const agentProcessor = {
       return false;
     }
 
-    // 1. Parsing de Dominio (XML CoT)
-    if (data.text) {
-      const parsed = parseAgentThought(data.text);
-      data.thought = parsed.thought;
-      data.plan_steps = parsed.plan;
-      data.verification = parsed.verification;
+    // 1. Telemetría y Metadatos (Sin chat)
+    if (data.type === "METRIC_PARTIAL" && data.metadata) {
+      store.updateTelemetry({
+        tokens: data.metadata.estimated_tokens,
+        cost: data.metadata.estimated_cost,
+      });
+      return true;
     }
 
-    // 2. Orquestación de Estado
+    // 2. Orquestación de Estado Global
     if (data.activeNode) store.setActiveNode(data.activeNode);
     if (data.plan && data.plan.length > 0) store.setCurrentPlan(data.plan);
     if (data.completedSteps && data.completedSteps.length > 0) {
@@ -34,27 +35,32 @@ export const agentProcessor = {
     if (data.isWaiting) store.setIsWaiting(true);
     if (data.threadId) store.setThreadId(data.threadId);
 
-    // 3. Telemetría
-    store.updateTelemetry({
-      tokens: data.token_usage?.total,
-      iterations: data.iteration_count,
-      cost: data.total_cost_usd
-    });
-
-    // 4. Gestión de la lista de pensamientos (Streaming dinámico)
-    this.updateThoughts(data, store);
-
-    // 5. Soporte para eventos de Sistema (Issue #128 + Security Audit)
-    if (data.type === "METRIC_PARTIAL" && data.metadata) {
+    // 3. Telemetría Final
+    if (data.token_usage || data.total_cost_usd) {
       store.updateTelemetry({
-        tokens: data.metadata.estimated_tokens,
-        cost: data.metadata.estimated_cost,
+        tokens: data.token_usage?.total,
+        iterations: data.iteration_count,
+        cost: data.total_cost_usd
       });
+    }
+
+    // 4. Gestión de Pensamientos (Solo si hay contenido real)
+    if (data.type === "SECURITY_ANALYSIS" && data.security_audit) {
+      data.text = data.text || `🛡️ Seguridad: ${data.security_audit.verdict === 'safe' ? 'PERMITIDO' : 'BLOQUEADO'}`;
+      this.updateThoughts(data, store);
       return true;
     }
 
-    if (data.type === "SECURITY_ANALYSIS" && data.security_audit) {
-      data.text = `Análisis de seguridad completado: ${data.security_audit.verdict === 'safe' ? 'Permitido' : 'Bloqueado'}`;
+    if (data.text || data.thought) {
+      // Parsing XML CoT si es necesario
+      if (data.text && !data.thought) {
+        const parsed = parseAgentThought(data.text);
+        data.thought = parsed.thought;
+        data.plan_steps = parsed.plan;
+        data.verification = parsed.verification;
+      }
+      
+      console.log(`[AgentProcessor] Agregando pensamiento de ${data.agent}:`, data.text?.slice(0, 30));
       this.updateThoughts(data, store);
       return true;
     }

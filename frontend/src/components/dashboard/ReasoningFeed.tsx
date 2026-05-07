@@ -107,25 +107,41 @@ export const ReasoningFeed: React.FC = () => {
                     </div>
 
                     {/* Verdict Banner */}
-                    <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                    <div className={`p-4 rounded-xl border space-y-3 ${
                       thought.security_audit.verdict === 'safe' 
-                        ? 'bg-blue-600/20 border-blue-500/30 text-blue-100' 
-                        : 'bg-red-600/20 border-red-500/30 text-red-100'
+                        ? 'bg-blue-600/10 border-blue-500/20 text-blue-100' 
+                        : 'bg-red-600/10 border-red-500/20 text-red-100'
                     }`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                          thought.security_audit.verdict === 'safe' ? 'bg-blue-500' : 'bg-red-500'
-                        }`}>
-                          {thought.security_audit.verdict === 'safe' ? <Zap className="w-3 h-3 text-white" /> : <ShieldAlert className="w-3 h-3 text-white" />}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            thought.security_audit.verdict === 'safe' ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]'
+                          }`}>
+                            {thought.security_audit.verdict === 'safe' ? <Zap className="w-4 h-4 text-white" /> : <ShieldAlert className="w-4 h-4 text-white" />}
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-widest block leading-none opacity-70">Security Verdict</span>
+                            <span className="text-[14px] font-black tracking-tight">{thought.security_audit.verdict === 'safe' ? 'ACCESO PERMITIDO' : 'ACCESO BLOQUEADO'}</span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-[10px] font-black uppercase tracking-widest block leading-none">Veredicto del Juez</span>
-                          <span className="text-[12px] font-bold">{thought.security_audit.verdict === 'safe' ? 'ACCESO PERMITIDO' : 'ACCESO BLOQUEADO'}</span>
-                        </div>
+                        <Badge variant="outline" className="text-[9px] border-white/20 uppercase">
+                          {thought.agent}
+                        </Badge>
                       </div>
-                      <span className="text-[9px] font-mono opacity-60">
-                        {thought.security_audit.judge?.slice(0, 40)}...
-                      </span>
+
+                      {thought.security_audit.judge && (
+                        <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                          <span className="text-[9px] font-bold uppercase tracking-tighter text-muted-foreground block mb-1">Judge Reasoning</span>
+                          <p className="text-[11px] leading-relaxed italic opacity-90">
+                            {thought.security_audit.judge}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-[9px] font-mono opacity-50">
+                        <span>THREAT_LEVEL: {(thought as any).threat_level || 'LOW'}</span>
+                        <span>{thought.time}</span>
+                      </div>
                     </div>
                   </motion.div>
                 );

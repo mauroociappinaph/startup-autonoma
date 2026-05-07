@@ -66,13 +66,16 @@ export function useAgentStream() {
       `/api/agents/stream?prompt=${encodeURIComponent(prompt)}&threadId=${newThreadId}`,
       {
         onData: (data) => {
+          console.log("📥 [AgentStream] Chunk recibido:", data);
           agentProcessor.process(data as AgentThought, actions);
         },
         onEnd: () => {
+          console.log("🏁 [AgentStream] Stream finalizado.");
           setIsStreaming(false);
           eventSourceRef.current = null;
         },
         onError: (err) => {
+          console.error("❌ [AgentStream] Error en el stream:", err);
           setIsStreaming(false);
           eventSourceRef.current = null;
         }
@@ -92,9 +95,16 @@ export function useAgentStream() {
 
       if (reader) {
         await sseClient.readStream(reader, {
-          onData: (data) => agentProcessor.process(data as AgentThought, actions),
-          onEnd: () => setIsStreaming(false),
+          onData: (data) => {
+            console.log("📥 [AgentStream] (Approve) Chunk recibido:", data);
+            agentProcessor.process(data as AgentThought, actions);
+          },
+          onEnd: () => {
+            console.log("🏁 [AgentStream] (Approve) Stream finalizado.");
+            setIsStreaming(false);
+          },
           onError: (err) => {
+            console.error("❌ [AgentStream] (Approve) Error:", err);
             setIsStreaming(false);
           }
         });
@@ -117,9 +127,16 @@ export function useAgentStream() {
 
       if (reader) {
         await sseClient.readStream(reader, {
-          onData: (data) => agentProcessor.process(data as AgentThought, actions),
-          onEnd: () => setIsStreaming(false),
+          onData: (data) => {
+            console.log("📥 [AgentStream] (Reject) Chunk recibido:", data);
+            agentProcessor.process(data as AgentThought, actions);
+          },
+          onEnd: () => {
+            console.log("🏁 [AgentStream] (Reject) Stream finalizado.");
+            setIsStreaming(false);
+          },
           onError: (err) => {
+            console.error("❌ [AgentStream] (Reject) Error:", err);
             setIsStreaming(false);
           }
         });
