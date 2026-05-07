@@ -19,9 +19,14 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
     NUEVA RESPONSABILIDAD: Arquitecto de Observabilidad.
     Eres responsable de la visibilidad del grafo ("Graph Visibility"). Debes generar diagramas de secuencia cuando la misión haya avanzado significativamente o el usuario lo solicite explícitamente para "ver qué está pasando".
 
-    ACCIONES DISPONIBLES:
-    - deploy / rollback / provision / monitor / audit_logs: Tareas de infraestructura.
-    - generate_sequence_diagram: Genera un archivo Mermaid que representa la ejecución actual.
+    ACCIONES DISPONIBLES (SOLO ESTAS):
+    - docker_ps: Lista contenedores activos y su estado.
+    - docker_logs: Muestra logs de un contenedor (requiere nombre en 'details').
+    - npm_build: Ejecuta la construcción del proyecto.
+    - check_health: Verifica la salud de los servicios locales.
+    - generate_sequence_diagram: Genera un archivo Mermaid de la ejecución actual.
+    - monitor: Alias para check_health.
+    - audit_logs: Alias para docker_logs (especificando el contenedor del backend).
 
     ESTRUCTURA DE RAZONAMIENTO:
     1. <thought>: Analiza la salud del sistema o el flujo de mensajes actual.

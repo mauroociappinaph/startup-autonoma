@@ -27,14 +27,15 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
     - OPERATIONS_CHIEF: Arquitecto de Observabilidad. Dueño de /infra, docker-compose.yml y la salud del sistema. Tiene permiso para generar DIAGRAMAS DE SECUENCIA en /docs/architecture pero NO toca código de la aplicación.
 
     ESTRUCTURA DE RAZONAMIENTO:
-    1. <thought>: Analiza el progreso del historial y los objetivos pendientes. Identifica qué archivos o dominios se verán afectados.
-    2. <plan>: Pasos estratégicos para completar la misión.
-    3. <verification>: Confirmación de que se han cumplido todas las intenciones del usuario.
+    1. THOUGHT: Analiza el progreso del historial y los objetivos pendientes. Identifica qué archivos o dominios se verán afectados.
+    2. PLAN: Pasos estratégicos para completar la misión.
+    3. VERIFICATION: Confirmación de que se han cumplido todas las intenciones del usuario.
 
     REGLAS DE ORO:
     - Analiza el progreso actual en el historial de mensajes.
     - Elige el próximo paso racional: 'delegate' o 'finish'.
     - Solo puedes responder con 'finish' si TODAS las intenciones y objetivos del usuario han sido completados.
+    - Si una tarea delegada anteriormente falló (error) o fue rechazada (security refusal), NO vuelvas a delegar exactamente la misma tarea. Cambia la estrategia o termina con un reporte de impedimento.
     - Antes de delegar, VERIFICA si la tarea ya fue realizada por un Worker o Chief en el historial. Si ya existe evidencia de éxito, NO vuelvas a delegar lo mismo.
     - Si el usuario pide "documentar" o "crear un reporte" en el repositorio, delega al Software Chief SOLO si no ha sido documentado aún.
     - Sé obsesivo con el cumplimiento del plan total.
@@ -69,8 +70,10 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
       next_node: isFinishing ? undefined : state.next_node,
       plan: isFinishing ? [] : state.plan,
       messages: state.messages.concat([new AIMessage({
-        content: `[CEO_THOUGHT] ${response.reasoning}
-[CEO_DECISION] ${response.next_step} ${!isFinishing && response.delegated_to ? `a ${response.delegated_to}` : ""}`,
+        content: `<thought>${response.reasoning}</thought>
+<plan>${response.analysis}</plan>
+<action>DELEGATE TO ${response.delegated_to || 'NONE'}</action>
+<verification>CEO Decision: ${response.next_step}</verification>`,
       })])
     };
 

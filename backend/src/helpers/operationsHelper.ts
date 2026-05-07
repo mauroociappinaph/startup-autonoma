@@ -5,7 +5,9 @@ const ALLOWED_COMMANDS: Record<string, string> = {
   docker_ps: 'docker ps --format "{{.Names}}: {{.Status}}"',
   docker_logs: 'docker logs {args} --tail 50',
   npm_build: 'npm run build',
-  check_health: 'curl -s http://localhost:3000/health || echo "Offline"'
+  check_health: 'curl -s http://localhost:3000/health || echo "Offline"',
+  monitor: 'curl -s http://localhost:3000/health || echo "Offline"',
+  audit_logs: 'docker logs backend --tail 50'
 };
 
 /**
