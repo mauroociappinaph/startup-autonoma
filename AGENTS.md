@@ -207,6 +207,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── tsconfig.json
 ├── full_validation.log
 ├── /infra
+│   ├── /sandbox
 ├── /openspec
 │   ├── /changes
 │   │   ├── /arch
@@ -259,6 +260,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   ├── quick-commit.ts
 ├── /skills
 ├── task.md
+├── /temp
 ├── tsconfig.json
 ├── tsconfig.tsbuildinfo
 ├── turbo.json

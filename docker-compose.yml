@@ -169,7 +169,9 @@ services:
   # AGENT SANDBOX (Aislamiento para ejecución de código)
   # -------------------------------------------------------
   sandbox:
-    image: node:20-alpine
+    build:
+      context: .
+      dockerfile: infra/sandbox/Dockerfile
     container_name: startup-sandbox
     restart: unless-stopped
     command: tail -f /dev/null
