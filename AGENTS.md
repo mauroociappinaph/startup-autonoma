@@ -58,6 +58,7 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 53. **Strict-XML-Formatting:** Las respuestas de los agentes deben seguir la estructura de tags XML: `<thought>`, `<plan>`, `<action>`, `<verification>`. Esto permite un parsing determinista y una mejor visualización en el dashboard.
 54. **Single-Source-of-Proto:** Prohibido duplicar archivos `.proto`. Toda comunicación gRPC debe definirse en `packages/protos/proto` y regenerarse mediante `npm run generate`.
 55. **Clean-Test-Teardown:** Todo test que utilice infraestructura (Redis, DB, gRPC) DEBE asegurar el cierre de conexiones en el `afterAll` global para evitar "open handles" y cuelgues en el CI/CD.
+56. **Mandatory-Sandbox-Execution:** Todo comando CLI arbitrario ejecutado por un agente DEBE correr dentro del `startup-sandbox` vía `SandboxService`. Prohibida la ejecución directa en el host.
 
 ---
 
