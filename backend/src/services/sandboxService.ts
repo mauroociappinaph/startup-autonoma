@@ -52,13 +52,19 @@ export class SandboxService {
          // Podríamos ser más estrictos aquí en el futuro
       }
 
-      console.log(`[SANDBOX] Ejecutando: ${command} en ${workingDir} (Timeout: ${timeout}ms)`);
+      console.log(`\n[SANDBOX] 🛡️  EJECUCIÓN SEGURA`);
+      console.log(`[SANDBOX] 📜 Comando: ${command}`);
+      console.log(`[SANDBOX] 📂 Directorio: ${workingDir}`);
+      console.log(`[SANDBOX] ⏳ Timeout: ${timeout}ms`);
       
       // Construimos el comando de docker exec con timeout (usando el comando 'timeout' de linux)
       const timeoutSec = Math.ceil(timeout / 1000);
       const fullCommand = `docker exec -w /workspace/${workingDir} ${this.containerName} timeout ${timeoutSec}s ${command}`;
 
       const { stdout, stderr } = await execAsync(fullCommand);
+
+      console.log(`[SANDBOX] ✅ Éxito: ${command.split(' ')[0]}`);
+      if (stdout) console.log(`[SANDBOX] 📤 Output: ${stdout.substring(0, 100)}${stdout.length > 100 ? '...' : ''}`);
 
       return {
         success: true,
@@ -75,7 +81,8 @@ export class SandboxService {
         ? `Tiempo de ejecución excedido (${timeout}ms)` 
         : err.message;
 
-      console.warn(`[SANDBOX] Error en ejecución: ${errorMessage}`);
+      console.warn(`[SANDBOX] ❌ ERROR: ${errorMessage}`);
+      if (err.stderr) console.warn(`[SANDBOX] 🛑 Stderr: ${err.stderr.substring(0, 100)}...`);
       
       return {
         success: false,
