@@ -89,7 +89,7 @@ export class LLMFactory {
       },
       ultra: {
         openai: "gpt-4o",
-        nvidia: process.env.NVIDIA_ULTRA_MODEL || "meta/llama-3.1-405b-instruct",
+        nvidia: process.env.NVIDIA_ULTRA_MODEL || "meta/llama-3.1-70b-instruct",
         groq: "llama-3.3-70b-versatile",
       },
       flow: {

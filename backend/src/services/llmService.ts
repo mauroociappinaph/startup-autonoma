@@ -233,18 +233,63 @@ export class LLMService {
     };
 
     try {
-      const parsedData = await parser.parse(content);
-      return {
-        data: parsedData,
-        usage: {
-          total: usage.total_tokens || 0,
-          prompt: usage.input_tokens || 0,
-          completion: usage.output_tokens || 0
+      // --- MEJORA: Sanitización agresiva de JSON ---
+      let sanitizedContent = content.trim();
+      
+      // 1. Eliminar bloques de código markdown si existen
+      if (sanitizedContent.includes("```")) {
+        const match = sanitizedContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (match) sanitizedContent = match[1];
+      }
+      
+      // 2. Extraer solo lo que está entre el primer '{' y el último '}'
+      const firstBrace = sanitizedContent.indexOf("{");
+      const lastBrace = sanitizedContent.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        sanitizedContent = sanitizedContent.substring(firstBrace, lastBrace + 1);
+      }
+
+      try {
+        const parsedData = JSON.parse(sanitizedContent);
+        return {
+          data: parsedData,
+          usage: {
+            total: usage.total_tokens || 0,
+            prompt: usage.input_tokens || 0,
+            completion: usage.output_tokens || 0
+          }
+        };
+      } catch (parseError) {
+        // Si falla el parse del bloque completo, intentamos encontrar el primer JSON válido
+        // Esto ayuda si el modelo pegó basura después del objeto JSON o si el lastIndexOf falló por texto extra.
+        SacredLogger.warn("Fallo inicial de JSON.parse, intentando recuperación por truncamiento...", "LLM_SERVICE");
+        
+        let tempContent = sanitizedContent;
+        while (tempContent.length > 0) {
+          const lastIdx = tempContent.lastIndexOf("}");
+          if (lastIdx === -1) break;
+          tempContent = tempContent.substring(0, lastIdx + 1);
+          try {
+            const parsedData = JSON.parse(tempContent);
+            SacredLogger.info("Recuperación de JSON exitosa tras truncamiento.", "LLM_SERVICE");
+            return {
+              data: parsedData,
+              usage: {
+                total: usage.total_tokens || 0,
+                prompt: usage.input_tokens || 0,
+                completion: usage.output_tokens || 0
+              }
+            };
+          } catch {
+            // Intentamos quitar el último carácter y buscar el siguiente corchete de cierre
+            tempContent = tempContent.substring(0, tempContent.length - 1);
+          }
         }
-      };
+        throw parseError;
+      }
     } catch (e) {
-      SacredLogger.error("Error crítico: El modelo no cumplió con el formato JSON solicitado.", "LLM_SERVICE");
-      throw e;
+      SacredLogger.error(`Error crítico en parsing JSON: ${content.slice(0, 500)}`, "LLM_SERVICE", e as Error);
+      throw new Error("El modelo no cumplió con el formato JSON solicitado tras múltiples intentos de sanitización.");
     }
   }
 

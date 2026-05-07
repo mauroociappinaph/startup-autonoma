@@ -39,6 +39,8 @@ export interface AgentThought {
     judge?: string;
     verdict: 'safe' | 'unsafe';
   };
+  threat_level?: string;
+  decision?: string;
 }
 
 /**
