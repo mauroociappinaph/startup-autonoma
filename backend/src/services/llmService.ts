@@ -1,300 +1,71 @@
 import { z } from "zod";
 import { BaseMessage } from "@langchain/core/messages";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { LLMFactory } from "./llmFactory.js";
-import { LLMFactoryOptions, LangChainResponseWithUsage } from "@/types/llm.types.js";
+import { LLMFactoryOptions } from "@/types/llm.types.js";
 import { ContextManager } from "../helpers/contextManager.js";
-import { MODEL_PRICING } from "../config/pricing.js";
-import { StructuredOutputParser } from "@langchain/core/output_parsers";
-
 import { TelemetryService } from "./telemetryService.js";
-import { SacredLogger } from "@/helpers/logger.js";
 import { SpanStatusCode, Span } from "@opentelemetry/api";
+import { ProviderManager } from "./llm/providerManager.js";
+import { RetryStrategy } from "./llm/retryStrategy.js";
 
 /**
- * Helper interno para Timeouts.
- */
-function withTimeout<T>(promise: Promise<T>, ms: number = 120000): Promise<T> {
-  let timeoutId: NodeJS.Timeout;
-  const timeoutPromise = new Promise<T>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error(`LLM Timeout después de ${ms}ms`));
-    }, ms);
-  });
-
-  return Promise.race([
-    promise,
-    timeoutPromise
-  ]).finally(() => {
-    if (timeoutId) clearTimeout(timeoutId);
-  });
-}
-
-/**
- * Servicio de alto nivel para interactuar con LLMs.
- * Garantiza cumplimiento de Ley #13 (Trimming) y Ley #14 (Structured Data).
+ * Fachada de alto nivel para interactuar con LLMs.
+ * Cumple con la Ley Sagrada de archivos pequeños (< 300 líneas).
  */
 export class LLMService {
+  /**
+   * Delegado para el cálculo de costos.
+   */
   public static calculateCost(usage: { prompt: number; completion: number }, model: string): number {
-    const pricing = MODEL_PRICING[model] || MODEL_PRICING["default"];
-    return (usage.prompt / 1_000_000) * pricing.input + (usage.completion / 1_000_000) * pricing.output;
+    return ProviderManager.calculateCost(usage, model);
   }
 
   /**
-   * Obtiene datos estructurados garantizados junto con telemetría completa.
+   * Obtiene datos estructurados con resiliencia y telemetría.
    */
   static async getStructuredData<T extends z.ZodTypeAny>(
     config: LLMFactoryOptions,
     messages: BaseMessage[],
     schema: T
-  ): Promise<{ 
-    data: z.infer<T>; 
-    usage: { total: number; prompt: number; completion: number };
-    cost: number;
-    latency: number;
-    model: string;
-  }> {
+  ) {
     return this._withSpan(`LLM_GENERATE_STRUCTURED:${config.type}`, { "llm.type": config.type }, async (span) => {
       const startTime = performance.now();
-      // ... rest of logic
-    const rawModel = LLMFactory.createModel(config) as BaseChatModel;
-    const trimmedMessages = await ContextManager.trim(messages, rawModel);
+      const rawModel = ProviderManager.createModel(config);
+      const trimmedMessages = await ContextManager.trim(messages, rawModel);
 
-    const provider = LLMFactory.getProviderForType(config.type);
-    const modelWithName = rawModel as BaseChatModel & { modelName?: string; model?: string };
-    const modelName = modelWithName.modelName || modelWithName.model || "unknown";
+      const result = await RetryStrategy.executeWithStructuredRetry(config, trimmedMessages, schema, startTime);
+      
+      const latency = performance.now() - startTime;
+      const cost = this.calculateCost(result.usage, result.model);
 
-    let lastError: Error | null = null;
-    let currentConfig = { ...config };
-    let currentModel = rawModel;
-
-    // BUCLE DE RESILIENCIA (Máximo 3 intentos con rotación de estrategia/provider)
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        SacredLogger.info(`Intento ${attempt}/3 para ${config.type} (${modelName})`, "LLM_SERVICE");
-        
-        // Intento de salida estructurada nativa (o manual si es nvidia)
-        const currentProvider = LLMFactory.getProviderForType(currentConfig.type);
-        if (currentProvider === "nvidia") {
-          const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema, currentConfig.timeoutMs);
-          const latency = performance.now() - startTime;
-          const cost = this.calculateCost(result.usage, modelName);
-          return { ...result, cost, latency, model: modelName };
-        }
-
-        const modelWithStructuredOutput = currentModel.withStructuredOutput(schema, { includeRaw: true });
-        const response = (await withTimeout(modelWithStructuredOutput.invoke(trimmedMessages), currentConfig.timeoutMs || 120000)) as { 
-          parsed: z.infer<T>, 
-          raw: LangChainResponseWithUsage 
-        };
-        
-        const usage = response.raw.usage_metadata || {
-          input_tokens: 0,
-          output_tokens: 0,
-          total_tokens: 0
-        };
-
-        const latency = performance.now() - startTime;
-        const usageData = {
-          total: usage.total_tokens || 0,
-          prompt: usage.input_tokens || 0,
-          completion: usage.output_tokens || 0
-        };
-
-        const cost = this.calculateCost(usageData, modelName);
-
-        return {
-          data: response.parsed as z.infer<T>,
-          usage: usageData,
-          cost,
-          latency,
-          model: modelName
-        };
-      } catch (error: unknown) {
-        lastError = error as Error;
-        SacredLogger.warn(`Fallo en intento ${attempt}: ${lastError.message}`, "LLM_SERVICE");
-
-        if (attempt === 1) {
-          SacredLogger.info("Reintentando con modo manual...", "LLM_SERVICE");
-          try {
-             const result = await this._getManualStructuredData(currentModel, trimmedMessages, schema, currentConfig.timeoutMs);
-             const latency = performance.now() - startTime;
-             const cost = this.calculateCost(result.usage, modelName);
-             return { ...result, cost, latency, model: modelName };
-          } catch (manualError: unknown) {
-             lastError = manualError as Error;
-          }
-        } else if (attempt === 2) {
-          const isFastType = config.type === "fast";
-          if (isFastType) {
-            SacredLogger.warn(`Cambiando a Groq 70b para el último intento...`, "LLM_SERVICE");
-            currentConfig = { ...currentConfig, type: "flow" };
-            currentModel = LLMFactory.createModel({ ...config, type: "flow" });
-          } else {
-            const fallbackProvider = provider === "nvidia" ? "groq" : "nvidia";
-            SacredLogger.warn(`Cambiando de proveedor a ${fallbackProvider}...`, "LLM_SERVICE");
-            currentConfig = { ...currentConfig, type: fallbackProvider === "nvidia" ? "ultra" : "flow" };
-            currentModel = LLMFactory.createModel({ ...config, type: fallbackProvider === "nvidia" ? "ultra" : "flow" });
-          }
-        }
-      }
-    }
-
-    SacredLogger.error("Agotados todos los intentos de resiliencia.", "LLM_SERVICE", lastError || undefined);
-    throw lastError || new Error("Error desconocido en LLMService");
+      return { ...result, cost, latency };
     });
   }
   
   /**
-   * Obtiene una respuesta de texto plana junto con telemetría.
+   * Obtiene respuesta de texto plano.
    */
-  static async getText(
-    config: LLMFactoryOptions,
-    messages: BaseMessage[]
-  ): Promise<{ 
-    content: string; 
-    usage: { total: number; prompt: number; completion: number };
-    cost: number;
-    latency: number;
-    model: string;
-  }> {
+  static async getText(config: LLMFactoryOptions, messages: BaseMessage[]) {
     return this._withSpan(`LLM_GENERATE_TEXT:${config.type}`, { "llm.type": config.type }, async (span) => {
       const startTime = performance.now();
-    const rawModel = LLMFactory.createModel(config) as BaseChatModel;
-    const trimmedMessages = await ContextManager.trim(messages, rawModel);
-    
-    const modelWithName = rawModel as BaseChatModel & { modelName?: string; model?: string };
-    const modelName = modelWithName.modelName || modelWithName.model || "unknown";
+      const rawModel = ProviderManager.createModel(config);
+      const trimmedMessages = await ContextManager.trim(messages, rawModel);
+      const modelName = ProviderManager.getModelName(rawModel);
 
-    const response = await withTimeout(rawModel.invoke(trimmedMessages), config.timeoutMs || 120000);
-    const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
-    
-    const responseWithMetadata = response as LangChainResponseWithUsage;
-    const usage = responseWithMetadata.usage_metadata || {
-      input_tokens: 0,
-      output_tokens: 0,
-      total_tokens: 0
-    };
+      const response = await rawModel.invoke(trimmedMessages);
+      const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
+      
+      const usage = (response as any).usage_metadata || { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+      const usageData = { total: usage.total_tokens, prompt: usage.input_tokens, completion: usage.output_tokens };
+      
+      const latency = performance.now() - startTime;
+      const cost = this.calculateCost(usageData, modelName);
 
-    const usageData = {
-      total: usage.total_tokens || 0,
-      prompt: usage.input_tokens || 0,
-      completion: usage.output_tokens || 0
-    };
-
-    const latency = performance.now() - startTime;
-    const cost = this.calculateCost(usageData, modelName);
-
-    return {
-      content,
-      usage: usageData,
-      cost,
-      latency,
-      model: modelName
-    };
+      return { content, usage: usageData, cost, latency, model: modelName };
     });
   }
 
   /**
-   * Método de respaldo: Pide JSON explícito y lo parsea.
-   */
-  private static async _getManualStructuredData<T extends z.ZodTypeAny>(
-    model: BaseChatModel, 
-    messages: BaseMessage[], 
-    schema: T,
-    timeoutMs?: number
-  ): Promise<{ data: z.infer<T>; usage: { total: number; prompt: number; completion: number } }> {
-    const parser = StructuredOutputParser.fromZodSchema(schema);
-    const formatInstructions = parser.getFormatInstructions();
-    
-    const jsonInstruction = `\n\n${formatInstructions}\n\nIMPORTANTE: Tu respuesta DEBE ser únicamente un objeto JSON válido según las instrucciones anteriores. No incluyas explicaciones fuera del JSON.`;
-    
-    const formattedMessages = messages.map((m, i) => {
-      let role = "user";
-      const type = m._getType();
-      
-      if (type === "ai") role = "assistant";
-      if (type === "system") role = "system";
-      if (type === "human") role = "user";
-
-      const content = i === messages.length - 1 ? m.content + jsonInstruction : m.content;
-      return { role, content };
-    });
-
-    const response = await withTimeout(model.invoke(formattedMessages), timeoutMs || 120000);
-    const content = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
-    
-    // Seguro para evitar eslint error de no-explicit-any
-    const responseWithMetadata = response as LangChainResponseWithUsage;
-    const usage = responseWithMetadata.usage_metadata || {
-      input_tokens: 0,
-      output_tokens: 0,
-      total_tokens: 0
-    };
-
-    try {
-      // --- MEJORA: Sanitización agresiva de JSON ---
-      let sanitizedContent = content.trim();
-      
-      // 1. Eliminar bloques de código markdown si existen
-      if (sanitizedContent.includes("```")) {
-        const match = sanitizedContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (match) sanitizedContent = match[1];
-      }
-      
-      // 2. Extraer solo lo que está entre el primer '{' y el último '}'
-      const firstBrace = sanitizedContent.indexOf("{");
-      const lastBrace = sanitizedContent.lastIndexOf("}");
-      if (firstBrace !== -1 && lastBrace !== -1) {
-        sanitizedContent = sanitizedContent.substring(firstBrace, lastBrace + 1);
-      }
-
-      try {
-        const parsedData = JSON.parse(sanitizedContent);
-        return {
-          data: parsedData,
-          usage: {
-            total: usage.total_tokens || 0,
-            prompt: usage.input_tokens || 0,
-            completion: usage.output_tokens || 0
-          }
-        };
-      } catch (parseError) {
-        // Si falla el parse del bloque completo, intentamos encontrar el primer JSON válido
-        // Esto ayuda si el modelo pegó basura después del objeto JSON o si el lastIndexOf falló por texto extra.
-        SacredLogger.warn("Fallo inicial de JSON.parse, intentando recuperación por truncamiento...", "LLM_SERVICE");
-        
-        let tempContent = sanitizedContent;
-        while (tempContent.length > 0) {
-          const lastIdx = tempContent.lastIndexOf("}");
-          if (lastIdx === -1) break;
-          tempContent = tempContent.substring(0, lastIdx + 1);
-          try {
-            const parsedData = JSON.parse(tempContent);
-            SacredLogger.info("Recuperación de JSON exitosa tras truncamiento.", "LLM_SERVICE");
-            return {
-              data: parsedData,
-              usage: {
-                total: usage.total_tokens || 0,
-                prompt: usage.input_tokens || 0,
-                completion: usage.output_tokens || 0
-              }
-            };
-          } catch {
-            // Intentamos quitar el último carácter y buscar el siguiente corchete de cierre
-            tempContent = tempContent.substring(0, tempContent.length - 1);
-          }
-        }
-        throw parseError;
-      }
-    } catch (e) {
-      SacredLogger.error(`Error crítico en parsing JSON: ${content.slice(0, 500)}`, "LLM_SERVICE", e as Error);
-      throw new Error("El modelo no cumplió con el formato JSON solicitado tras múltiples intentos de sanitización.");
-    }
-  }
-
-  /**
-   * Helper interno para manejar spans de OpenTelemetry.
+   * Orquestador de Telemetría (OpenTelemetry Spans).
    */
   private static async _withSpan<T>(
     spanName: string,
@@ -306,15 +77,8 @@ export class LLMService {
       span.setAttributes(attributes);
       try {
         const result = await fn(span);
-        // Si el resultado tiene uso de tokens, lo agregamos al span
-        interface LLMResult {
-          usage?: { prompt: number; completion: number; total: number };
-          model?: string;
-          cost?: number;
-        }
-        
         if (result && typeof result === "object") {
-          const res = result as LLMResult;
+          const res = result as any;
           if (res.usage) {
             span.setAttributes({
               "llm.usage.prompt": res.usage.prompt,
