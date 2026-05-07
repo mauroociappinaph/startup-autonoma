@@ -21,6 +21,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "check": "turbo run check",
+    "test:fast": "turbo run test:fast",
     "check-laws": "tsx scripts/architecture-audit/runner.ts",
     "check-docker": "node scripts/check-docker.js",
     "verify-srp": "node scripts/verify-srp.js",

@@ -15,6 +15,10 @@
       "inputs": ["src/**", "package.json", "tsconfig.json", "jest.config.js"],
       "outputs": []
     },
+    "test:fast": {
+      "inputs": ["src/**", "package.json", "tsconfig.json", "jest.config.js"],
+      "outputs": []
+    },
     "lint": {
       "inputs": ["src/**", ".eslintrc.json", "package.json"],
       "outputs": []
