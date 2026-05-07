@@ -45,8 +45,27 @@ export async function ai_engine_worker_node(state: AgentStateType) {
   try {
     console.log(`🚀 Llamando a Worker Python: ${aiTask.worker_name}...`);
     
-    // Aseguramos que trace_id sea un string
     const traceId = TraceContext.getTraceId() || aiTask.trace_id || (state.trace_id ? String(state.trace_id) : "unknown");
+
+    // Iniciar streaming de progreso en background
+    const progressStream = aiEngineClient.streamProgress({
+      worker_name: aiTask.worker_name,
+      task_description: aiTask.task_description,
+      trace_id: traceId,
+      payload: aiTask.payload || {}
+    });
+
+    progressStream.on("data", (update) => {
+      console.log(`📢 [PROGRESS] ${aiTask.worker_name}: ${update.status} (${update.progress_percentage}%)`);
+      // Publicar al EventBus para que llegue al Dashboard via SSE
+      import("@/services/eventBus.js").then(({ EventBus }) => {
+        EventBus.publish(traceId, {
+          type: "agent_progress",
+          worker: aiTask.worker_name,
+          ...update
+        }).catch(err => console.error("❌ Fallo publicando progreso:", err));
+      });
+    });
 
     const response = await aiEngineClient.executeTask({
       worker_name: aiTask.worker_name,

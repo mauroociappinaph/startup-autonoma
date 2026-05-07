@@ -7,6 +7,7 @@ from app.grpc_generated import ai_engine_pb2, ai_engine_pb2_grpc
 
 # Importamos la función del worker (ahora asíncrona)
 from app.workers.lead_gen_worker import process_lead_generation_task
+from app.core.progress_manager import progress_manager
 
 logging.basicConfig(level=logging.INFO)
 
@@ -41,17 +42,32 @@ class AIEngineServicer(ai_engine_pb2_grpc.AIEngineServicer):
             )
 
     async def StreamWorkerProgress(self, request, context):
-        print(f"--- [GRPC SERVER] Streaming progreso para: {request.worker_name} ---")
-        # Simulación de streaming de progreso asíncrono
-        for i in range(1, 6):
-            await asyncio.sleep(0.5)
-            yield ai_engine_pb2.WorkerProgressUpdate(
-                status=f"Processing step {i}/5",
-                progress_percentage=i*20,
-                log_message=f"Simulating step {i}",
-                trace_id=request.trace_id
-            )
-        yield ai_engine_pb2.WorkerProgressUpdate(status="Finalizing", progress_percentage=100, log_message="Streaming finalizado", trace_id=request.trace_id)
+        trace_id = request.trace_id
+        print(f"--- [GRPC SERVER] Client subscribed to progress: {trace_id} ---")
+        
+        queue = await progress_manager.get_queue(trace_id)
+        
+        try:
+            while True:
+                # Esperar el siguiente update de la cola
+                update = await queue.get()
+                
+                # Si recibimos None, la tarea terminó
+                if update is None:
+                    break
+                    
+                yield ai_engine_pb2.WorkerProgressUpdate(
+                    status=update["status"],
+                    progress_percentage=update["progress"],
+                    log_message=update["log"],
+                    trace_id=trace_id
+                )
+                queue.task_done()
+        except Exception as e:
+            print(f"⚠️  Error en stream de progreso ({trace_id}): {e}")
+        finally:
+            progress_manager.cleanup(trace_id)
+            print(f"--- [GRPC SERVER] Progress stream closed: {trace_id} ---")
 
     async def Ping(self, request, context):
         print("--- [GRPC SERVER] Health Check (Ping) received ---")
