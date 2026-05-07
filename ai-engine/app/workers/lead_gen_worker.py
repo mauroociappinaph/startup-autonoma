@@ -63,15 +63,24 @@ async def process_lead_generation_task(request_payload: struct_pb2.Struct, trace
             })
 
             print(f"--- [LEAD GEN WORKER] Iniciando prospección para: {parsed_request.niche} ---")
+            
+            from app.core.progress_manager import progress_manager
+            await progress_manager.push(trace_id, "initializing", 10, f"🚀 Iniciando prospección para {parsed_request.niche}")
 
             # 2. Simulación de latencia de red asíncrona (libera Event Loop)
-            await asyncio.sleep(1.5)
+            await asyncio.sleep(1.0)
+            await progress_manager.push(trace_id, "searching", 40, f"🔎 Escaneando directorios en {parsed_request.location or 'Global'}...")
             
             # 3. Ejecución de la búsqueda en un hilo separado para no bloquear el Event Loop
             leads = await asyncio.to_thread(simulate_search, parsed_request.niche, parsed_request.location)
+            await progress_manager.push(trace_id, "filtering", 70, f"📊 Filtrando {len(leads)} resultados encontrados...")
             
             # 4. Formateo de resultados (LIMIT)
+            await asyncio.sleep(0.5)
             final_leads = leads[:parsed_request.limit]
+            
+            await progress_manager.push(trace_id, "finalizing", 90, f"✅ Procesados {len(final_leads)} leads finales.")
+
             result_data = {
                 "status": "success",
                 "leads_found": len(final_leads),
@@ -86,6 +95,9 @@ async def process_lead_generation_task(request_payload: struct_pb2.Struct, trace
             json_format.ParseDict(result_data, result_struct)
 
             print(f"--- [LEAD GEN WORKER] Tarea completada. {len(final_leads)} leads enviados ---")
+            
+            # Avisamos al manager que terminamos
+            await progress_manager.close(trace_id)
             
             span.set_status(Status(StatusCode.OK))
             return ai_engine_pb2.WorkerTaskResponse(
