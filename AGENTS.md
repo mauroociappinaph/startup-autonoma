@@ -12,13 +12,11 @@ El sistema es una startup autónoma operada por agentes jerárquicos cuyo objeti
 
 **Jerarquía Actualizada:**
 0.  **Agente Mirror (Aduana):** Entrada oficial del grafo. Refina la intención y valida con el humano.
-1.  **Agente CEO (Estratega):** Orquestador dinámico. Elige el Chief adecuado (Software, Business u Operations).
-2.  **Agentes Chief:** Coordinan áreas.
-    *   **Software Chief:** Ingeniería, arquitectura y tests.
-    *   **Business Chief:** Lead gen, mercado y crecimiento. ✅ Fase A Completada.
-    *   **Operations Chief:** Infraestructura, observabilidad y resiliencia. ✅ Fase C Inicializada.
-    *   **Unified Proto Contracts:** Sincronización automática gRPC. ✅ Issue #87 Completada.
-3.  **Agentes Workers:** Ejecutan tareas atómicas (Git, Researcher, TestRunner, AI-Engine Worker, Persistence Worker).
+1.  **Agente CEO (Estratega):** Orquestador dinámico raíz. Elige el Dominio adecuado.
+2.  **Sub-grafos de Dominio (Chiefs & Workers):** Coordinan áreas de forma aislada.
+    *   **Software Domain:** Software Chief coordinando Git, Code Research, Code Write y Test.
+    *   **Business Domain:** Business Chief coordinando Researcher, Lead Gen y Persistence.
+    *   **Operations Domain:** Operations Chief coordinando Infraestructura y Seguridad.
 
 ---
 

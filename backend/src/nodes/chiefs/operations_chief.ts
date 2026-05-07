@@ -79,7 +79,11 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
     };
 
     // Lógica de ruteo interno
-    if (response.requires_approval) {
+    if (response.action === "complete") {
+      updates.next_node = "ceo";
+      updates.active_chief = undefined;
+      updates.completed_steps = ["operations_chief"];
+    } else if (response.requires_approval) {
       updates.next_node = "ceo"; // Volvemos al CEO para que el Mirror/Humano valide
     } else {
       updates.next_node = "operations_worker"; // Delegamos al worker de infra

@@ -7,6 +7,7 @@ import { test_runner_node } from "@/nodes/workers/test_runner_node.js";
 import { code_researcher_node } from "@/nodes/workers/code_researcher_node.js";
 import { code_writer_node } from "@/nodes/workers/code_writer_node.js";
 import { review_worker_node } from "@/nodes/workers/review_worker.js";
+import { documentation_worker_node } from "@/nodes/workers/documentation_worker.js";
 import { TelemetryHelper } from "@/helpers/telemetryHelper.js";
 import { AuditHelper } from "@/helpers/auditHelper.js";
 
@@ -25,6 +26,7 @@ const softwareWorkflow = new StateGraph(AgentAnnotation)
     .addNode("code_researcher", wrap("code_researcher", code_researcher_node))
     .addNode("code_writer", wrap("code_writer", code_writer_node))
     .addNode("review_worker", wrap("review_worker", review_worker_node))
+    .addNode("documentation_worker", wrap("documentation_worker", documentation_worker_node))
 
     .addEdge(START, "software_chief")
     
@@ -41,6 +43,7 @@ const softwareWorkflow = new StateGraph(AgentAnnotation)
             code_researcher: "code_researcher",
             code_writer: "code_writer",
             review_worker: "review_worker",
+            documentation_worker: "documentation_worker",
             end: END
         }
     );
@@ -52,5 +55,6 @@ softwareWorkflow.addEdge("test_runner", "software_chief");
 softwareWorkflow.addEdge("code_researcher", "software_chief");
 softwareWorkflow.addEdge("code_writer", "software_chief");
 softwareWorkflow.addEdge("review_worker", "software_chief");
+softwareWorkflow.addEdge("documentation_worker", "software_chief");
 
 export const software_domain_graph = softwareWorkflow.compile();

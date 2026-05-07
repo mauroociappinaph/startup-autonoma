@@ -18,24 +18,17 @@ import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
 const SoftwareChiefDecisionSchema = z.object({
   reasoning: z.string().describe("Explicación técnica de por qué se toma esta decisión."),
   decision: z.enum([
-    "delegate_to_researcher",
     "delegate_to_code_researcher", // Worker de lectura estática
-    "delegate_to_code_writer",     // NUEVO: Worker de modificación de código
+    "delegate_to_code_writer",     // Worker de modificación de código
     "delegate_to_git_worker",
     "delegate_to_test_runner",
-    "delegate_to_ai_engine",
-    "delegate_to_documentation_worker", // NUEVO: Capacidad de documentación
+    "delegate_to_documentation_worker",
     "complete",
     "need_clarification"
   ]),
   worker_instruction: z.string().nullable().optional().describe("Instrucción en lenguaje natural para el worker (si aplica)."),
   git_payload: GitActionSchema.nullable().optional().describe("Carga útil estructurada si se delega al Git Worker."),
   test_payload: TestRunnerInputSchema.nullable().optional().describe("Carga útil estructurada si se delega al Test Runner."),
-  ai_engine_task: z.object({ // Payload específico para el AI Engine
-    worker_name: z.string().describe("Nombre del worker específico en el AI Engine (ej: 'lead_gen', 'market_analyst')."),
-    task_description: z.string().describe("Descripción de la tarea a ejecutar."),
-    payload: z.any().optional().describe("Datos de entrada para el worker."),
-  }).nullable().optional().describe("Instrucción para el AI Engine si la decisión es delegar a este servicio."),
   code_researcher_payload: z.any().optional().describe("Carga útil estructurada para el Code Researcher."),
   code_writer_instruction: z.any().optional().describe("Carga útil estructurada del tipo CodeWriterPayload si se delega al Code Writer.")
 });
@@ -45,7 +38,7 @@ const SoftwareChiefDecisionSchema = z.object({
  * Ahora capaz de delegar tareas al AI Engine y manejar respuestas nulas.
  */
 export async function software_chief_node(state: AgentStateType) {
-  console.log("--- EJECUTANDO NODO SOFTWARE CHIEF ---");
+  SacredLogger.node("SOFTWARE CHIEF");
 
   const system_prompt = new SystemMessage(`
     Eres el SoftwareChief de una Startup Autónoma.
@@ -57,11 +50,11 @@ export async function software_chief_node(state: AgentStateType) {
     2. <plan>: Enumera los pasos atómicos necesarios.
     3. <verification>: Define cómo sabrás si el paso fue exitoso.
 
-    TUS HERRAMIENTAS (WORKERS Y SERVICIOS EXTERNOS):
-    1. ResearchWorker: Para explorar el repo y leer archivos.
-    2. GitWorker: Para operaciones de ramas y commits.
-    3. TestRunner: Para validación de calidad.
-    4. AI Engine (gRPC): Para tareas pesadas (scraping, ML, etc).
+    TUS HERRAMIENTAS (WORKERS INTERNOS):
+    1. CodeResearcher: Para explorar el repo y leer archivos de código de forma determinista.
+    2. CodeWriter: Para modificar archivos existentes o crear nuevos siguiendo el plan.
+    3. GitWorker: Para operaciones de ramas y commits.
+    4. TestRunner: Para validación de calidad técnica.
     5. DocumentationWorker: Para mantener AGENTS.md, README.md y /docs actualizados.
 
     LEYES SAGRADAS:
@@ -108,9 +101,9 @@ export async function software_chief_node(state: AgentStateType) {
       SoftwareChiefDecisionSchema
     );
 
-    console.log(`🧠 Chief Reasoning: ${response.reasoning}`);
-    console.log(`🎯 Decision: ${response.decision}`);
-    console.log(`📊 [${model}] Costo: $${cost.toFixed(6)}`);
+    SacredLogger.info(`🧠 Chief Reasoning: ${response.reasoning}`, "SOFTWARE");
+    SacredLogger.info(`🎯 Decision: ${response.decision}`, "SOFTWARE");
+    SacredLogger.info(`📊 [${model}] Costo: $${cost.toFixed(6)}`, "SOFTWARE");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Software Chief",
@@ -131,14 +124,7 @@ export async function software_chief_node(state: AgentStateType) {
       })])
     };
 
-    if (response.decision === "delegate_to_researcher") {
-      updates.plan = ["research"];
-      updates.next_node = "researcher";
-      updates.messages?.push(new AIMessage({
-        content: `[CHIEF_DELEGATION] Delegando investigación inteligente: ${response.worker_instruction || 'Tarea de investigación requerida.'}`,
-      }));
-    }
-    else if (response.decision === "delegate_to_code_researcher") {
+    if (response.decision === "delegate_to_code_researcher") {
       updates.plan = ["code_research"];
       updates.next_node = "code_researcher";
       updates.messages?.push(new AIMessage({
@@ -180,21 +166,6 @@ export async function software_chief_node(state: AgentStateType) {
         content: `[CHIEF_DELEGATION] Delegando validación de tests: ${response.reasoning}`,
         additional_kwargs: {
           test_instruction: response.test_payload!
-        }
-      }));
-    }
-    else if (response.decision === "delegate_to_ai_engine") {
-      updates.plan = ["ai_engine_task"];
-      updates.next_node = "ai_engine_worker";
-      updates.messages?.push(new AIMessage({
-        content: `[CHIEF_DELEGATION] Delegando tarea al AI Engine: ${response.reasoning}`,
-        additional_kwargs: {
-          ai_engine_task: {
-            worker_name: response.ai_engine_task!.worker_name,
-            task_description: response.ai_engine_task!.task_description,
-            trace_id: TraceContext.getTraceId() || state.trace_id || "unknown-trace", // Usamos trace_id del estado o uno por defecto
-            payload: response.ai_engine_task!.payload || {},
-          }
         }
       }));
     }
