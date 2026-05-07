@@ -93,7 +93,6 @@ describe("TelemetryService Integration Tests", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let telemetryServiceInstance: any;
   let getRedisConnection: () => Redis;
-  let closeRedisConnections: () => Promise<void>;
   let redis: Redis;
 
   beforeAll(async () => {
@@ -103,18 +102,11 @@ describe("TelemetryService Integration Tests", () => {
     
     telemetryServiceInstance = new telemetryModule.TelemetryService();
     getRedisConnection = redisModule.getRedisConnection;
-    closeRedisConnections = redisModule.closeRedisConnections;
     
     redis = getRedisConnection();
     
     const statsKey = `project:telemetry:stats:${projectId}`;
     await redis.del(statsKey);
-  });
-
-  afterAll(async () => {
-    const statsKey = `project:telemetry:stats:${projectId}`;
-    if (redis) await redis.del(statsKey);
-    if (closeRedisConnections) await closeRedisConnections();
   });
 
   it("should calculate cost correctly for a given model", () => {

@@ -34,10 +34,6 @@ describe('Test Runner Node', () => {
     test_runner_node = module.test_runner_node;
   });
 
-  afterAll(async () => {
-    const { closeRedisConnections } = await import('@/db/redis.js');
-    await closeRedisConnections();
-  });
 
   beforeEach(() => {
     jest.restoreAllMocks();

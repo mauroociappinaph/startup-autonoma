@@ -52,10 +52,6 @@ describe("stateHelper", () => {
     AuditService = auditModule.AuditService;
   });
 
-  afterAll(async () => {
-    const { closeRedisConnections } = await import("../db/redis.js");
-    await closeRedisConnections();
-  });
 
   beforeEach(() => {
     initialState = {

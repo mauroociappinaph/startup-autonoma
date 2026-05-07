@@ -46,10 +46,6 @@ describe('CEO Node Routing', () => {
     LLMService = llmModule.LLMService;
   });
 
-  afterAll(async () => {
-    const { closeRedisConnections } = await import('@/db/redis.js');
-    await closeRedisConnections();
-  });
 
   afterEach(() => {
     jest.restoreAllMocks();

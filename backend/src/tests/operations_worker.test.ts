@@ -45,10 +45,6 @@ describe('Operations Worker Node', () => {
     operations_worker_node = workerModule.operations_worker_node;
   });
 
-  afterAll(async () => {
-    const { closeRedisConnections } = await import('@/db/redis.js');
-    await closeRedisConnections();
-  });
 
   afterEach(() => {
     jest.restoreAllMocks();

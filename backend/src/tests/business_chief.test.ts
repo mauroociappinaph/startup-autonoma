@@ -41,12 +41,6 @@ describe('Business Chief Node', () => {
     LLMService = llmModule.LLMService;
   });
 
-  afterAll(async () => {
-    const { closeRedisConnections } = await import('@/db/redis.js');
-    const { aiEngineClient } = await import('@/services/aiEngineClient.js');
-    await closeRedisConnections();
-    aiEngineClient.close();
-  });
 
   beforeEach(() => {
     initialState = {
