@@ -223,6 +223,7 @@ Para maximizar la resiliencia y el razonamiento, se adoptan los siguientes está
 │   │   ├── /fix-187-circular-dependency
 │   │   ├── /issue-114-operations-chief
 │   │   ├── /issue-144-redis-janitor
+│   │   ├── /issue-185-state-segregation
 │   │   ├── /optimize-entry-flow
 │   │   ├── /optimize-system-performance
 │   │   ├── /refactor

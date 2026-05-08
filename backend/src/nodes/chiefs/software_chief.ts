@@ -121,6 +121,9 @@ export async function software_chief_node(state: AgentStateType) {
     const updates: Partial<AgentStateType> = {
       ...metricsUpdate,
       active_chief: "software_chief",
+      software: {
+        last_impact_analysis: skillResult ? JSON.parse(JSON.stringify(skillResult)) : undefined, // Simplificado para el ejemplo
+      },
       messages: state.messages.concat([new AIMessage({
         content: `[SOFTWARE_CHIEF_THOUGHT] ${response.reasoning}
 [DECISION] ${response.decision}`,

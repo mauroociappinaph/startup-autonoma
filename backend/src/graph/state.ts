@@ -1,6 +1,23 @@
 import { Annotation, messagesStateReducer } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
-import { ProjectContext } from "@startup/shared";
+import { 
+  ProjectContext, 
+  BusinessContext, 
+  SoftwareContext, 
+  OperationsContext 
+} from "@startup/shared";
+
+/**
+ * domainReducer: Realiza un merge profundo de nivel 1 para los objetos de dominio.
+ * Esto permite que un nodo actualice solo un campo dentro del dominio sin borrar el resto.
+ */
+const domainReducer = <T extends object>(prev: T | undefined, next: Partial<T> | undefined): T | undefined => {
+  if (!next) return prev;
+  return {
+    ...(prev || {}),
+    ...next
+  } as T;
+};
 
 /**
  * AgentAnnotation: Implementación del canal de estado para LangGraph.
@@ -154,22 +171,6 @@ export const AgentAnnotation = Annotation.Root({
   }),
 
   /**
-   * Payload específico para tareas de Lead Gen (Engine Python).
-   */
-  lead_gen_payload: Annotation<{ niche: string; location?: string; limit: number } | undefined>({
-    reducer: (prev, next) => next || prev,
-    default: () => undefined,
-  }),
-
-  /**
-   * Resultado de leads calificados obtenidos por el engine.
-   */
-  qualified_leads: Annotation<string | undefined>({
-    reducer: (prev, next) => next || prev,
-    default: () => undefined,
-  }),
-
-  /**
    * Flag que indica si el input fue detectado como malicioso.
    */
   is_malicious: Annotation<boolean>({
@@ -189,6 +190,32 @@ export const AgentAnnotation = Annotation.Root({
    */
   last_diagram: Annotation<string | undefined>({
     reducer: (prev, next) => next || prev,
+    default: () => undefined,
+  }),
+
+  // --- Domain Segregation (Issue #185) ---
+
+  /**
+   * Contexto del dominio Business.
+   */
+  business: Annotation<BusinessContext | undefined>({
+    reducer: domainReducer,
+    default: () => undefined,
+  }),
+
+  /**
+   * Contexto del dominio Software.
+   */
+  software: Annotation<SoftwareContext | undefined>({
+    reducer: domainReducer,
+    default: () => undefined,
+  }),
+
+  /**
+   * Contexto del dominio Operations.
+   */
+  operations: Annotation<OperationsContext | undefined>({
+    reducer: domainReducer,
     default: () => undefined,
   }),
 });

@@ -116,6 +116,11 @@ export async function business_chief_node(state: AgentStateType) {
     else if (response.decision === "delegate_to_lead_gen") {
       updates.plan = ["ai_engine_task"];
       updates.next_node = "ai_engine_worker";
+      
+      updates.business = {
+        lead_gen_payload: response.lead_gen_payload || undefined
+      };
+
       updates.messages?.push(new AIMessage({
         content: `[BUSINESS_DELEGATION] Iniciando Lead Generation: ${response.reasoning}`,
         additional_kwargs: {
@@ -135,10 +140,18 @@ export async function business_chief_node(state: AgentStateType) {
         SacredLogger.info("🎯 Calificando leads usando Lead Qualification Skill...", "BUSINESS");
         
         const qualificationSkill = SkillRegistry.get<LeadQualificationInput, LeadQualificationOutput>("lead-qualification");
+        
+        const currentPayload = state.business?.lead_gen_payload;
+
         const { data } = await qualificationSkill.run({
           leads: (aiEngineResult as unknown[]) || [],
-          niche: state.lead_gen_payload?.niche || "general"
+          niche: currentPayload?.niche || "general"
         });
+
+        updates.business = {
+          qualified_leads: data.qualified_leads,
+          market_research: data.market_fit_analysis
+        };
 
         updates.messages?.push(new AIMessage({
           content: `[LEAD_QUALIFICATION_SUCCESS] Leads calificados: ${data.qualified_leads.length} prospectos encontrados.
@@ -161,13 +174,16 @@ Reasoning: ${data.reasoning}`,
       // Inyectamos la acción de llamar a la tool en el plan
       updates.plan = ["persist_memory"]; 
       updates.next_node = "persistence_worker";
+      
+      const currentPayload = state.business?.lead_gen_payload;
+
       updates.messages?.push(new AIMessage({
         content: `[BUSINESS_PERSISTENCE] Guardando hallazgos en Engram: ${response.reasoning}`,
         additional_kwargs: {
           engram_data: {
-            title: `Leads generados para ${response.lead_gen_payload?.niche || 'nicho desconocido'}`,
+            title: `Leads generados para ${currentPayload?.niche || 'nicho desconocido'}`,
             type: "lead",
-            topic_key: `leads/${response.lead_gen_payload?.niche || 'general'}`,
+            topic_key: `leads/${currentPayload?.niche || 'general'}`,
             content: {
               What: "Generación de leads estructurados desde AI Engine.",
               Why: "Persistencia para futuras campañas de marketing.",
@@ -185,6 +201,9 @@ Reasoning: ${data.reasoning}`,
     else if (response.decision === "need_strategic_clarification") {
       updates.next_node = "ceo";
       updates.executive_summary = `Business Chief requiere aclaración estratégica: ${response.reasoning}`;
+      updates.business = {
+        strategic_clarification: response.reasoning
+      };
     }
 
     return updates;

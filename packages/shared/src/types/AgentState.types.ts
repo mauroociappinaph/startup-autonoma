@@ -26,12 +26,6 @@ export interface AgentStateType {
   plan: string[]; // Tareas pendientes o totales
   completed_steps: string[]; // Tareas finalizadas
   active_chief?: string; // Añadido para el nodo activo del Chief
-  lead_gen_payload?: {
-    niche: string;
-    location?: string;
-    limit: number;
-  };
-  qualified_leads?: string;
   /**
    * Registro de la última sincronización con el BudgetService.
    */
@@ -42,5 +36,44 @@ export interface AgentStateType {
   threat_level?: "none" | "low" | "medium" | "high" | "critical"; // Nivel de amenaza detectado
   security_report?: string; // Reporte detallado del Sentinel
   last_diagram?: string; // Contenido del último diagrama Mermaid generado
+
+  // --- Domain Segregation (Issue #185) ---
+  business?: BusinessContext;
+  software?: SoftwareContext;
+  operations?: OperationsContext;
+
   [key: string]: unknown; // Firma de índice requerida por LangGraph (tipado seguro)
+}
+
+/**
+ * Contexto específico del dominio de Negocios.
+ */
+export interface BusinessContext {
+  lead_gen_payload?: {
+    niche: string;
+    location?: string;
+    limit: number;
+  };
+  qualified_leads?: any[];
+  market_research?: string;
+  strategic_clarification?: string;
+}
+
+/**
+ * Contexto específico del dominio de Software.
+ */
+export interface SoftwareContext {
+  last_impact_analysis?: any;
+  affected_files?: string[];
+  technical_plan?: string[];
+  test_report?: string;
+}
+
+/**
+ * Contexto específico del dominio de Operaciones.
+ */
+export interface OperationsContext {
+  infrastructure_report?: string;
+  security_audit_logs?: string[];
+  deployment_status?: "pending" | "success" | "failed";
 }

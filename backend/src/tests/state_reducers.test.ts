@@ -30,4 +30,44 @@ describe("State Reducers Logic", () => {
       expect(targetReducer(prev, next)).toBe("business_chief");
     });
   });
+
+  describe("Domain Reducer (Deep Merge Level 1)", () => {
+    const domainReducer = <T extends object>(prev: T | undefined, next: Partial<T> | undefined): T | undefined => {
+      if (!next) return prev;
+      return {
+        ...(prev || {}),
+        ...next
+      } as T;
+    };
+
+    it("should perform shallow merge of domain objects", () => {
+      interface TestDomain { niche: string; limit: number; location?: string };
+      const prev: TestDomain = { niche: "AI", limit: 10 };
+      const next: Partial<TestDomain> = { location: "USA" };
+      const result = domainReducer(prev, next);
+      
+      expect(result).toEqual({
+        niche: "AI",
+        limit: 10,
+        location: "USA"
+      });
+    });
+
+    it("should overwrite existing keys in domain objects", () => {
+      const prev = { niche: "AI", limit: 10 };
+      const next = { limit: 20 };
+      const result = domainReducer(prev, next);
+      
+      expect(result).toEqual({
+        niche: "AI",
+        limit: 20
+      });
+    });
+
+    it("should return prev if next is undefined", () => {
+      const prev = { niche: "AI" };
+      const next = undefined;
+      expect(domainReducer(prev, next)).toEqual(prev);
+    });
+  });
 });
