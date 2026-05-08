@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { test_runner } from '@/tools/domain/software/testRunner.js';
+import { AIMessage } from '@langchain/core/messages';
 
 // Mockeamos ioredis para evitar conexiones reales
 jest.mock('ioredis', () => {
@@ -49,14 +50,19 @@ describe('Test Runner Node', () => {
     });
 
     const state: any = {
-      messages: [{
+      messages: [new AIMessage({
+        content: 'Test',
         additional_kwargs: {
-          test_instruction: {
-            package: 'backend',
-            filter: 'git_worker'
+          worker_instruction: {
+            action: 'test_operation',
+            payload: {
+              package: 'backend',
+              filter: 'git_worker'
+            },
+            reasoning: 'Testing the test runner'
           }
         }
-      }]
+      })]
     };
 
     const result = await test_runner_node(state);
@@ -76,13 +82,18 @@ describe('Test Runner Node', () => {
     });
 
     const state: any = {
-      messages: [{
+      messages: [new AIMessage({
+        content: 'Test Failure',
         additional_kwargs: {
-          test_instruction: {
-            package: 'backend'
+          worker_instruction: {
+            action: 'test_operation',
+            payload: {
+              package: 'backend'
+            },
+            reasoning: 'Testing failure case'
           }
         }
-      }]
+      })]
     };
 
     const result = await test_runner_node(state);
