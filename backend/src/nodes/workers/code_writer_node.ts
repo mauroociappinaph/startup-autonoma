@@ -4,7 +4,7 @@ import { write_file, patch_file } from "@/tools/fs.js";
 import { CodeWriterInstructionSchema } from "@/types/code-writer.types.js";
 import { incrementIteration } from "@/helpers/index.js";
 import { ProtocolHelper } from "@/helpers/protocol_helper.js";
-import { SacredLogger } from "@/helpers/logger.js";
+import { services } from "@/services/index.js";
 
 /**
  * Nodo CodeWriter: Ejecutor atómico "manos en la masa".
@@ -14,7 +14,7 @@ import { SacredLogger } from "@/helpers/logger.js";
  * las Tools nativas para aplicarlo. No genera planes, sólo ejecuta e informa.
  */
 export async function code_writer_node(state: AgentStateType) {
-  SacredLogger.node("CODE WRITER");
+  services.logger.node("CODE WRITER");
 
   try {
     const instruction = ProtocolHelper.getInstruction(state.messages);
@@ -93,7 +93,7 @@ export async function code_writer_node(state: AgentStateType) {
     }
 
     // 3. Resultado Exitoso
-    SacredLogger.success(`Escritura en ${payload.file_path} completada.`, "WRITER");
+    services.logger.success(`Escritura en ${payload.file_path} completada.`, "WRITER");
     return {
       ...incrementIteration(state),
       messages: state.messages.concat([

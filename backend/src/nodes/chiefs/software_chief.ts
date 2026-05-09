@@ -1,5 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { LLMService } from "@/services/llmService.js";
+import { services } from "@/services/index.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { GitActionSchema } from "@/types/git-worker.types.js";
@@ -7,7 +7,6 @@ import { TestRunnerInputSchema } from "@/types/software-tools.types.js";
 import { prepareNodeUpdate } from "@/helpers/index.js";
 import { SkillRegistry } from "@/skills/skill_registry.js";
 import { CodeChangeImpactAnalysisSkill } from "@/skills/software/impact_analysis.js";
-import { SacredLogger } from "@/helpers/logger.js";
 import { TraceContext } from "@/services/traceContext.js";
 import { ImpactAnalysisOutput } from "@/types/skills.types.js";
 import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
@@ -41,7 +40,7 @@ const SoftwareChiefDecisionSchema = z.object({
  * Ahora capaz de delegar tareas al AI Engine y manejar respuestas nulas.
  */
 export async function software_chief_node(state: AgentStateType) {
-  SacredLogger.node("SOFTWARE CHIEF");
+  services.logger.node("SOFTWARE CHIEF");
 
   const system_prompt = new SystemMessage(`
     Eres el SoftwareChief de una Startup Autónoma.
@@ -76,7 +75,7 @@ export async function software_chief_node(state: AgentStateType) {
   let skillResult = "";
   if (state.messages.length === 1) {
     try {
-      SacredLogger.info("Consultando Code Impact Analysis (Expert Skill)...", "CORE");
+      services.logger.info("Consultando Code Impact Analysis (Expert Skill)...", "CORE");
       const impactSkill = SkillRegistry.get<{ change_description: string }, ImpactAnalysisOutput>("code-impact-analysis");
       const { data } = await impactSkill.run({ change_description: state.messages[0].content as string });
       
@@ -98,15 +97,15 @@ export async function software_chief_node(state: AgentStateType) {
     : [system_prompt, ...state.messages];
 
   try {
-    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await services.llm.getStructuredData(
       { type: "ultra", temperature: 0 },
       messagesToLLM,
       SoftwareChiefDecisionSchema
     );
 
-    SacredLogger.info(`🧠 Chief Reasoning: ${response.reasoning}`, "SOFTWARE");
-    SacredLogger.info(`🎯 Decision: ${response.decision}`, "SOFTWARE");
-    SacredLogger.info(`📊 [${model}] Costo: $${cost.toFixed(6)}`, "SOFTWARE");
+    services.logger.info(`🧠 Chief Reasoning: ${response.reasoning}`, "SOFTWARE");
+    services.logger.info(`🎯 Decision: ${response.decision}`, "SOFTWARE");
+    services.logger.info(`📊 [${model}] Costo: $${cost.toFixed(6)}`, "SOFTWARE");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Software Chief",

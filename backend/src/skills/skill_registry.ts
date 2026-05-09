@@ -1,5 +1,5 @@
 import { ISkill } from "@/types/skills.types.js";
-import { SacredLogger } from "@/helpers/logger.js";
+import { services } from "@/services/index.js";
 
 /**
  * Registro central de Expert Skills.
@@ -15,7 +15,7 @@ export class SkillRegistry {
     if (this.skills.has(skill.id)) {
       return; // Ya registrado
     }
-    SacredLogger.info(`[SkillRegistry] Registrando skill: ${skill.id} v${skill.version}`, "CORE");
+    services.logger.info(`[SkillRegistry] Registrando skill: ${skill.id} v${skill.version}`, "CORE");
     this.skills.set(skill.id, skill);
   }
 
@@ -25,8 +25,8 @@ export class SkillRegistry {
   public static get<I, O>(id: string): ISkill<I, O> {
     const skill = this.skills.get(id);
     if (!skill) {
-      SacredLogger.error(`[SkillRegistry] Skill no encontrado: ${id}`, "CORE");
-      throw new Error(`[SkillRegistry] Skill no encontrado: ${id}`);
+      services.logger.error(`[SkillRegistry] Skill no encontrado: ${id}`, "CORE");
+      throw new Error(`Skill ${id} not found in registry.`);
     }
     return skill as unknown as ISkill<I, O>;
   }

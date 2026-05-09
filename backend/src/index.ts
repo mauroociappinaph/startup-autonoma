@@ -24,7 +24,7 @@ import telemetryRoutes from '@/routes/telemetryRoutes.js';
 import { SystemController } from '@/controllers/systemController.js';
 import { agentWorker, setupRedisJanitor, systemWorker } from '@/jobs/index.js';
 import { closeRedisConnections } from '@/db/redis.js';
-import { SacredLogger } from '@/helpers/logger.js';
+import { services } from '@/services/index.js';
 import { initializeSkills } from '@/skills/loader.js';
 
 initializeSkills();
@@ -50,32 +50,32 @@ app.use('/api/telemetry', telemetryRoutes);
 app.get('/health', SystemController.healthCheck);
 
 app.listen(PORT, () => {
-  SacredLogger.info('==========================================================');
-  SacredLogger.info(`🏢 Startup Autónoma escuchando en http://localhost:${PORT}`);
-  SacredLogger.info(`🚀 API Base: http://localhost:${PORT}/api/agents`);
-  SacredLogger.info('==========================================================');
+  services.logger.info('==========================================================');
+  services.logger.info(`🏢 Startup Autónoma escuchando en http://localhost:${PORT}`);
+  services.logger.info(`🚀 API Base: http://localhost:${PORT}/api/agents`);
+  services.logger.info('==========================================================');
 
   // Iniciamos el worker de BullMQ al arrancar el servidor
   agentWorker.start(AGENT_CONCURRENCY);
 
 
   // Iniciamos el Janitor de Redis (Gap 144)
-  setupRedisJanitor().catch(err => SacredLogger.error(`Error al programar Janitor: ${err.message}`, "INFRA"));
+  setupRedisJanitor().catch(err => services.logger.error(`Error al programar Janitor: ${err.message}`, "INFRA"));
 });
 
 /**
  * Graceful shutdown: esperamos que los jobs activos terminen antes de cerrar.
  */
 const shutdown = async (signal: string): Promise<void> => {
-  SacredLogger.warn(`Señal ${signal} recibida. Apagando worker y cerrando conexiones...`, "SYSTEM");
+  services.logger.warn(`Señal ${signal} recibida. Apagando worker y cerrando conexiones...`, "SYSTEM");
   try {
     await agentWorker.stop();
     await systemWorker.close();
     await closeRedisConnections();
-    SacredLogger.success("Apagado completado con éxito.", "SYSTEM");
+    services.logger.success("Apagado completado con éxito.", "SYSTEM");
     process.exit(0);
   } catch (error) {
-    SacredLogger.error(`Error durante el apagado: ${error}`, "SYSTEM");
+    services.logger.error(`Error durante el apagado: ${error}`, "SYSTEM");
     process.exit(1);
   }
 };

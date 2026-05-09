@@ -135,6 +135,18 @@ class ProjectService {
   }
 
   /**
+   * Actualiza el presupuesto en USD de un proyecto y sincroniza cache.
+   */
+  async updateBudget(projectId: string, maxUsdBudget: number): Promise<ProjectContext> {
+    const project = await this.getProject(projectId);
+    if (!project) throw new Error(`Project ${projectId} not found`);
+
+    project.maxUsdBudget = maxUsdBudget;
+    await this.saveProject(project);
+    return project;
+  }
+
+  /**
    * Resuelve la ruta absoluta de un archivo dentro del contexto de un proyecto.
    * Evita ataques de Path Traversal asegurando que el archivo esté dentro del workDir.
    */

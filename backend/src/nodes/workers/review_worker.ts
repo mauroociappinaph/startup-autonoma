@@ -1,5 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { LLMService } from "@/services/llmService.js";
+import { services } from "@/services/index.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { ReviewWorkerSchema } from "@startup/shared";
 import { prepareNodeUpdate } from "@/helpers/index.js";
@@ -24,7 +24,7 @@ export async function review_worker_node(state: AgentStateType): Promise<Partial
   `);
 
   try {
-    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await services.llm.getStructuredData(
       { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       ReviewWorkerSchema

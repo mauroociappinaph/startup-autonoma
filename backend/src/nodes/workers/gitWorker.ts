@@ -6,7 +6,7 @@ import {
   GitCommandInput,
   GitWorkerResponse 
 } from '@/types/git-worker.types.js';
-import { SacredLogger } from '@/helpers/logger.js';
+import { services } from '@/services/index.js';
 
 /**
  * Helper interno para ejecutar comandos de shell como promesas.
@@ -35,7 +35,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
   const { payload, repoPath } = GitCommandSchema.parse(commandInput);
   const targetRepoPath = repoPath || process.cwd();
 
-  SacredLogger.info(`Ejecutando acción: ${payload.action}`, "GIT_WORKER");
+  services.logger.info(`Ejecutando acción: ${payload.action}`, "GIT_WORKER");
 
   const actionName = payload.action;
 
@@ -44,7 +44,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
     if (payload.action === 'commit-all') {
       const { stdout: status } = await runCommand('git status --porcelain', targetRepoPath);
       if (!status || !status.trim()) {
-        SacredLogger.info('Nada para commitear, el árbol de trabajo está limpio.', "GIT");
+        services.logger.info('Nada para commitear, el árbol de trabajo está limpio.', "GIT");
         return { success: true, action: actionName, stdout: 'Nothing to commit, working tree clean' };
       }
 
@@ -65,7 +65,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
         }
       }
 
-      SacredLogger.success(`Acción ${actionName} completada. CommitId: ${response.commitId}`, "GIT");
+      services.logger.success(`Acción ${actionName} completada. CommitId: ${response.commitId}`, "GIT");
       return response;
     }
 
@@ -74,7 +74,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       try {
         const stats = await fs.stat(path.join(targetRepoPath, '.git'));
         if (stats.isDirectory()) {
-          SacredLogger.info('El repositorio ya está clonado en este directorio.', "GIT");
+          services.logger.info('El repositorio ya está clonado en este directorio.', "GIT");
           return { success: true, action: actionName, stdout: 'Already cloned' };
         }
       } catch {
@@ -103,7 +103,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
         try {
           const { stdout: branchList } = await runCommand(`git branch --list ${payload.branchName}`, targetRepoPath);
           if (branchList && branchList.trim()) {
-            SacredLogger.info(`La rama '${payload.branchName}' ya existe. Cambiando a ella...`, "GIT");
+            services.logger.info(`La rama '${payload.branchName}' ya existe. Cambiando a ella...`, "GIT");
             gitCommand = `git checkout ${payload.branchName}`;
           } else {
             gitCommand = `git checkout ${payload.baseBranch} && git pull origin ${payload.baseBranch} && git checkout -b ${payload.branchName}`;
@@ -134,7 +134,7 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
     }
 
     const maskedCommand = gitCommand.replace(/https:\/\/.*@/, 'https://[TOKEN]@');
-    SacredLogger.info(`Ejecutando: ${maskedCommand} en ${targetRepoPath}`, "GIT");
+    services.logger.info(`Ejecutando: ${maskedCommand} en ${targetRepoPath}`, "GIT");
 
     const { stdout, stderr } = await runCommand(gitCommand, targetRepoPath);
 
@@ -149,12 +149,12 @@ export async function gitWorker(commandInput: GitCommandInput): Promise<GitWorke
       response.branchName = payload.branchName;
     }
 
-    SacredLogger.success(`Acción ${actionName} completada con éxito.`, "GIT");
+    services.logger.success(`Acción ${actionName} completada con éxito.`, "GIT");
     return response;
 
   } catch (error: unknown) {
     const err = error as Error & { stderr?: string; stdout?: string; error?: { message: string } };
-    SacredLogger.error(`Falló la acción ${actionName}: ${err.message || 'Error desconocido'}`, "GIT");
+    services.logger.error(`Falló la acción ${actionName}: ${err.message || 'Error desconocido'}`, "GIT");
     return {
       success: false,
       action: actionName,

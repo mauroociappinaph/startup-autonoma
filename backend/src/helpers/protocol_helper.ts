@@ -1,6 +1,6 @@
 import { BaseMessage, AIMessage } from "@langchain/core/messages";
 import { WorkerInstruction, WorkerInstructionSchema, WorkerResult, WorkerResultSchema } from "@startup/shared";
-import { SacredLogger } from "./logger.js";
+import { services } from "@/services/index.js";
 
 /**
  * ProtocolHelper: Utilidad para estandarizar la comunicación Chief-Worker.
@@ -18,7 +18,7 @@ export class ProtocolHelper {
         if (result.success) {
           return result.data;
         } else {
-          SacredLogger.error(`Instrucción malformada detectada en el mensaje ${i}: ${result.error.message}`, "PROTOCOL");
+          services.logger.error(`Instrucción malformada detectada en el mensaje ${i}: ${result.error.message}`, "PROTOCOL");
         }
       }
     }

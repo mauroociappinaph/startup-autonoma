@@ -7,3 +7,4 @@ export * from "./llmFactory.js";
 export * from "./llmService.js";
 export * from "./projectService.js";
 export * from "./telemetryService.js";
+export * from "./facade.js";

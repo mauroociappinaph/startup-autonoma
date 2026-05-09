@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { getRedisConnection } from '../db/redis.js';
-import { aiEngineClient } from '../services/aiEngineClient.js';
+import { services } from '@/services/index.js';
 
 /**
  * Controlador para tareas administrativas y de sistema.
@@ -26,7 +26,7 @@ export class SystemController {
       health.services.redis = redisPing === 'PONG';
 
       // 2. Verificar AI Engine (gRPC)
-      health.services.ai_engine = await aiEngineClient.ping();
+      health.services.ai_engine = await services.aiEngine.ping();
 
       const isHealthy = health.services.redis && health.services.ai_engine;
 

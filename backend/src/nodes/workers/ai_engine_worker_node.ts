@@ -1,5 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { aiEngineClient } from "@/services/aiEngineClient.js";
+import { services } from "@/services/index.js";
 import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import { incrementIteration } from "@/helpers/index.js";
 import { AIEngineTask } from "@/types/index.js";
@@ -11,14 +11,14 @@ import { TraceContext } from "@/services/traceContext.js";
  * Ejecuta tareas pesadas como Lead Gen, Scraping o ML.
  */
 export async function ai_engine_worker_node(state: AgentStateType) {
-  console.log("--- EJECUTANDO NODO WORKER AI ENGINE (gRPC) ---");
+  services.logger.node("AI ENGINE WORKER");
 
   // Recuperamos la instrucción del mensaje del Chief (buscamos en los additional_kwargs)
   const lastMessage = state.messages[state.messages.length - 1];
   const aiTask = lastMessage.additional_kwargs?.ai_engine_task as AIEngineTask | undefined;
 
   if (!aiTask) {
-    console.error("❌ No se encontró una tarea válida para el AI Engine en el historial.");
+    services.logger.error("No se encontró una tarea válida para el AI Engine en el historial.", "AI_ENGINE");
     return {
       messages: state.messages.concat([new AIMessage({
         content: "[WORKER_ERROR] No hay instrucciones para el AI Engine."
@@ -36,19 +36,19 @@ export async function ai_engine_worker_node(state: AgentStateType) {
   );
 
   if (existingResult) {
-    console.log(`ℹ️ [AI_ENGINE] Idempotencia disparada: Resultado ya existe para ${aiTask.worker_name}. Saltando gRPC...`);
+    services.logger.info(`ℹ️ [AI_ENGINE] Idempotencia disparada: Resultado ya existe para ${aiTask.worker_name}. Saltando gRPC...`, "AI_ENGINE");
     return {
       next_node: state.active_chief || "ceo"
     };
   }
 
   try {
-    console.log(`🚀 Llamando a Worker Python: ${aiTask.worker_name}...`);
+    services.logger.info(`🚀 Llamando a Worker Python: ${aiTask.worker_name}...`, "AI_ENGINE");
     
     const traceId = TraceContext.getTraceId() || aiTask.trace_id || (state.trace_id ? String(state.trace_id) : "unknown");
 
     // Iniciar streaming de progreso en background
-    const progressStream = aiEngineClient.streamProgress({
+    const progressStream = services.aiEngine.streamProgress({
       worker_name: aiTask.worker_name,
       task_description: aiTask.task_description,
       trace_id: traceId,
@@ -56,18 +56,16 @@ export async function ai_engine_worker_node(state: AgentStateType) {
     });
 
     progressStream.on("data", (update) => {
-      console.log(`📢 [PROGRESS] ${aiTask.worker_name}: ${update.status} (${update.progress_percentage}%)`);
+      services.logger.info(`📢 [PROGRESS] ${aiTask.worker_name}: ${update.status} (${update.progress_percentage}%)`, "AI_ENGINE");
       // Publicar al EventBus para que llegue al Dashboard via SSE
-      import("@/services/eventBus.js").then(({ EventBus }) => {
-        EventBus.publish(traceId, {
-          type: "agent_progress",
-          worker: aiTask.worker_name,
-          ...update
-        }).catch(err => console.error("❌ Fallo publicando progreso:", err));
-      });
+      services.eventBus.publish(traceId, {
+        type: "agent_progress",
+        worker: aiTask.worker_name,
+        ...update
+      }).catch(err => services.logger.error("❌ Fallo publicando progreso", "AI_ENGINE"));
     });
 
-    const response = await aiEngineClient.executeTask({
+    const response = await services.aiEngine.executeTask({
       worker_name: aiTask.worker_name,
       task_description: aiTask.task_description,
       trace_id: traceId,
@@ -75,7 +73,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
     });
 
     if (response.success) {
-      console.log(`✅ Resultado del AI Engine recibido: ${response.message}`);
+      services.logger.success(`✅ Resultado del AI Engine recibido: ${response.message}`, "AI_ENGINE");
       return {
         messages: state.messages.concat([new AIMessage({
           content: `[WORKER_RESULT] Resultado de ${aiTask.worker_name}: ${response.message}`,
@@ -89,7 +87,7 @@ export async function ai_engine_worker_node(state: AgentStateType) {
       throw new Error(response.errorCode || response.message);
     }
   } catch (error) {
-    console.error("❌ Fallo en la comunicación con el AI Engine:", error);
+    services.logger.error(`❌ Fallo en la comunicación con el AI Engine: ${error instanceof Error ? error.message : String(error)}`, "AI_ENGINE");
     return {
       messages: state.messages.concat([new AIMessage({
         content: `[WORKER_ERROR] Falla en AI Engine (${aiTask.worker_name}): ${error instanceof Error ? error.message : String(error)}`

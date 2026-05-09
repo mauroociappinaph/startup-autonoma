@@ -1,9 +1,7 @@
 import { getGraph } from '@/graph/index.js';
 import { AgentStateType } from '@startup/shared';
 import { ProjectContext } from '@startup/shared';
-import { EventBus } from './eventBus.js';
-import { TelemetryService } from './telemetryService.js';
-import { LLMService } from './llmService.js';
+import { services } from './index.js';
 import { GraphFormatter } from '@/helpers/graphFormatter.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LangGraphStreamEvent } from '@/types/index.js';
@@ -54,12 +52,12 @@ export class GraphService {
           chunkCounter++;
           if (chunkCounter % 10 === 0) {
             const estimatedTokens = Math.ceil(reasoningBuffer.length / 4);
-            const currentNodeCost = LLMService.calculateCost(
+            const currentNodeCost = services.llm.calculateCost(
               { prompt: 0, completion: estimatedTokens },
               event.metadata?.model_name || "default"
             );
 
-            await EventBus.publish(threadId, {
+            await services.eventBus.publish(threadId, {
               agent: "SYSTEM",
               type: "METRIC_PARTIAL",
               metadata: {
@@ -75,17 +73,17 @@ export class GraphService {
        }
        
        if (eventType === "on_node_start") {
-          EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_START", metadata: { node: event.metadata?.langgraph_node, trace_id: TraceContext.getTraceId() }, threadId });
+          services.eventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_START", metadata: { node: event.metadata?.langgraph_node, trace_id: TraceContext.getTraceId() }, threadId });
           reasoningBuffer = "";
           lastYieldedLength = 0;
        }
 
        if (eventType === "on_node_end") {
-         EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: event.metadata?.langgraph_node, trace_id: TraceContext.getTraceId() }, threadId });
+         services.eventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: event.metadata?.langgraph_node, trace_id: TraceContext.getTraceId() }, threadId });
          const updates = event.data.output as Record<string, unknown>;
          if (updates) {
             for (const update of GraphFormatter.formatUpdate(updates, threadId, event.config?.configurable?.checkpoint_id)) {
-              await EventBus.publish(threadId, update);
+              await services.eventBus.publish(threadId, update);
               yield update;
             }
          }
@@ -102,7 +100,7 @@ export class GraphService {
         isWaiting: true,
         threadId
       };
-      await EventBus.publish(threadId, waitEvent);
+      await services.eventBus.publish(threadId, waitEvent);
       yield waitEvent;
     }
   }
@@ -116,7 +114,7 @@ export class GraphService {
     const stateValues = (await graph.getState(config)).values as AgentStateType;
 
     const projectContext = stateValues.project_context 
-      ?? await (await import('./projectService.js')).projectService.getOrCreateProject('default-startup');
+      ?? await services.project.getOrCreateProject('default-startup');
 
     if (status === 'approved') {
       await graph.updateState(config, { is_mission_approved: true, project_context: projectContext });
@@ -155,11 +153,11 @@ export class GraphService {
         }
 
         if (eventType === "on_node_end") {
-          EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: event.metadata?.langgraph_node, trace_id: TraceContext.getTraceId() }, threadId });
+          services.eventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: event.metadata?.langgraph_node, trace_id: TraceContext.getTraceId() }, threadId });
           const updates = event.data.output as Record<string, unknown>;
           if (updates) { 
             for (const update of GraphFormatter.formatUpdate(updates, threadId, event.config?.configurable?.checkpoint_id)) {
-              await EventBus.publish(threadId, update);
+              await services.eventBus.publish(threadId, update);
               yield update;
             }
           }
@@ -183,7 +181,7 @@ export class GraphService {
         isWaiting: true,
         threadId
       };
-      await EventBus.publish(threadId, waitEv);
+      await services.eventBus.publish(threadId, waitEv);
       yield waitEv;
     }
   }

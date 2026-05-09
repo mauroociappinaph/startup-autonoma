@@ -3,9 +3,8 @@ import { getRedisConnection } from "@/db/redis.js";
 import { AgentJobData, AgentJobResult } from "@/types/agent-job.types.js";
 import { GraphService } from "@/services/graphService.js";
 import { AGENT_QUEUE_NAME } from "@/jobs/agentQueue.js";
-import { projectService } from "@/services/projectService.js";
+import { services } from "@/services/index.js";
 import { gitWorker } from "@/nodes/workers/gitWorker.js";
-import { EventBus } from "@/services/eventBus.js"; // Nuevo sistema nervioso
 import fs from "fs/promises";
 import path from "path";
 import { TraceContext } from "@/services/traceContext.js";
@@ -76,9 +75,17 @@ export class AgentWorker {
       console.log(`🧠 Procesando job ${job.id} | trace: ${TraceContext.getTraceId()} | prompt: "${prompt.substring(0, 60)}..."`);
 
       try {
-        // Resolvemos el contexto de proyecto (Gap 2)
+        // Publicar evento de inicio (Observabilidad)
+        await services.eventBus.publish(sessionId, {
+          agent: "SYSTEM",
+          type: "SPAN_START",
+          metadata: { node: "GRAPH_ORCHESTRATION" },
+          threadId: sessionId
+        });
+
+        // 1. Obtener contexto del proyecto
         const projectName = projectId || "default-startup";
-        const projectContext = await projectService.getOrCreateProject(projectName, repoUrl);
+        const projectContext = await services.project.getOrCreateProject(projectName, repoUrl);
 
         // Lógica de Auto-Clone robusta (Gap 3)
         const hasGit = await fs.stat(path.join(projectContext.workDir, ".git"))
@@ -100,11 +107,19 @@ export class AgentWorker {
         const stream = GraphService.runAgentStream(prompt, sessionId, projectContext);
 
         for await (const event of stream) {
-          await EventBus.publish(sessionId, event);
+          await services.eventBus.publish(sessionId, event);
         }
 
         // Notificamos finalización exitosa
-        await EventBus.publish(sessionId, { type: "end", status: "completed" });
+        await services.eventBus.publish(sessionId, { type: "end", status: "completed" });
+
+        // Publicar evento de fin
+        await services.eventBus.publish(sessionId, {
+          agent: "SYSTEM",
+          type: "SPAN_END",
+          metadata: { node: "GRAPH_ORCHESTRATION" },
+          threadId: sessionId
+        });
 
         return {
           sessionId,
@@ -115,7 +130,15 @@ export class AgentWorker {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`❌ Error en job ${job.id}:`, errorMessage);
 
-        await EventBus.publish(sessionId, {
+        // Publicar evento de error/fin
+        await services.eventBus.publish(sessionId, {
+          agent: "SYSTEM",
+          type: "SPAN_END",
+          metadata: { node: "GRAPH_ORCHESTRATION", error: true },
+          threadId: sessionId
+        });
+
+        await services.eventBus.publish(sessionId, {
           type: "error",
           error: errorMessage,
         });

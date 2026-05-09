@@ -1,16 +1,15 @@
 import { AgentStateType } from "@startup/shared";
-import { LLMService } from "@/services/llmService.js";
+import { services } from "@/services/index.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { OperationsChiefSchema } from "@startup/shared";
 import { prepareNodeUpdate } from "@/helpers/index.js";
-import { SacredLogger } from "@/helpers/logger.js";
 
 /**
  * Nodo OperationsChief: El Guardián de la Infraestructura.
  * Se encarga de despliegues, monitoreo y mantenimiento del sistema.
  */
 export async function operations_chief_node(state: AgentStateType): Promise<Partial<AgentStateType>> {
-  SacredLogger.node("OPERATIONS CHIEF");
+  services.logger.node("OPERATIONS CHIEF");
 
   const system_prompt = new SystemMessage(`
     Eres el OperationsChief de una Startup Autónoma.
@@ -41,13 +40,13 @@ export async function operations_chief_node(state: AgentStateType): Promise<Part
   `);
 
   try {
-    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
-      { type: "ultra", temperature: 0 },
+    const { data: response, usage, cost, latency, model } = await services.llm.getStructuredData(
+      { type: "flow", temperature: 0 },
       [system_prompt, ...state.messages],
       OperationsChiefSchema
     );
 
-    SacredLogger.info(`Operations Decision: ${response.action} -> ${response.reasoning}`, "OPS_CHIEF");
+    services.logger.info(`Operations Decision: ${response.action} -> ${response.reasoning}`, "OPS_CHIEF");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Operations Chief",

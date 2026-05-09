@@ -1,12 +1,11 @@
 import { AgentStateType } from "@startup/shared";
-import { LLMService } from "@/services/llmService.js";
+import { services } from "@/services/index.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { prepareNodeUpdate } from "@/helpers/index.js";
 import { SkillRegistry } from "@/skills/skill_registry.js";
 import { LeadQualificationSkill } from "@/skills/business/lead_qualification.js";
 import { LeadQualificationOutput, LeadQualificationInput } from "@/types/skills.types.js";
-import { SacredLogger } from "@/helpers/logger.js";
 import { TraceContext } from "@/services/traceContext.js";
 
 /**
@@ -35,7 +34,7 @@ const BusinessChiefDecisionSchema = z.object({
  * Coordina tareas de investigación de mercado y generación de leads.
  */
 export async function business_chief_node(state: AgentStateType) {
-  SacredLogger.info("--- EJECUTANDO NODO BUSINESS CHIEF ---", "BUSINESS");
+  services.logger.info("--- EJECUTANDO NODO BUSINESS CHIEF ---", "BUSINESS");
 
   // Verificamos si acabamos de recibir resultados de un worker (Ley de Robustez)
   const lastMessage = state.messages.length > 0 ? state.messages[state.messages.length - 1] : null;
@@ -81,14 +80,15 @@ export async function business_chief_node(state: AgentStateType) {
   `);
 
   try {
-    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await services.llm.getStructuredData(
       { type: "ultra", temperature: 0 },
       [system_prompt, ...state.messages],
       BusinessChiefDecisionSchema
     );
 
-    SacredLogger.info(`🧠 Business Chief Reasoning: ${response.reasoning}`, "BUSINESS");
-    SacredLogger.info(`📊 [${model}] Costo: $${cost.toFixed(6)}`, "BUSINESS");
+    services.logger.info(`🧠 Business Chief Reasoning: ${response.reasoning}`, "BUSINESS");
+    services.logger.info(`🎯 Decision: ${response.decision}`, "BUSINESS");
+    services.logger.info(`📊 [${model}] Costo: $${cost.toFixed(6)}`, "BUSINESS");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Business Chief",
@@ -137,7 +137,7 @@ export async function business_chief_node(state: AgentStateType) {
       updates.plan = ["qualify_leads"];
       
       try {
-        SacredLogger.info("🎯 Calificando leads usando Lead Qualification Skill...", "BUSINESS");
+        services.logger.info("🎯 Calificando leads usando Lead Qualification Skill...", "BUSINESS");
         
         const qualificationSkill = SkillRegistry.get<LeadQualificationInput, LeadQualificationOutput>("lead-qualification");
         
@@ -162,7 +162,7 @@ Reasoning: ${data.reasoning}`,
           }
         }));
       } catch (err) {
-        SacredLogger.error("❌ Fallo al calificar leads via Expert Skill", "BUSINESS");
+        services.logger.error("❌ Fallo al calificar leads via Expert Skill", "BUSINESS");
         updates.messages?.push(new AIMessage({
           content: `[LEAD_QUALIFICATION_ERROR] No se pudo calificar automáticamente: ${err instanceof Error ? err.message : String(err)}`
         }));

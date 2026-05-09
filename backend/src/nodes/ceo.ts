@@ -1,9 +1,8 @@
-import { LLMService } from "@/services/llmService.js";
+import { services } from "@/services/index.js";
 import { CEOResponseSchema } from "@startup/shared";
 import { AgentStateType } from "@startup/shared";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { prepareNodeUpdate } from "@/helpers/index.js";
-import { SacredLogger } from "@/helpers/logger.js";
 import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
 
 /**
@@ -11,7 +10,7 @@ import { ReasoningSanitizer } from "@/helpers/reasoningSanitizer.js";
  * Orquestador dinámico que elige el Chief adecuado.
  */
 export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStateType>> {
-  SacredLogger.node("CEO (ESTRATEGA)");
+  services.logger.node("CEO (ESTRATEGA)");
 
   const system_prompt = new SystemMessage(`
     Eres el CEO de una Startup Autónoma de alto rendimiento.
@@ -42,14 +41,14 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
   `);
 
   try {
-    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await services.llm.getStructuredData(
       { type: "reasoning", temperature: 0 },
       [system_prompt, ...state.messages],
       CEOResponseSchema
     );
 
-    SacredLogger.info(`CEO Decision: ${response.next_step} -> ${response.reasoning}`, "CEO");
-    SacredLogger.info(`[${model}] Costo de este paso: $${cost.toFixed(6)}`, "CEO");
+    services.logger.info(`CEO Decision: ${response.next_step} -> ${response.reasoning}`, "CEO");
+    services.logger.info(`[${model}] Costo de este paso: $${cost.toFixed(6)}`, "CEO");
 
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "CEO",
@@ -79,7 +78,7 @@ export async function ceo_node(state: AgentStateType): Promise<Partial<AgentStat
 
     return updates;
   } catch (error) {
-    SacredLogger.error("Error en el Nodo CEO: " + error, "CEO");
+    services.logger.error("Error en el Nodo CEO: " + error, "CEO");
     return {
       executive_summary: "Error crítico en el orquestador CEO.",
     };

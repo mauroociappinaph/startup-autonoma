@@ -1,6 +1,6 @@
 import { ISkill, SkillResponse } from "@/types/skills.types.js";
-import { LLMService } from "@/services/llmService.js";
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import { services } from "@/services/index.js";
+import { SystemMessage, HumanMessage, BaseMessage } from "@langchain/core/messages";
 import { z } from "zod";
 
 /**
@@ -22,7 +22,7 @@ export abstract class BaseSkill<I, O> implements ISkill<I, O> {
     options: { temperature?: number; model_type?: "reasoning" | "ultra" | "fast" } = {}
   ): Promise<{ data: z.infer<T>; usage: { total_tokens: number; cost_usd: number }; model: string }> {
     
-    const { data, usage, cost, model } = await LLMService.getStructuredData(
+    const { data, usage, cost, model } = await services.llm.getStructuredData(
       { type: options.model_type || "ultra", temperature: options.temperature ?? 0 },
       messages,
       schema

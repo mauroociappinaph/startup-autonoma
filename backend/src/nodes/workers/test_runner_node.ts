@@ -3,19 +3,19 @@ import { test_runner } from "@/tools/domain/software/testRunner.js";
 import { AIMessage } from "@langchain/core/messages";
 import { ProtocolHelper } from "@/helpers/protocol_helper.js";
 import { incrementIteration } from "@/helpers/index.js";
-import { SacredLogger } from "@/helpers/logger.js";
+import { services } from "@/services/index.js";
 import { TestRunnerInput } from "@/types/software-tools.types.js";
 
 /**
  * Nodo TestRunner: Brazo ejecutor de validaciones técnicas.
  */
 export async function test_runner_node(state: AgentStateType) {
-  SacredLogger.node("TEST RUNNER");
+  services.logger.node("TEST RUNNER");
 
   const instruction = ProtocolHelper.getInstruction(state.messages);
   
   if (!instruction) {
-    SacredLogger.error("No se encontró una instrucción válida para el Test Runner.", "TEST_NODE");
+    services.logger.error("No se encontró una instrucción válida para el Test Runner.", "TEST_NODE");
     return {
       executive_summary: "Error: No se recibió una instrucción de test válida.",
       ...incrementIteration(state)
@@ -28,7 +28,7 @@ export async function test_runner_node(state: AgentStateType) {
     const result = await test_runner.invoke(testInstruction);
 
     if (result.success) {
-      SacredLogger.success(`Tests en [${testInstruction.package}] pasaron: ${result.summary}`, "TEST_NODE");
+      services.logger.success(`Tests en [${testInstruction.package}] pasaron: ${result.summary}`, "TEST_NODE");
       return {
         executive_summary: `Validación exitosa en ${testInstruction.package}: ${result.summary}`,
         ...incrementIteration(state),
@@ -42,7 +42,7 @@ export async function test_runner_node(state: AgentStateType) {
         })]
       };
     } else {
-      SacredLogger.error(`Tests en [${testInstruction.package}] fallaron: ${result.summary}`, "TEST_NODE");
+      services.logger.error(`Tests en [${testInstruction.package}] fallaron: ${result.summary}`, "TEST_NODE");
       return {
         executive_summary: `Validación fallida en ${testInstruction.package}: ${result.summary}`,
         ...incrementIteration(state),
@@ -56,9 +56,8 @@ export async function test_runner_node(state: AgentStateType) {
         })]
       };
     }
-  } catch (error: unknown) {
-    const err = error as Error;
-    SacredLogger.error(`Fallo crítico en el Nodo TestRunner: ${err.message}`, "TEST_NODE");
+  } catch (err: any) {
+    services.logger.error(`Fallo crítico en el Nodo TestRunner: ${err.message}`, "TEST_NODE");
     return {
       executive_summary: `Fallo crítico en Test Runner: ${err.message}`,
       ...incrementIteration(state),

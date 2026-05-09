@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { TelemetryService, telemetryService as defaultTelemetryService } from "../services/telemetryService.js";
-import { SacredLogger } from "../helpers/logger.js";
+import { services } from "@/services/index.js";
 
 /**
  * TelemetryController: Handles infrastructure metrics requests.
@@ -27,9 +27,9 @@ export class TelemetryController {
       const stats = await this.telemetryService.getNodesStats(projectId);
       return res.json(stats);
     } catch (error) {
-      const errorMessage = (error as Error).message;
-      SacredLogger.error(`Error fetching telemetry stats: ${errorMessage}`, "TELEMETRY_CONTROLLER");
-      return res.status(500).json({ error: "Internal server error" });
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      services.logger.error(`Error fetching telemetry stats: ${errorMessage}`, "TELEMETRY_CONTROLLER");
+      return res.status(500).json({ error: "Failed to fetch telemetry stats" });
     }
   }
 
@@ -47,9 +47,9 @@ export class TelemetryController {
       const stats = await this.telemetryService.getProjectStats(projectId);
       return res.json(stats);
     } catch (error) {
-      const errorMessage = (error as Error).message;
-      SacredLogger.error(`Error fetching global stats: ${errorMessage}`, "TELEMETRY_CONTROLLER");
-      return res.status(500).json({ error: "Internal server error" });
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      services.logger.error(`Error fetching global stats: ${errorMessage}`, "TELEMETRY_CONTROLLER");
+      return res.status(500).json({ error: "Failed to fetch global stats" });
     }
   }
 }

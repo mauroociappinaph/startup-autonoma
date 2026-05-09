@@ -1,5 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { LLMService } from "../services/llmService.js";
+import { services } from "../services/index.js";
 import { ResearcherResponseSchema } from "@startup/shared";
 import { list_dir, read_file } from "../tools/index.js";
 import { SystemMessage, AIMessage, ToolMessage, BaseMessage } from "@langchain/core/messages";
@@ -78,7 +78,7 @@ export async function researcher_node(state: AgentStateType) {
   // SÍNTESIS FINAL
   console.log("📊 Sintetizando hallazgos de investigación...");
 
-  const { data: synthesisResponse, usage, cost, latency, model: modelName } = await LLMService.getStructuredData(
+  const { data: synthesisResponse, usage, cost, latency, model: modelName } = await services.llm.getStructuredData(
     { type: "flow", temperature: 0 },
     [
       new SystemMessage("Sintetiza los hallazgos de la investigación técnica en un reporte estructurado."),

@@ -1,6 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { telemetryService } from "@/services/telemetryService.js";
-import { auditService } from "@/services/auditService.js";
+import { services } from "@/services/index.js";
 import { NodeMetadata } from "@/types/state-helper.types.js";
 
 /**
@@ -14,7 +13,7 @@ export async function prepareNodeUpdate(
   const projectId = state.project_context?.projectId || "unknown";
 
   // 1. Dynamic Telemetry (Uses the actual model configured in LLMService)
-  await telemetryService.recordMetric(projectId, {
+  await services.telemetry.recordMetric(projectId, {
     node: metadata.nodeName,
     model: metadata.model,
     latency: metadata.latency,
@@ -24,7 +23,7 @@ export async function prepareNodeUpdate(
 
   // 2. Auditing (only if there's a strategic decision)
   if (metadata.decision && metadata.reasoning) {
-    await auditService.logDecision(projectId, {
+    await services.audit.logDecision(projectId, {
       agent: metadata.nodeName,
       decision: metadata.decision,
       reasoning: metadata.reasoning

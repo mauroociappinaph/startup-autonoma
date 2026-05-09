@@ -1,5 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { LLMService } from "@/services/llmService.js";
+import { services } from "@/services/index.js";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { SecurityWorkerSchema } from "@startup/shared";
 import { prepareNodeUpdate } from "@/helpers/index.js";
@@ -25,7 +25,7 @@ export async function security_worker_node(state: AgentStateType): Promise<Parti
   `);
 
   try {
-    const { data: response, usage, cost, latency, model } = await LLMService.getStructuredData(
+    const { data: response, usage, cost, latency, model } = await services.llm.getStructuredData(
       { type: "reasoning", temperature: 0 },
       [system_prompt, ...state.messages],
       SecurityWorkerSchema

@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import { GraphService } from '@/services/graphService.js';
 import { enqueueAgentJob } from '@/jobs/index.js';
-import { EventBus } from '@/services/eventBus.js';
-import { SacredLogger } from '@/helpers/logger.js';
+import { services } from '@/services/index.js';
 
 /**
  * Controlador para las acciones de los Agentes.
@@ -50,7 +49,7 @@ export class AgentController {
   static async stream(req: Request, res: Response) {
     const { prompt, threadId, sessionId } = req.query;
     
-    SacredLogger.info(`🚀 INICIANDO MISIÓN: prompt="${prompt}", threadId="${threadId}"`, "STREAM");
+    services.logger.info(`🚀 INICIANDO MISIÓN: prompt="${prompt}", threadId="${threadId}"`, "STREAM");
 
     // Soporte para ambos modos: legacy (prompt) y encolado (sessionId)
     const resolvedPrompt = prompt ? String(prompt) : null;
@@ -71,15 +70,15 @@ export class AgentController {
     res.write(': heartbeat\n\n');
     (res as Response & { flush?: () => void }).flush?.(); 
 
-    SacredLogger.info(`Conexión SSE abierta para sessionId: ${resolvedSessionId}`, "STREAM");
+    services.logger.info(`Conexión SSE abierta para sessionId: ${resolvedSessionId}`, "STREAM");
 
-    // Suscripción al EventBus para eventos generados por el Worker (Gap 4)
-    const unsubscribe = await EventBus.subscribe(resolvedSessionId, (data) => {
-      SacredLogger.info(`Evento recibido del EventBus para ${resolvedSessionId}`, "STREAM");
-      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    // Suscripción al EventBus
+    const unsubscribe = await services.eventBus.subscribe(resolvedSessionId, (event) => {
+      services.logger.info(`Evento recibido del EventBus para ${resolvedSessionId}`, "STREAM");
+      res.write(`data: ${JSON.stringify(event)}\n\n`);
     });
 
-    SacredLogger.info(`Suscripción al EventBus activa. Esperando eventos...`, "STREAM");
+    services.logger.info(`Suscripción al EventBus activa. Esperando eventos...`, "STREAM");
 
     // Manejar desconexión del cliente
     req.on('close', async () => {
@@ -91,13 +90,12 @@ export class AgentController {
       // Si hay prompt directo (modo legacy), ejecutamos el grafo aquí.
       // Notese que los eventos también se publicarán en el bus si el worker está activo.
       if (resolvedPrompt) {
-        const { projectService } = await import('@/services/projectService.js');
-        const defaultContext = await projectService.getOrCreateProject('default-startup');
+        const defaultContext = await services.project.getOrCreateProject('default-startup');
         
         const generator = GraphService.runAgentStream(resolvedPrompt, resolvedSessionId, defaultContext);
         for await (const event of generator) {
           // Publicamos manualmente para modo legacy para que otros suscriptores vean lo mismo
-          await EventBus.publish(resolvedSessionId, event);
+          await services.eventBus.publish(resolvedSessionId, event);
         }
       }
 
@@ -134,7 +132,7 @@ export class AgentController {
 
       for await (const event of generator) {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
-        await EventBus.publish(String(threadId), event); // Sincronizar con otros suscriptores
+        await services.eventBus.publish(String(threadId), event); // Sincronizar con otros suscriptores
       }
 
       res.write('event: end\ndata: "execution_complete"\n\n');

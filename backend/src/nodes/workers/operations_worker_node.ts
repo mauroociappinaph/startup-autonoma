@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { safeExec } from "@/helpers/operationsHelper.js";
 import { OperationsWorkerInput, OperationsWorkerResult, ExecError } from "@/types/operations.types.js";
-import { SacredLogger } from "@/helpers/logger.js";
+import { services } from "@/services/index.js";
 import { incrementIteration } from "@/helpers/index.js";
 import { generateSequenceDiagram } from "@/helpers/diagramHelper.js";
 
@@ -13,24 +13,23 @@ import { generateSequenceDiagram } from "@/helpers/diagramHelper.js";
  * Nodo OperationsWorker: Ejecutor de comandos de infraestructura.
  */
 export async function operations_worker_node(state: AgentStateType) {
-  SacredLogger.node("OPERATIONS WORKER");
+  services.logger.node("OPERATIONS WORKER");
 
   const lastMessage = state.messages[state.messages.length - 1];
+  const instruction = lastMessage?.additional_kwargs?.operations_instruction as OperationsWorkerInput;
   
-  if (!lastMessage || !lastMessage.additional_kwargs?.operations_instruction) {
-    SacredLogger.error("No se encontró una instrucción válida para el Operations Worker.", "OPS_NODE");
+  if (!instruction) {
+    services.logger.error("No se encontró una instrucción válida para el Operations Worker.", "OPS_NODE");
     return {
       executive_summary: "Error: No se recibió una instrucción de operaciones válida.",
       ...incrementIteration(state)
     };
   }
 
-  const instruction = lastMessage.additional_kwargs.operations_instruction as OperationsWorkerInput;
-
   try {
     // --- NUEVO: Manejo de acciones integradas (Internal Operations) ---
     if (instruction.command === "generate_sequence_diagram") {
-      SacredLogger.info("Generando diagrama de secuencia automático...", "OPS_NODE");
+      services.logger.info("Generando diagrama de secuencia automático...", "OPS_NODE");
       const diagram = generateSequenceDiagram(state.messages);
       
       const docsDir = path.join(process.cwd(), "docs/architecture/sequences");
@@ -42,7 +41,7 @@ export async function operations_worker_node(state: AgentStateType) {
       const filePath = path.join(docsDir, fileName);
       fs.writeFileSync(filePath, diagram);
 
-      SacredLogger.success(`Diagrama generado exitosamente en ${filePath}`, "OPS_NODE");
+      services.logger.success(`Diagrama generado exitosamente en ${filePath}`, "OPS_NODE");
 
       return {
         executive_summary: `Se ha generado un diagrama de secuencia de la ejecución actual en: ${filePath}`,
@@ -62,7 +61,7 @@ export async function operations_worker_node(state: AgentStateType) {
 
     // --- Ejecución de comandos de Shell (Legacy / External Ops) ---
     const command = safeExec(instruction.command, instruction.args);
-    SacredLogger.info(`Ejecutando comando: ${command}`, "OPS_NODE");
+    services.logger.info(`Ejecutando comando: ${command}`, "OPS_NODE");
 
     const { stdout, stderr } = await new Promise<{ stdout: string, stderr: string }>((resolve, reject) => {
       child_process.exec(command, (error, stdout, stderr) => {
@@ -84,7 +83,7 @@ export async function operations_worker_node(state: AgentStateType) {
       stderr
     };
 
-    SacredLogger.success(`Comando ${instruction.command} ejecutado con éxito.`, "OPS_NODE");
+    services.logger.success(`Comando ${instruction.command} ejecutado con éxito.`, "OPS_NODE");
 
     return {
       executive_summary: `Operations Worker ejecutó ${instruction.command}:\n${stdout || stderr || 'Sin salida'}`,
@@ -99,9 +98,8 @@ export async function operations_worker_node(state: AgentStateType) {
         }
       })]
     };
-  } catch (error: unknown) {
-    const err = error as ExecError;
-    SacredLogger.error(`Error en Operations Worker: ${err.message}`, "OPS_NODE");
+  } catch (err: any) {
+    services.logger.error(`Error en Operations Worker: ${err.message}`, "OPS_NODE");
     
     const result: OperationsWorkerResult = {
       success: false,

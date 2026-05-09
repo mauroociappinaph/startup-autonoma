@@ -1,6 +1,5 @@
 import { AgentStateType } from "@startup/shared";
-import { auditService } from "../services/auditService.js";
-import { SacredLogger } from "./logger.js";
+import { services } from "../services/index.js";
 
 /**
  * AuditHelper: Middleware para el registro persistente de acciones de agentes.
@@ -19,7 +18,7 @@ export class AuditHelper {
         // Determinar qué acción se realizó basándose en el estado o el resultado
         const resultData = result as Record<string, unknown>;
         
-        await auditService.logAction({
+        await services.audit.logAction({
           projectId,
           nodeName,
           action: "EXECUTE",
@@ -33,7 +32,7 @@ export class AuditHelper {
 
         return result;
       } catch (error) {
-        await auditService.logAction({
+        await services.audit.logAction({
           projectId,
           nodeName,
           action: "EXECUTE_FAILED",

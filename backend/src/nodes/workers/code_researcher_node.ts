@@ -2,7 +2,7 @@ import { AgentStateType } from "@startup/shared";
 import { codeResearcher } from "./codeResearcher.js";
 import { AIMessage } from "@langchain/core/messages";
 import { ProtocolHelper } from "@/helpers/protocol_helper.js";
-import { SacredLogger } from "@/helpers/logger.js";
+import { services } from "@/services/index.js";
 import { incrementIteration } from "@/helpers/index.js";
 import { CodeResearcherInput } from "@/types/code-researcher.types.js";
 
@@ -10,12 +10,12 @@ import { CodeResearcherInput } from "@/types/code-researcher.types.js";
  * Nodo CodeResearcherWorker: Agente especializado en explorar y leer el código fuente.
  */
 export async function code_researcher_node(state: AgentStateType) {
-  SacredLogger.node("CODE RESEARCHER");
+  services.logger.node("CODE RESEARCHER");
 
   const instruction = ProtocolHelper.getInstruction(state.messages);
   
   if (!instruction) {
-    SacredLogger.error("No se encontró una instrucción válida para el Code Researcher.", "RESEARCHER");
+    services.logger.error("No se encontró una instrucción válida para el Code Researcher.", "RESEARCHER");
     return {
       executive_summary: "Error: No se recibió una instrucción de investigación válida.",
       ...incrementIteration(state)
@@ -28,7 +28,7 @@ export async function code_researcher_node(state: AgentStateType) {
     const result = await codeResearcher(payload as any);
 
     if (result.success) {
-      SacredLogger.success(`Investigación [${result.action}] completada.`, "RESEARCHER");
+      services.logger.success(`Investigación [${result.action}] completada.`, "RESEARCHER");
       return {
         executive_summary: `Code Researcher ejecutó con éxito: ${result.action}.`,
         messages: [new AIMessage({
@@ -41,7 +41,7 @@ export async function code_researcher_node(state: AgentStateType) {
         })]
       };
     } else {
-      SacredLogger.error(`Investigación [${result.action}] fallida: ${result.errorMessage}`, "RESEARCHER");
+      services.logger.error(`Investigación [${result.action}] fallida: ${result.errorMessage}`, "RESEARCHER");
       return {
         executive_summary: `Error en Code Researcher: ${result.errorMessage}`,
         messages: [new AIMessage({

@@ -4,8 +4,7 @@ import { HumanMessage } from '@langchain/core/messages';
 import { TraceContext } from '../traceContext.js';
 import { LangGraphStreamEvent } from '@/types/index.js';
 import { StreamHelper } from '@/helpers/streamHelper.js';
-import { LLMService } from '../llmService.js';
-import { EventBus } from '../eventBus.js';
+import { services } from '../index.js';
 import { GraphFormatter } from '@/helpers/graphFormatter.js';
 
 /**
@@ -97,17 +96,17 @@ export class WorkflowEngine {
        }
        
        if (event.event === "on_node_start") {
-          EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_START", metadata: { node: event.metadata?.langgraph_node }, threadId });
+          services.eventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_START", metadata: { node: event.metadata?.langgraph_node }, threadId });
           reasoningBuffer = "";
           lastYieldedLength = 0;
        }
 
        if (event.event === "on_node_end") {
-         EventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: event.metadata?.langgraph_node }, threadId });
+         services.eventBus.publish(threadId, { agent: "SYSTEM", type: "SPAN_END", metadata: { node: event.metadata?.langgraph_node }, threadId });
          const updates = event.data.output as Record<string, unknown>;
          if (updates) {
             for (const update of GraphFormatter.formatUpdate(updates, threadId, event.config?.configurable?.checkpoint_id)) {
-              await EventBus.publish(threadId, update);
+              await services.eventBus.publish(threadId, update);
               yield update;
             }
          }
@@ -117,8 +116,8 @@ export class WorkflowEngine {
 
   private static async _publishMetrics(threadId: string, buffer: string, baseline: AgentStateType, event: any) {
     const tokens = Math.ceil(buffer.length / 4);
-    const cost = LLMService.calculateCost({ prompt: 0, completion: tokens }, event.metadata?.model_name || "default");
-    await EventBus.publish(threadId, {
+    const cost = services.llm.calculateCost({ prompt: 0, completion: tokens }, event.metadata?.model_name || "default");
+    await services.eventBus.publish(threadId, {
       agent: "SYSTEM",
       type: "METRIC_PARTIAL",
       metadata: {
@@ -139,7 +138,7 @@ export class WorkflowEngine {
       isWaiting: true,
       threadId
     };
-    await EventBus.publish(threadId, waitEvent);
+    await services.eventBus.publish(threadId, waitEvent);
     yield waitEvent;
   }
 }

@@ -1,9 +1,8 @@
 import { AgentStateType } from "@startup/shared";
-import { LLMService } from "@/services/llmService.js";
+import { services } from "@/services/index.js";
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { prepareNodeUpdate } from "@/helpers/index.js";
-import { SacredLogger } from "@/helpers/logger.js";
 import { RunnableConfig } from "@langchain/core/runnables";
 
 /**
@@ -80,8 +79,8 @@ ${COMMON_INSTRUCTIONS}
  * Ejecuta verificación adversaria paralela (Prosecutor vs Defender) y desempata si es necesario.
  */
 export async function aduana_sentinel_node(state: AgentStateType, config?: unknown) {
-  SacredLogger.node("ADUANA SENTINEL (JUDGMENT DAY)");
-  SacredLogger.info(`Analizando input: ${state.original_prompt?.slice(0, 50)}...`, "SENTINEL");
+  services.logger.node("ADUANA SENTINEL (JUDGMENT DAY)");
+  services.logger.info(`Analizando input: ${state.original_prompt?.slice(0, 50)}...`, "SENTINEL");
 
   const userInput = state.original_prompt || "";
   // FIX: Sin XML tags — Groq los interpreta como campos del tool call y rompe la validación
@@ -90,8 +89,7 @@ export async function aduana_sentinel_node(state: AgentStateType, config?: unkno
   const threadId = (config as any)?.configurable?.thread_id || state.trace_id || "unknown";
   
   // Emitimos pensamiento parcial inicial
-  const { EventBus } = await import("@/services/eventBus.js");
-  await EventBus.publish(threadId, {
+  await services.eventBus.publish(threadId, {
     agent: "MIRROR",
     text: "🛡️ Iniciando análisis de seguridad multimodelo (Judgment Day Protocol)...",
     isPartial: false, // Lo marcamos como final para que aparezca la burbuja completa
@@ -100,14 +98,14 @@ export async function aduana_sentinel_node(state: AgentStateType, config?: unkno
 
   try {
     // Paso 1: Ejecución paralela
-    SacredLogger.info("Lanzando Prosecutor y Defender en paralelo...", "SENTINEL");
+    services.logger.info("Lanzando Prosecutor y Defender en paralelo...", "SENTINEL");
     const [prosecutorResult, defenderResult] = await Promise.all([
-      LLMService.getStructuredData({ type: "fast", temperature: 0 }, [PROSECUTOR_PROMPT, humanMessage], AduanaSentinelSchema),
-      LLMService.getStructuredData({ type: "fast", temperature: 0 }, [DEFENDER_PROMPT, humanMessage], AduanaSentinelSchema)
+      services.llm.getStructuredData({ type: "fast", temperature: 0 }, [PROSECUTOR_PROMPT, humanMessage], AduanaSentinelSchema),
+      services.llm.getStructuredData({ type: "fast", temperature: 0 }, [DEFENDER_PROMPT, humanMessage], AduanaSentinelSchema)
     ]);
-    SacredLogger.info("Resultados paralelos recibidos.", "SENTINEL");
+    services.logger.info("Resultados paralelos recibidos.", "SENTINEL");
 
-    await EventBus.publish(state.trace_id || "unknown", {
+    await services.eventBus.publish(state.trace_id || "unknown", {
       agent: "MIRROR",
       text: "Comparando perspectivas (Prosecutor vs Defender)...",
       isPartial: true,
@@ -126,15 +124,15 @@ export async function aduana_sentinel_node(state: AgentStateType, config?: unkno
 
     // Paso 2: Consenso
     if (prosecutorResult.data.is_injection === defenderResult.data.is_injection) {
-      SacredLogger.info("Consenso alcanzado en Aduana Sentinel.", "SENTINEL");
-      SacredLogger.info(`Consenso alcanzado: ${prosecutorResult.data.is_injection ? "MALICIOSO" : "SEGURO"}`, "SENTINEL");
+      services.logger.info("Consenso alcanzado en Aduana Sentinel.", "SENTINEL");
+      services.logger.info(`Consenso alcanzado: ${prosecutorResult.data.is_injection ? "MALICIOSO" : "SEGURO"}`, "SENTINEL");
       // Si ambos coinciden, tomamos el del Prosecutor si es inyección, sino Defender
       finalResult = prosecutorResult.data.is_injection ? prosecutorResult.data : defenderResult.data;
       finalReasoning = `[Consenso] Prosecutor: ${prosecutorResult.data.reasoning} | Defender: ${defenderResult.data.reasoning}`;
     } else {
       // Paso 3: Contradicción -> Interviene el Judge
-      SacredLogger.info("Contradicción detectada. Invocando Synthesis Judge...", "SENTINEL");
-      SacredLogger.info("Contradicción -> Invocando al Judge para desempate.", "SENTINEL");
+      services.logger.info("Contradicción detectada. Invocando Synthesis Judge...", "SENTINEL");
+      services.logger.info("Contradicción -> Invocando al Judge para desempate.", "SENTINEL");
       
       const judgeHumanMessage = new HumanMessage(`
 MENSAJE ORIGINAL DEL USUARIO:
@@ -153,12 +151,12 @@ ARGUMENTO DEL DEFENDER (BLUE TEAM):
 - Razonamiento: ${defenderResult.data.reasoning}
 `);
 
-      const judgeOutput = await LLMService.getStructuredData(
+      const judgeOutput = await services.llm.getStructuredData(
         { type: "reasoning", temperature: 0 }, // Usamos modelo superior para el desempate
         [JUDGE_PROMPT, judgeHumanMessage],
         AduanaSentinelSchema
       );
-      SacredLogger.info("Veredicto del Judge recibido.", "SENTINEL");
+      services.logger.info("Veredicto del Judge recibido.", "SENTINEL");
 
       finalResult = judgeOutput.data;
       totalCost += judgeOutput.cost;
@@ -168,10 +166,10 @@ ARGUMENTO DEL DEFENDER (BLUE TEAM):
       maxLatency += judgeOutput.latency; // Latencia secuencial del judge
 
       finalReasoning = `[Desempate Judge] ${judgeOutput.data.reasoning}`;
-      SacredLogger.info(`Veredicto del Judge: ${finalResult.is_injection ? 'BLOQUEAR' : 'PERMITIR'}`, "SENTINEL");
+      services.logger.info(`Veredicto del Judge: ${finalResult.is_injection ? 'BLOQUEAR' : 'PERMITIR'}`, "SENTINEL");
     }
 
-    SacredLogger.info("Nodo finalizado. Aplicando métricas y devolviendo...", "SENTINEL");
+    services.logger.info("Nodo finalizado. Aplicando métricas y devolviendo...", "SENTINEL");
     const metricsUpdate = await prepareNodeUpdate(state, {
       nodeName: "Aduana Sentinel",
       model: prosecutorResult.model || "unknown",
@@ -191,7 +189,7 @@ ARGUMENTO DEL DEFENDER (BLUE TEAM):
     };
 
     const threadId = (config as RunnableConfig)?.configurable?.thread_id || state.trace_id || "unknown";
-    SacredLogger.info(`Publicando auditoría de seguridad para threadId: ${threadId}`, "SENTINEL");
+    services.logger.info(`Publicando auditoría de seguridad para threadId: ${threadId}`, "SENTINEL");
 
     // Emitimos el evento de seguridad estructurado para la nueva UI profesional
     const securityEvent = {
@@ -215,8 +213,8 @@ ARGUMENTO DEL DEFENDER (BLUE TEAM):
     };
 
     // Publicamos inmediatamente
-    await EventBus.publish(threadId, securityEvent);
-    SacredLogger.info(`Evento publicado con éxito en el canal: ${threadId}`, "SENTINEL");
+    await services.eventBus.publish(threadId, securityEvent);
+    services.logger.info(`Evento publicado con éxito en el canal: ${threadId}`, "SENTINEL");
 
     if (finalResult.is_injection) {
       updates.executive_summary = `🛡️ BLOQUEO DE SEGURIDAD: ${finalReasoning}`;
@@ -228,7 +226,7 @@ ARGUMENTO DEL DEFENDER (BLUE TEAM):
     return updates;
 
   } catch (error) {
-    SacredLogger.error("Error en Aduana Sentinel", "SENTINEL", error instanceof Error ? error : new Error(String(error)));
+    services.logger.error("Error en Aduana Sentinel", "SENTINEL", error instanceof Error ? error : new Error(String(error)));
     return {
       is_malicious: false,
       next_node: "mirror"
