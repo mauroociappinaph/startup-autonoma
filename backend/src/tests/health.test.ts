@@ -6,7 +6,12 @@ import { jest } from '@jest/globals';
 jest.unstable_mockModule('../db/redis.js', () => ({
   getRedisConnection: jest.fn(() => ({
     ping: jest.fn().mockResolvedValue('PONG')
-  }))
+  })),
+  getRedisSubscriber: jest.fn(() => ({
+    subscribe: jest.fn().mockResolvedValue(undefined),
+    on: jest.fn()
+  })),
+  closeRedisConnections: jest.fn().mockResolvedValue(undefined)
 }));
 
 jest.unstable_mockModule('../services/aiEngineClient.js', () => ({
