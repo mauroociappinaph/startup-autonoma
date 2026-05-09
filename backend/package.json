@@ -17,7 +17,7 @@
     "@langchain/google-genai": "^2.1.26",
     "@langchain/groq": "^1.2.0",
     "@langchain/langgraph": "latest",
-    "@langchain/openai": "^1.4.4",
+    "@langchain/openai": "^1.4.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "zod": "^3.23.8"
