@@ -1,57 +1,16 @@
 import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from "@jest/globals";
+import { AgentStateType } from "@startup/shared";
 
-// Mockeamos ioredis para evitar conexiones reales
-jest.mock('ioredis', () => {
-  const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: (jest.fn() as any).mockImplementation(() => ({ rpush: (jest.fn() as any).mockReturnThis(), ltrim: (jest.fn() as any).mockReturnThis(), expire: (jest.fn() as any).mockReturnThis(), hincrbyfloat: (jest.fn() as any).mockReturnThis(), hincrby: (jest.fn() as any).mockReturnThis(), exec: (jest.fn() as any).mockResolvedValue([]) })),
-    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
-    hincrby: (jest.fn() as any).mockReturnThis(),
-    rpush: (jest.fn() as any).mockReturnThis(),
-    ltrim: (jest.fn() as any).mockReturnThis(),
-    expire: (jest.fn() as any).mockReturnThis(),
-    lrange: (jest.fn() as any).mockResolvedValue([]),
-    exec: (jest.fn() as any).mockResolvedValue([]),
-    hgetall: (jest.fn() as any).mockResolvedValue({}),
-    publish: (jest.fn() as any).mockResolvedValue(1),
-    lpush: (jest.fn() as any).mockResolvedValue(1),
-    on: jest.fn() as any,
-    quit: (jest.fn() as any).mockResolvedValue("OK")
-  }));
-  return {
-    Redis: MockRedis,
-    default: MockRedis
-  };
-});
-
-// Mockeamos el DB client para evitar problemas de Prisma en Jest ESM
-jest.unstable_mockModule('@startup/db', () => ({
-  prisma: {
-    auditLog: {
-      create: (jest.fn() as any).mockResolvedValue({}),
-      findMany: (jest.fn() as any).mockResolvedValue([]),
-    }
-  }
-}));
+import { 
+  prepareNodeUpdate, 
+  incrementIteration 
+} from "../helpers/stateHelper.js";
+import { telemetryService } from "../services/telemetryService.js";
+import { AuditService } from "../services/auditService.js";
 
 
 describe("stateHelper", () => {
-  let prepareNodeUpdate: any;
-  let incrementIteration: any;
-  let telemetryServiceInstance: any;
-  let AuditService: any;
-  let initialState: any;
-
-  beforeAll(async () => {
-    const module = await import("../helpers/stateHelper.js");
-    const telemetryModule = await import("../services/telemetryService.js");
-    const auditModule = await import("../services/auditService.js");
-    
-    prepareNodeUpdate = module.prepareNodeUpdate;
-    incrementIteration = module.incrementIteration;
-    telemetryServiceInstance = telemetryModule.telemetryService;
-    AuditService = auditModule.AuditService;
-  });
-
+  let initialState: AgentStateType;
 
   beforeEach(() => {
     initialState = {
@@ -65,14 +24,14 @@ describe("stateHelper", () => {
       completed_steps: [],
       original_prompt: "",
       refined_prompt: ""
-    };
+    } as unknown as AgentStateType;
     jest.clearAllMocks();
   });
 
   describe("prepareNodeUpdate", () => {
     it("debe incrementar iteración y acumular costos/tokens correctamente", async () => {
       // Usamos spyOn para evitar problemas de ESM mocks
-      const telemetrySpy = jest.spyOn(telemetryServiceInstance, 'recordMetric').mockResolvedValue(0.002);
+      const telemetrySpy = jest.spyOn(telemetryService, 'recordMetric').mockResolvedValue(0.002);
       const auditSpy = jest.spyOn(AuditService, 'logDecision').mockResolvedValue(undefined);
 
       const metadata = {

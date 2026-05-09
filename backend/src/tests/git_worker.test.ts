@@ -1,46 +1,32 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, describe, it, expect, afterEach } from '@jest/globals';
 import child_process from 'child_process';
 import { gitWorker } from '@/nodes/workers/gitWorker.js';
+import fs from 'fs/promises';
+import { Stats } from 'fs';
 
-// Mockeamos fs para evitar acceso real a disco en tests de idempotencia
-jest.mock('fs/promises', () => ({
-  default: {
-    stat: (jest.fn() as any).mockResolvedValue({
-      isDirectory: () => true
-    })
-  },
-  stat: (jest.fn() as any).mockResolvedValue({
-    isDirectory: () => true
-  })
-}));
-
-/**
- * Tests del Git Worker Node.
- *
- * ESTRATEGIA DE MOCK: Se usa jest.spyOn sobre `child_process.exec` (default
- * import) en lugar de `jest.mock('child_process')`. Esto funciona porque
- * gitWorker.ts importa el módulo como objeto (`import child_process from ...`)
- * y llama a `child_process.exec` en tiempo de ejecución, lo que permite
- * que spyOn intercepte la referencia correctamente.
- */
 describe('Git Worker Node', () => {
+  beforeEach(() => {
+    jest.spyOn(fs, 'stat').mockResolvedValue({
+      isDirectory: () => true
+    } as unknown as Stats);
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
   it('debería traducir la acción commit-all correctamente', async () => {
-    jest.spyOn(child_process, 'exec').mockImplementation((cmd: string, _opts: any, callback: any) => {
+    jest.spyOn(child_process, 'exec').mockImplementation(((cmd: string, _opts: unknown, callback?: (error: Error | null, stdout: string, stderr: string) => void) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
       if (cmd.includes('status')) {
-        cb(null, 'M  file.ts\n', '');
+        cb?.(null, 'M  file.ts\n', '');
       } else if (cmd.includes('commit')) {
-        cb(null, '[main abc1234] feat: test commit\n 1 file changed, 1 insertion(+)\n', '');
+        cb?.(null, '[main abc1234] feat: test commit\n 1 file changed, 1 insertion(+)\n', '');
       } else {
-        cb(null, '', '');
+        cb?.(null, '', '');
       }
-      return {} as any;
-    });
+      return {} as child_process.ChildProcess;
+    }) as unknown as typeof child_process.exec);
 
     const result = await gitWorker({
       payload: {
@@ -55,12 +41,12 @@ describe('Git Worker Node', () => {
   });
 
   it('debería manejar errores de Git correctamente', async () => {
-    jest.spyOn(child_process, 'exec').mockImplementation((_cmd: string, _opts: any, callback: any) => {
+    jest.spyOn(child_process, 'exec').mockImplementation(((_cmd: string, _opts: unknown, callback?: (error: Error | null, stdout: string, stderr: string) => void) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
       const error = new Error('Command failed');
-      cb(error, '', 'fatal: not a git repository');
-      return {} as any;
-    });
+      if (cb) cb(error, '', 'fatal: not a git repository');
+      return {} as child_process.ChildProcess;
+    }) as unknown as typeof child_process.exec);
 
     const result = await gitWorker({
       payload: { action: 'pull' }
@@ -71,16 +57,16 @@ describe('Git Worker Node', () => {
   });
 
   it('debería crear una branch correctamente', async () => {
-    jest.spyOn(child_process, 'exec').mockImplementation((cmd: string, _opts: any, callback: any) => {
+    jest.spyOn(child_process, 'exec').mockImplementation(((cmd: string, _opts: unknown, callback?: (error: Error | null, stdout: string, stderr: string) => void) => {
       const cb = typeof _opts === 'function' ? _opts : callback;
       if (cmd.includes('--list')) {
         // Rama NO existe → stdout vacío
-        cb(null, '', '');
+        cb?.(null, '', '');
       } else {
-        cb(null, "Switched to a new branch 'feat/nueva-feature'", '');
+        cb?.(null, "Switched to a new branch 'feat/nueva-feature'", '');
       }
-      return {} as any;
-    });
+      return {} as child_process.ChildProcess;
+    }) as unknown as typeof child_process.exec);
 
     const result = await gitWorker({
       payload: {

@@ -6,16 +6,16 @@ import { jest } from '@jest/globals';
  */
 
 // En versiones recientes de @types/jest, Mock solo toma un argumento (el tipo de la función)
-type MockFn = jest.Mock<(...args: any[]) => Promise<any>>;
+type MockFn<T = unknown> = jest.Mock<(...args: unknown[]) => Promise<T>>;
 
 interface MockPrismaModel {
   findUnique: MockFn;
-  findMany: MockFn;
+  findMany: MockFn<unknown[]>;
   create: MockFn;
   update: MockFn;
   delete: MockFn;
   upsert: MockFn;
-  count: MockFn;
+  count: MockFn<number>;
 }
 
 interface MockPrismaClient {
@@ -30,12 +30,12 @@ interface MockPrismaClient {
 
 const createMockModel = (): MockPrismaModel => ({
   findUnique: jest.fn(() => Promise.resolve(null)) as MockFn,
-  findMany: jest.fn(() => Promise.resolve([])) as MockFn,
+  findMany: jest.fn(() => Promise.resolve([])) as MockFn<unknown[]>,
   create: jest.fn(() => Promise.resolve({})) as MockFn,
   update: jest.fn(() => Promise.resolve({})) as MockFn,
   delete: jest.fn(() => Promise.resolve({})) as MockFn,
   upsert: jest.fn(() => Promise.resolve({})) as MockFn,
-  count: jest.fn(() => Promise.resolve(0)) as MockFn,
+  count: jest.fn(() => Promise.resolve(0)) as MockFn<number>,
 });
 
 export const prisma: MockPrismaClient = {
@@ -50,7 +50,7 @@ export const prisma: MockPrismaClient = {
       return (callback as (p: MockPrismaClient) => unknown)(prisma);
     }
     return Promise.resolve([]);
-  }) as MockFn,
+  }) as MockFn<unknown>,
 };
 
 // Helper para resetear todos los mocks de la DB entre tests
@@ -59,7 +59,7 @@ export const resetDbMock = () => {
     if (typeof model === 'object' && model !== null) {
       Object.values(model).forEach((method: unknown) => {
         if (typeof method === 'function' && 'mockReset' in method) {
-          (method as MockFn).mockReset();
+          (method as MockFn<unknown>).mockReset();
         }
       });
     }

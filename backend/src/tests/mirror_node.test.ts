@@ -1,51 +1,12 @@
 import { jest, describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
 
-// Mockeamos ioredis para evitar conexiones reales
-jest.mock('ioredis', () => {
-  const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: (jest.fn() as any).mockImplementation(() => ({ 
-      rpush: (jest.fn() as any).mockReturnThis(), 
-      ltrim: (jest.fn() as any).mockReturnThis(), 
-      expire: (jest.fn() as any).mockReturnThis(), 
-      hincrbyfloat: (jest.fn() as any).mockReturnThis(), 
-      hincrby: (jest.fn() as any).mockReturnThis(), 
-      hset: (jest.fn() as any).mockReturnThis(),
-      exec: (jest.fn() as any).mockResolvedValue([]) 
-    })),
-
-    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
-    hincrby: (jest.fn() as any).mockReturnThis(),
-    rpush: (jest.fn() as any).mockReturnThis(),
-    ltrim: (jest.fn() as any).mockReturnThis(),
-    expire: (jest.fn() as any).mockReturnThis(),
-    lrange: (jest.fn() as any).mockResolvedValue([]),
-    exec: (jest.fn() as any).mockResolvedValue([]),
-    hgetall: (jest.fn() as any).mockResolvedValue({}),
-    set: (jest.fn() as any).mockResolvedValue("OK"),
-    get: (jest.fn() as any).mockResolvedValue(null),
-    publish: (jest.fn() as any).mockResolvedValue(1),
-    on: jest.fn() as any,
-    quit: (jest.fn() as any).mockResolvedValue("OK")
-  }));
-  return {
-    Redis: MockRedis,
-    default: MockRedis
-  };
-});
+import { mirror_node } from '@/nodes/mirror.js';
+import { LLMService } from '@/services/llmService.js';
+import { AgentStateType } from '@startup/shared';
 
 describe('MirrorAgent Node', () => {
-  let mirror_node: any;
-  let LLMService: any;
-  let initialState: any;
-
-  beforeAll(async () => {
-    const mirrorModule = await import('@/nodes/mirror.js');
-    const llmModule = await import('@/services/llmService.js');
-    mirror_node = mirrorModule.mirror_node;
-    LLMService = llmModule.LLMService;
-  });
-
+  let initialState: AgentStateType;
 
   beforeEach(() => {
     initialState = {
@@ -62,7 +23,7 @@ describe('MirrorAgent Node', () => {
       total_cost_usd: 0,
       reasoning: "",
       token_usage: { total: 0, prompt: 0, completion: 0 }
-    };
+    } as unknown as AgentStateType;
     jest.clearAllMocks();
   });
 
@@ -84,7 +45,7 @@ describe('MirrorAgent Node', () => {
       model: "glm-5.1"
     });
 
-    const result: any = await mirror_node(initialState);
+    const result = await mirror_node(initialState) as Extract<Awaited<ReturnType<typeof mirror_node>>, { refined_prompt: string }>;
 
     expect(result.refined_prompt).toBe(mockRefined);
     expect(result.executive_summary).toContain('Mirror optimizó la petición');

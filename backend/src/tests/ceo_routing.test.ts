@@ -1,50 +1,11 @@
 import { jest, describe, it, expect, afterEach, beforeAll, afterAll } from '@jest/globals';
 import { HumanMessage } from '@langchain/core/messages';
+import { AgentStateType } from '@startup/shared';
 
-// Mockeamos ioredis para evitar conexiones reales
-jest.mock('ioredis', () => {
-  const MockRedis = jest.fn().mockImplementation(() => ({
-    pipeline: (jest.fn() as any).mockImplementation(() => ({ 
-      rpush: (jest.fn() as any).mockReturnThis(), 
-      ltrim: (jest.fn() as any).mockReturnThis(), 
-      expire: (jest.fn() as any).mockReturnThis(), 
-      hincrbyfloat: (jest.fn() as any).mockReturnThis(), 
-      hincrby: (jest.fn() as any).mockReturnThis(), 
-      hset: (jest.fn() as any).mockReturnThis(),
-      exec: (jest.fn() as any).mockResolvedValue([]) 
-    })),
-
-    hincrbyfloat: (jest.fn() as any).mockReturnThis(),
-    hincrby: (jest.fn() as any).mockReturnThis(),
-    rpush: (jest.fn() as any).mockReturnThis(),
-    ltrim: (jest.fn() as any).mockReturnThis(),
-    expire: (jest.fn() as any).mockReturnThis(),
-    lrange: (jest.fn() as any).mockResolvedValue([]),
-    exec: (jest.fn() as any).mockResolvedValue([]),
-    hgetall: (jest.fn() as any).mockResolvedValue({}),
-    set: (jest.fn() as any).mockResolvedValue("OK"),
-    get: (jest.fn() as any).mockResolvedValue(null),
-    publish: (jest.fn() as any).mockResolvedValue(1),
-    lpush: (jest.fn() as any).mockResolvedValue(1),
-    on: jest.fn() as any,
-    quit: (jest.fn() as any).mockResolvedValue("OK")
-  }));
-  return {
-    Redis: MockRedis,
-    default: MockRedis
-  };
-});
+import { ceo_node } from '@/nodes/ceo.js';
+import { LLMService } from '@/services/llmService.js';
 
 describe('CEO Node Routing', () => {
-  let ceo_node: any;
-  let LLMService: any;
-
-  beforeAll(async () => {
-    const ceoModule = await import('@/nodes/ceo.js');
-    const llmModule = await import('@/services/llmService.js');
-    ceo_node = ceoModule.ceo_node;
-    LLMService = llmModule.LLMService;
-  });
 
 
   afterEach(() => {
@@ -52,9 +13,9 @@ describe('CEO Node Routing', () => {
   });
 
   it('debería delegar al Operations Chief para consultas de infraestructura', async () => {
-    const mockState: any = {
+    const mockState = {
       messages: [new HumanMessage('¿Cómo están los contenedores de docker?')],
-    };
+    } as unknown as AgentStateType;
 
     jest.spyOn(LLMService, 'getStructuredData').mockResolvedValue({
       data: {
@@ -65,7 +26,7 @@ describe('CEO Node Routing', () => {
         task_description: 'Check docker status',
         is_complete: false
       },
-      usage: {} as any,
+      usage: { total: 0, prompt: 0, completion: 0 },
       cost: 0,
       latency: 100,
       model: 'test-model'
