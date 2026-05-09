@@ -1,102 +1,17 @@
-import { describe, it, expect, afterAll, beforeAll, jest } from '@jest/globals';
+import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import type { Redis } from 'ioredis';
-
-// Mockeamos ioredis para evitar conexiones reales
-jest.mock('ioredis', () => {
-  const storage: Record<string, Record<string, string>> = {};
-  
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const MockRedis = jest.fn().mockImplementation(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const redisInstance: any = {
-      pipeline: jest.fn().mockImplementation(() => {
-        const pipelineObj: any = {
-          rpush: jest.fn().mockImplementation(() => pipelineObj),
-          lpush: jest.fn().mockImplementation(() => pipelineObj),
-          ltrim: jest.fn().mockImplementation(() => pipelineObj),
-          expire: jest.fn().mockImplementation(() => pipelineObj),
-          hincrbyfloat: jest.fn().mockImplementation((k, f, v) => {
-            redisInstance.hincrbyfloat(k, f, v);
-            return pipelineObj;
-          }),
-          hincrby: jest.fn().mockImplementation((k, f, v) => {
-            redisInstance.hincrby(k, f, v);
-            return pipelineObj;
-          }),
-          hset: jest.fn().mockImplementation((k, f, v) => {
-            redisInstance.hset(k, f, v);
-            return pipelineObj;
-          }),
-          exec: (jest.fn() as any).mockResolvedValue([]),
-        };
-        return pipelineObj;
-      }),
-      hincrbyfloat: jest.fn().mockImplementation((key: any, field: any, value: any) => {
-        if (!storage[key]) storage[key] = {};
-        const current = parseFloat(storage[key][field] || "0");
-        storage[key][field] = (current + value).toString();
-        return Promise.resolve(current + value);
-      }),
-      hincrby: jest.fn().mockImplementation((key: any, field: any, value: any) => {
-        if (!storage[key]) storage[key] = {};
-        const current = parseInt(storage[key][field] || "0", 10);
-        storage[key][field] = (current + value).toString();
-        return Promise.resolve(current + value);
-      }),
-      exec: jest.fn().mockImplementation(() => Promise.resolve([])),
-      hgetall: jest.fn().mockImplementation((key: any) => {
-        return Promise.resolve(storage[key] || {});
-      }),
-      set: jest.fn().mockImplementation((key: any, value: any) => {
-        storage[key] = { value };
-        return Promise.resolve("OK");
-      }),
-      get: jest.fn().mockImplementation((key: any) => {
-        return Promise.resolve(storage[key]?.value || null);
-      }),
-      publish: jest.fn().mockImplementation(() => Promise.resolve(1)),
-      rpush: jest.fn().mockReturnThis(),
-      lpush: jest.fn().mockImplementation(() => Promise.resolve(1)),
-      ltrim: jest.fn().mockImplementation(() => Promise.resolve("OK")),
-      lrange: jest.fn().mockImplementation(() => Promise.resolve([])),
-      expire: jest.fn().mockReturnThis(),
-      on: jest.fn(),
-      quit: jest.fn().mockImplementation(() => Promise.resolve("OK")),
-      del: jest.fn().mockImplementation((key: any) => {
-        delete storage[key];
-        return Promise.resolve(1);
-      }),
-      keys: (jest.fn() as any).mockImplementation((pattern: string) => {
-        const regexStr = pattern
-          .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
-          .replace(/\?/g, '.')                  // Convert Redis ? to Regex .
-          .replace(/\*/g, '.*');               // Convert Redis * to Regex .*
-        const regex = new RegExp("^" + regexStr + "$");
-        return Promise.resolve(Object.keys(storage).filter(k => regex.test(k)));
-      }),
-      hset: jest.fn().mockImplementation((key: any, field: any, value: any) => {
-        if (!storage[key]) storage[key] = {};
-        storage[key][field] = value.toString();
-        return Promise.resolve(1);
-      })
-    };
-    return redisInstance;
-  });
-  return {
-    Redis: MockRedis,
-    default: MockRedis
-  };
-});
+import { mockRedis } from './mocks/redis.js';
 
 describe("TelemetryService Integration Tests", () => {
   const projectId = "test-project-" + Date.now();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let telemetryServiceInstance: any;
+  let telemetryServiceInstance: any; // Mantenemos any temporalmente para la instancia pero limpiamos el resto
   let getRedisConnection: () => Redis;
   let redis: Redis;
 
   beforeAll(async () => {
-    // Usamos rutas relativas para evitar problemas de resolución del alias @/ en tsc
+    // Reset del mock centralizado
+    mockRedis.flushall();
+
     const redisModule = await import("../db/redis.js");
     const telemetryModule = await import("../services/telemetryService.js");
     

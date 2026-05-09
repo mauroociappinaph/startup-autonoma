@@ -23,6 +23,8 @@ export default {
       },
     ],
   },
-  setupFiles: ['<rootDir>/src/tests/jest.setup.ts'],
-  setupFilesAfterEnv: ['<rootDir>/src/tests/jest.teardown.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/src/tests/jest.setup.ts',
+    '<rootDir>/src/tests/jest.teardown.ts'
+  ],
 };
