@@ -1,14 +1,14 @@
-import { describe, it, expect, jest, beforeAll } from '@jest/globals';
+import { jest, describe, it, expect, beforeAll } from '@jest/globals';
 import * as opentelemetry from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { z } from "zod";
 import { TelemetryService } from "../services/telemetryService.js";
 import { LLMService } from "../services/llmService.js";
+import { RetryStrategy } from "../services/llm/retryStrategy.js";
 import { HumanMessage } from "@langchain/core/messages";
 
-// Mocking LangChain and Telemetry to avoid real calls
+// Mocking to avoid real calls
 jest.mock("../services/llmFactory.js");
-jest.mock("../services/telemetryService.js");
 
 describe("LLMService Tracing", () => {
   beforeAll(async () => {
@@ -23,9 +23,10 @@ describe("LLMService Tracing", () => {
 
   it("debe crear un span cuando se llama a getStructuredData", async () => {
     // Mocking the internal call to avoid execution
-    jest.spyOn(LLMService as unknown as { _getManualStructuredData: () => Promise<unknown> }, "_getManualStructuredData").mockResolvedValue({
+    const retrySpy = jest.spyOn(RetryStrategy, "executeWithStructuredRetry").mockResolvedValue({
       data: { success: true },
-      usage: { total: 10, prompt: 5, completion: 5 }
+      usage: { total: 10, prompt: 5, completion: 5 },
+      model: "test-model"
     });
 
     const tracer = TelemetryService.getTracer();
@@ -35,11 +36,12 @@ describe("LLMService Tracing", () => {
       { type: "ultra" },
       [new HumanMessage("hola")],
       z.object({ success: z.boolean() })
-    ).catch(() => {}); 
+    );
 
     expect(startActiveSpanSpy).toHaveBeenCalledWith(
       expect.stringContaining("LLM_GENERATE"),
       expect.any(Function)
     );
+    expect(retrySpy).toHaveBeenCalled();
   });
 });
